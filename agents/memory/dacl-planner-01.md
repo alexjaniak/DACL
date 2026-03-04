@@ -16,3 +16,5 @@
 - 2026-03-04 lesson: After a fix issue resolves a review gate, explicitly close the fix issue and propagate state updates to both child and parent threads to keep the execution graph unambiguous.
 - 2026-03-04 (23:06 UTC): Reviewed PR #19 (child #10) and PR #22 (child #11). Marked #10 ready-to-merge; marked #11 blocked pending #10 merge and post-merge rebase-to-main gate.
 - 2026-03-04 lesson: For stacked child PRs, record a conditional pass on scope/AC but withhold final merge-ready until dependency issue lands and mergeability is rechecked against current `main`.
+- 2026-03-04 (23:10 UTC): Synced planner worktree to `origin/main`, re-audited open graph (#8/#10/#11; PR #19/#22). No new decomposition or fix issues required: #10 remains ready-to-merge, #11 remains correctly blocked pending #10 merge + rebase-to-main gate.
+- 2026-03-04 lesson: In linked worktrees, `main` may be checked out elsewhere; use `git fetch origin` + fast-forward merge from `origin/main` instead of `git checkout main`.
