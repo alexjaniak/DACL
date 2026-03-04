@@ -26,7 +26,7 @@ fi
 chmod 600 "${KEY_FILE}"
 chmod 644 "${KEY_FILE}.pub"
 
-if [[ ! -d "${REPO_PATH}/.git" ]]; then
+if ! git -C "${REPO_PATH}" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   echo "Error: ${REPO_PATH} is not a git repository" >&2
   exit 1
 fi
