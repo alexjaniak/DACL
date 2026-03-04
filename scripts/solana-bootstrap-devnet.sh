@@ -23,6 +23,33 @@ if ! command -v cargo >/dev/null 2>&1; then
   exit 2
 fi
 
+MIN_CARGO_VERSION="1.85.0"
+CARGO_VERSION="$(cargo --version | awk '{print $2}')"
+if ! python3 - "$CARGO_VERSION" "$MIN_CARGO_VERSION" <<'PY'
+import sys
+from itertools import zip_longest
+
+def parse(v):
+    out = []
+    for part in v.split('.'):
+        digits = ''.join(ch for ch in part if ch.isdigit())
+        out.append(int(digits or 0))
+    return out
+
+cur = parse(sys.argv[1])
+minimum = parse(sys.argv[2])
+for a, b in zip_longest(cur, minimum, fillvalue=0):
+    if a > b:
+        sys.exit(0)
+    if a < b:
+        sys.exit(1)
+sys.exit(0)
+PY
+then
+  echo "Cargo ${CARGO_VERSION} is too old. Require >= ${MIN_CARGO_VERSION} for edition 2024 dependencies used by the bootstrap SDK." >&2
+  exit 2
+fi
+
 if [[ ! -f "${CONFIG_PATH}" ]]; then
   echo "Missing config: ${CONFIG_PATH}. Copy config/solana.devnet.example.json to config/solana.devnet.json and customize." >&2
   exit 1
