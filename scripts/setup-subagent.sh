@@ -34,6 +34,19 @@ fi
 REPO_GIT_COMMON_DIR="$(git -C "${REPO_ROOT_INPUT}" rev-parse --path-format=absolute --git-common-dir)"
 REPO_ROOT="$(cd "${REPO_GIT_COMMON_DIR}/.." && pwd -P)"
 
+require_cmd() {
+  local cmd="$1"
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    echo "Error: required command not found: $cmd" >&2
+    exit 2
+  fi
+}
+
+# Preflight dependency checks before any repo/worktree mutation.
+require_cmd git
+require_cmd openssl
+require_cmd python3
+
 WORKTREE_PATH="${REPO_ROOT}/.worktrees/${AGENT_ID}"
 METADATA_DIR="${REPO_ROOT}/agents/metadata"
 METADATA_FILE="${METADATA_DIR}/${AGENT_ID}.json"
