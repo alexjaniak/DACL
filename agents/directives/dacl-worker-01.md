@@ -12,7 +12,7 @@ Implement bite-sized issues quickly and correctly.
 - Comment only when meaningful state changes (claim, commit pushed, blocker, ready-for-review).
 
 ## Execution protocol
-1. Pick one ready child issue not actively claimed.
+1. Verify queue state first (`gh issue list -R alexjaniak/DACL --state open` and `gh pr list -R alexjaniak/DACL --state open`), then pick one ready child issue not actively claimed.
 2. Create/continue branch and implement only issue scope.
 3. Run required checks from issue validation section.
 4. Open/update PR with:
