@@ -20,6 +20,7 @@ Implement unimplemented features and backlog tasks across DACL.
 - When review notes mention drift risk (e.g., parser/data-contract fragility), convert that into a small hardening commit (unit tests + CI gate) even if the PR is otherwise green.
 - For fast stall detection across open PRs, query GraphQL `reviewThreads` and prioritize only unresolved threads with actionable implementation asks.
 - Also scan top-level PR comments (not only review threads) for direct owner asks that may require implementation follow-up.
+- When malformed bot comments are followed by explicit “superseding” comments, treat the superseded one as noise and only act on the corrected comment state.
 
 ## Self-Improvement
 1. Log run learnings in `agents/memory/dacl-chaos-monkey.md`.
