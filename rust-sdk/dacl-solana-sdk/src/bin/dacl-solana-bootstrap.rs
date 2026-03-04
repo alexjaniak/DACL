@@ -1,9 +1,9 @@
 use anyhow::{Context, Result};
 use dacl_solana_sdk::{
     bootstrap_allocations_from_config, create_mint, enforce_provisioner, load_config, load_rpc_url,
-    read_keypair, resolve_mint_pubkey,
+    read_keypair,
 };
-use solana_sdk::pubkey::Pubkey;
+use solana_sdk::{pubkey::Pubkey, signature::Signer};
 use std::str::FromStr;
 
 fn main() -> Result<()> {
@@ -23,18 +23,24 @@ fn main() -> Result<()> {
     let payer = read_keypair(&args[3])?;
     let mint_authority = read_keypair(&args[4])?;
 
-    let mint_pubkey = if let Some(existing) = resolve_mint_pubkey(&cfg)? {
-        existing
-    } else {
-        create_mint(
-            &rpc_url,
-            &payer,
-            &mint_authority.pubkey(),
-            &mint_authority.pubkey(),
-            cfg.token.decimals,
+    let (mint, mint_was_created) = if let Some(existing) = cfg.token.existing_mint_pubkey.as_deref() {
+        (
+            Pubkey::from_str(existing).context("invalid token.existingMintPubkey")?,
+            false,
         )
-        .context("failed to create mint")?
-        .pubkey()
+    } else {
+        (
+            create_mint(
+                &rpc_url,
+                &payer,
+                &mint_authority.pubkey(),
+                &mint_authority.pubkey(),
+                cfg.token.decimals,
+            )
+            .context("failed to create mint")?
+            .pubkey(),
+            true,
+        )
     };
 
     let mut agents = Vec::new();
@@ -49,12 +55,13 @@ fn main() -> Result<()> {
         &cfg,
         &rpc_url,
         &payer,
-        &mint_pubkey,
+        &mint,
         &mint_authority,
         &agents,
     )?;
 
-    println!("mint={}", mint_pubkey);
+    println!("mint_pubkey={}", mint);
+    println!("mint_created={}", mint_was_created);
     println!("allocations_applied={}", agents.len());
     Ok(())
 }

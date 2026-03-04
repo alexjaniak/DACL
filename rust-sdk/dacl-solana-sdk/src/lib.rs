@@ -3,6 +3,7 @@ use serde::Deserialize;
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::{
     commitment_config::CommitmentConfig,
+    program_pack::Pack,
     pubkey::Pubkey,
     signature::{read_keypair_file, Keypair, Signer},
     system_instruction,
@@ -10,7 +11,6 @@ use solana_sdk::{
 };
 use spl_associated_token_account::get_associated_token_address;
 use spl_token::instruction::{initialize_mint, mint_to};
-use std::str::FromStr;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct SolanaBootstrapConfig {
@@ -24,12 +24,12 @@ pub struct SolanaBootstrapConfig {
 #[derive(Debug, Clone, Deserialize)]
 pub struct TokenConfig {
     pub decimals: u8,
+    #[serde(default, rename = "existingMintPubkey")]
+    pub existing_mint_pubkey: Option<String>,
     #[serde(rename = "mintAuthorityAgentId")]
     pub mint_authority_agent_id: String,
     #[serde(rename = "freezeAuthorityAgentId")]
     pub freeze_authority_agent_id: String,
-    #[serde(default, rename = "existingMintPubkey")]
-    pub existing_mint_pubkey: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -147,24 +147,6 @@ pub fn mint_to_wallet(
     Ok(())
 }
 
-fn to_base_units(token_amount: u64, decimals: u8) -> Result<u64> {
-    let multiplier = 10u64
-        .checked_pow(decimals as u32)
-        .ok_or_else(|| anyhow!("invalid decimals {}; overflows u64", decimals))?;
-    token_amount
-        .checked_mul(multiplier)
-        .ok_or_else(|| anyhow!("token amount overflow for amount={} decimals={}", token_amount, decimals))
-}
-
-pub fn resolve_mint_pubkey(config: &SolanaBootstrapConfig) -> Result<Option<Pubkey>> {
-    config
-        .token
-        .existing_mint_pubkey
-        .as_ref()
-        .map(|s| Pubkey::from_str(s).map_err(|e| anyhow!("invalid existingMintPubkey '{}': {e}", s)))
-        .transpose()
-}
-
 pub fn bootstrap_allocations_from_config(
     config: &SolanaBootstrapConfig,
     rpc_url: &str,
@@ -174,13 +156,15 @@ pub fn bootstrap_allocations_from_config(
     agents: &[(String, Pubkey)],
 ) -> Result<()> {
     for (agent_id, wallet) in agents {
-        let tokens = config
+        let token_units = config
             .provisioning
             .agent_overrides
             .get(agent_id)
             .copied()
             .unwrap_or(config.provisioning.default_starting_tokens);
-        let amount = to_base_units(tokens, config.token.decimals)?;
+        let amount = token_units
+            .checked_mul(10_u64.pow(config.token.decimals as u32))
+            .ok_or_else(|| anyhow!("token amount overflow for agent '{agent_id}'"))?;
         mint_to_wallet(rpc_url, payer, mint, mint_authority, wallet, amount)?;
     }
     Ok(())

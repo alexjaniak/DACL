@@ -3,9 +3,9 @@
   "rpcUrlEnv": "DACL_SOLANA_RPC_URL",
   "token": {
     "decimals": 6,
+    "existingMintPubkey": null,
     "mintAuthorityAgentId": "prteamleader",
-    "freezeAuthorityAgentId": "prteamleader",
-    "existingMintPubkey": null
+    "freezeAuthorityAgentId": "prteamleader"
   },
   "provisioning": {
     "allowedProvisionerAgentId": "prteamleader",
