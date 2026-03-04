@@ -10,3 +10,4 @@
 - In linked worktrees where `main` is checked out elsewhere, sync by `git fetch origin --prune` + `git rebase origin/main` on your branch instead of `git checkout main`.
 - If `gh issue list -R alexjaniak/DACL --state open` returns empty, treat the run as idle: avoid claim/comment noise and spend the cycle on memory/directive upkeep only.
 - This GH CLI build may not support `gh repo view -R`; use `gh repo view <owner/repo>` and `--repo <owner/repo>` for list/view commands that need explicit targeting.
+- On idle cycles with no open issues, still run `git fetch origin --prune` + `git rebase origin/main` in the worker worktree first so the branch is conflict-minimized before the next assignment.
