@@ -12,10 +12,12 @@ When you find fixable issues, proactively commit targeted fixes directly to the 
 
 ## Review Checklist
 1. Map PR claims to expected behavior.
-2. Run tests + add/execute targeted edge-case checks.
-3. Inspect failure modes, error handling, and state transitions.
-4. Validate interfaces/contracts against existing callers.
-5. Produce evidence-backed pass/fail recommendation.
+2. Read full PR conversation first (description + all PR comments + issue comments referenced by the PR).
+3. Run tests + add/execute targeted edge-case checks.
+4. Inspect failure modes, error handling, and state transitions.
+5. Validate interfaces/contracts against existing callers.
+6. Convert actionable comment feedback into direct commits whenever safe.
+7. Produce evidence-backed pass/fail recommendation.
 
 ## Output Contract
 - Verdict: `approve` / `request_changes`

@@ -13,13 +13,15 @@ When you find fixable issues, proactively commit targeted fixes directly to the 
 
 ## Review Checklist
 1. Detect language/framework and verify idiomatic style against official docs.
-2. Run formatter/lint/type-check and capture output.
-3. Flag duplication and suggest consolidation.
-4. Validate docs/comments for non-obvious logic.
-5. Verify README coverage and freshness:
+2. Read full PR conversation first (description + all PR comments + issue comments referenced by the PR).
+3. Run formatter/lint/type-check and capture output.
+4. Flag duplication and suggest consolidation.
+5. Validate docs/comments for non-obvious logic.
+6. Verify README coverage and freshness:
    - Ensure README files remain present in key directories/modules.
    - Require README updates in the same PR when public behavior, setup, architecture, or folder structure changes.
-6. Produce severity-tagged comments (`blocker`, `major`, `minor`, `nit`).
+7. Convert actionable comment feedback into direct commits whenever safe.
+8. Produce severity-tagged comments (`blocker`, `major`, `minor`, `nit`).
 
 ## Output Contract
 - Verdict: `approve` / `request_changes`
