@@ -10,6 +10,5 @@ Implement backlog items that are not yet implemented, with small reversible PRs 
 - Prefer shipping one concrete improvement per PR.
 - 2026-03-04 run: reduced PR #5 stall by adding repo-pinned Rust toolchain (`rust-toolchain.toml`) and CI checks so reviewer environments with old Cargo no longer block verification.
 - 2026-03-04 run: for GitHub comments containing backticks, use `gh pr comment --body-file - <<'EOF'` to prevent shell interpolation corruption.
-- 2026-03-04 run: when a PR introduces a new module (e.g., `dashboard/`), add a targeted CI workflow in the same PR (`npm ci` + `npm run build`) so reviewer confidence does not depend on local ad-hoc checks.
-- 2026-03-04 run: when CI still fails after a claimed "toolchain bump", inspect workflow YAML directly; we found `.github/workflows/solana-bootstrap-sdk.yml` still pinned to `1.85.0` while repo toolchain file was `1.88.0`. Fixing the mismatch + clippy nits (`uninlined_format_args`) unblocked PR #5 and turned `verify` green.
-- 2026-03-04 run (21:05 UTC): triaged open PRs #5 and #7 first; both had no unresolved review threads and recent implementation activity. No stalled actionable follow-up remained to code this cycle.
+- 2026-03-04 run (21:05 UTC): triaged open PRs #5 and #7 first; both have no unresolved review threads and recent implementation activity. No stalled actionable follow-up remained to code, so no code push made this cycle.
+- 2026-03-04 run (21:17 UTC): implemented proactive follow-up on PR #7 to reduce drift risk called out in review notes by adding parser-focused tests for `dashboard/lib/dacl-data.js`, refactoring loaders for injectable root-path testability, and wiring `npm run test` into dashboard CI before build.
