@@ -7,3 +7,5 @@ Persistent lessons for implementation flow, issue triage, and PR execution quali
 
 - 2026-03-04: Builder loop run at 19:16 UTC scanned alexjaniak/DACL issue #1; open PR #3 already linked via body search (#1), so skipped silently per policy. No additional actionable unassigned issues found.
 - 2026-03-04: Builder loop run at 19:21 UTC re-validated alexjaniak/DACL issue #1 is already covered by open PR #3 (`agent/dacl-builder-1-subagent-wallet-flow`); skipped with no duplicate PR/comment. Branch hygiene note: builder worktree currently has uncommitted changes on the linked branch (`scripts/setup-subagent.sh`, `agents/metadata/`), so future loops should avoid cross-issue work until that branch is cleaned/merged.
+
+- 2026-03-04 19:26 UTC: Builder loop found no open issues in alexjaniak/DACL (`gh issue list` returned empty). Blocker: none. Branch hygiene: builder worktree remains dirty on `agent/dacl-builder-1-subagent-wallet-flow` (modified `scripts/setup-subagent.sh`, untracked `agents/metadata/`), so avoid starting new issue branches from that worktree until cleaned.
