@@ -11,44 +11,53 @@ function readJsonSafe(filePath, fallback) {
   }
 }
 
-export function loadAgents() {
-  const configDir = path.join(repoRoot, 'agents', 'config');
-  const metadataDir = path.join(repoRoot, 'agents', 'metadata');
+export function createDataLoaders(rootPath = repoRoot) {
+  function loadAgents() {
+    const configDir = path.join(rootPath, 'agents', 'config');
+    const metadataDir = path.join(rootPath, 'agents', 'metadata');
 
-  if (!fs.existsSync(configDir)) return [];
+    if (!fs.existsSync(configDir)) return [];
 
-  return fs
-    .readdirSync(configDir)
-    .filter((file) => file.endsWith('.json'))
-    .map((file) => {
-      const config = readJsonSafe(path.join(configDir, file), {});
-      const metadataFile = config.metadataFile
-        ? path.join(repoRoot, config.metadataFile)
-        : path.join(metadataDir, `${config.agentId || file.replace('.json', '')}.json`);
-      const metadata = readJsonSafe(metadataFile, {});
+    return fs
+      .readdirSync(configDir)
+      .filter((file) => file.endsWith('.json'))
+      .map((file) => {
+        const config = readJsonSafe(path.join(configDir, file), {});
+        const metadataFile = config.metadataFile
+          ? path.join(rootPath, config.metadataFile)
+          : path.join(metadataDir, `${config.agentId || file.replace('.json', '')}.json`);
+        const metadata = readJsonSafe(metadataFile, {});
 
-      return {
-        agentId: config.agentId || file.replace('.json', ''),
-        role: config.role || 'unknown',
-        responsibilities: Array.isArray(config.responsibilities) ? config.responsibilities : [],
-        worktree: config.worktree || metadata.worktreePath || null,
-        wallet: metadata.wallet?.pubkey || null,
-        health: metadata.wallet?.pubkey ? 'healthy' : 'degraded'
-      };
-    })
-    .sort((a, b) => a.agentId.localeCompare(b.agentId));
+        return {
+          agentId: config.agentId || file.replace('.json', ''),
+          role: config.role || 'unknown',
+          responsibilities: Array.isArray(config.responsibilities) ? config.responsibilities : [],
+          worktree: config.worktree || metadata.worktreePath || null,
+          wallet: metadata.wallet?.pubkey || null,
+          health: metadata.wallet?.pubkey ? 'healthy' : 'degraded'
+        };
+      })
+      .sort((a, b) => a.agentId.localeCompare(b.agentId));
+  }
+
+  function loadCronJobs() {
+    const cronPath = path.join(rootPath, 'agents', 'config', 'cron-jobs.json');
+    const raw = readJsonSafe(cronPath, []);
+    if (!Array.isArray(raw)) return [];
+
+    return raw.map((job) => ({
+      name: job.name || 'unnamed-job',
+      enabled: Boolean(job.enabled),
+      interval: job.interval || job.schedule || 'n/a',
+      nextRun: job.nextRun || 'unknown',
+      lastRunStatus: job.lastRunStatus || 'unknown'
+    }));
+  }
+
+  return { loadAgents, loadCronJobs };
 }
 
-export function loadCronJobs() {
-  const cronPath = path.join(repoRoot, 'agents', 'config', 'cron-jobs.json');
-  const raw = readJsonSafe(cronPath, []);
-  if (!Array.isArray(raw)) return [];
+const defaultLoaders = createDataLoaders();
 
-  return raw.map((job) => ({
-    name: job.name || 'unnamed-job',
-    enabled: Boolean(job.enabled),
-    interval: job.interval || job.schedule || 'n/a',
-    nextRun: job.nextRun || 'unknown',
-    lastRunStatus: job.lastRunStatus || 'unknown'
-  }));
-}
+export const loadAgents = defaultLoaders.loadAgents;
+export const loadCronJobs = defaultLoaders.loadCronJobs;
