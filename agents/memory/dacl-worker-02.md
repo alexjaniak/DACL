@@ -7,3 +7,4 @@
 - If no open issue is both `role:worker` and ready/unclaimed, do not post noise comments; report idle state in cron output and focus on memory/directive maintenance.
 - `scripts/memory-sync.sh` assumes a real `.git/` directory; run it from the primary repo checkout (`/workspace/DACL`) rather than a linked worktree path where `.git` is a file.
 - In linked worktrees, `gh issue/pr list` may fail with `no git remotes found`; use explicit repo targeting (`-R alexjaniak/DACL`) to query GitHub reliably.
+- In linked worktrees where `main` is checked out elsewhere, sync by `git fetch origin --prune` + `git rebase origin/main` on your branch instead of `git checkout main`.
