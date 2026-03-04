@@ -128,6 +128,33 @@ git identity: dacl-agent-001 <dacl-agent-001@users.noreply.github.com>
 wallet pubkey: 9w...abc
 ```
 
+## Environment Setup (Dependencies)
+
+Agent workflows may install missing dependencies as needed to complete tasks.
+On this host, prefer apt packages.
+
+### Required baseline tools
+- `git`
+- `gh`
+- `python3`
+- `openssl`
+- `cargo`
+- `rustc`
+
+### Install example (Debian/Ubuntu)
+
+```bash
+sudo apt-get update
+sudo apt-get install -y git gh python3 openssl cargo rustc
+```
+
+Verify Rust toolchain:
+
+```bash
+cargo --version
+rustc --version
+```
+
 ## Reviewer Agents (v1)
 
 Two initial PR reviewer specializations are defined under `agents/reviewers/`:

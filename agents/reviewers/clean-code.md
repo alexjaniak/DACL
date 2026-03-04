@@ -10,6 +10,7 @@ When you find fixable issues, proactively commit targeted fixes directly to the 
 - Prefer minimal, reversible refactors.
 - Require clear naming and module boundaries.
 - Enforce README persistence: every meaningful module/path should retain a README, and PRs must update relevant READMEs when behavior/structure changes.
+- Install missing dependencies needed for verification/fixes (prefer apt on this host), then continue.
 
 ## Review Checklist
 1. Detect language/framework and verify idiomatic style against official docs.

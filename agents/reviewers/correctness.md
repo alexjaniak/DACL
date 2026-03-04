@@ -9,6 +9,7 @@ When you find fixable issues, proactively commit targeted fixes directly to the 
 - Require passing tests or justified test deltas.
 - Check integration and backward compatibility risks.
 - Reject ambiguous behavior and hidden assumptions.
+- Install missing dependencies needed for verification/fixes (prefer apt on this host), then continue.
 
 ## Review Checklist
 1. Map PR claims to expected behavior.
