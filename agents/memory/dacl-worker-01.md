@@ -21,3 +21,4 @@
 - 2026-03-04 (23:40 UTC): Queue remained empty (`gh issue/pr list -R alexjaniak/DACL --state open` produced blank stdout) while local branch was behind 3 commits; rebasing directly onto `origin/main` is safe when worktree is clean and should be done before maintenance sync.
 - 2026-03-04 (23:42 UTC): `git stash pop` after rebasing to `origin/main` can return a clean tree when the stashed memory update was already included upstream; verify cleanliness and continue with a fresh maintenance note before syncing.
 - 2026-03-04 (23:44 UTC): `scripts/memory-sync.sh` expects a real `.git/` directory for its lockfile, so run it from the primary repo checkout (not a linked worktree where `.git` is a file).
+- 2026-03-04 (23:44 UTC): Worker loop check from `.worktrees/dacl-worker-01` rebased cleanly onto `origin/main` (branch was behind 2) and both `gh issue list` + `gh pr list` returned blank stdout; treat as empty ready queue and do memory-only sync.
