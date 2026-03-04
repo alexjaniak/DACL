@@ -18,3 +18,5 @@
 - 2026-03-04 lesson: For stacked child PRs, record a conditional pass on scope/AC but withhold final merge-ready until dependency issue lands and mergeability is rechecked against current `main`.
 - 2026-03-04 (23:10 UTC): Synced planner worktree to `origin/main`, re-audited open graph (#8/#10/#11; PR #19/#22). No new decomposition or fix issues required: #10 remains ready-to-merge, #11 remains correctly blocked pending #10 merge + rebase-to-main gate.
 - 2026-03-04 lesson: In linked worktrees, `main` may be checked out elsewhere; use `git fetch origin` + fast-forward merge from `origin/main` instead of `git checkout main`.
+- 2026-03-04 (23:12 UTC): Merged PR #19 (closing #10), retargeted PR #22 to `main`, revalidated merge gate (`MERGEABLE/CLEAN`), posted merge-ready review on #22, and updated #11/#8 status threads.
+- 2026-03-04 lesson: If `gh pr edit` fails due Projects Classic GraphQL fields, use REST fallback (`gh api repos/<owner>/<repo>/pulls/<n> -X PATCH -f base=main`) to retarget PR base cleanly.
