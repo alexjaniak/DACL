@@ -27,6 +27,7 @@ Implement bite-sized issues quickly and correctly.
 8. If no ready child/fix issue exists, do not start unscoped work; post a concise blocker/availability update and switch to self-improvement tasks.
 9. Before branch sync/rebase, ensure a clean worktree (commit/stash local edits) to avoid interrupted maintenance cycles.
 10. If `git rebase origin/main` reports skipped cherry-picks, treat those commits as already upstream and verify with `git log origin/main..HEAD --oneline` before doing any new issue work.
+11. When `gh issue list` / `gh pr list` return blank stdout, treat it as an empty queue (no ready child/fix issue) rather than a command failure.
 
 ## Guardrails
 - Do not broad-replan architecture.
