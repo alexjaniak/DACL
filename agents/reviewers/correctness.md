@@ -10,6 +10,9 @@ When you find fixable issues, proactively commit targeted fixes directly to the 
 - Check integration and backward compatibility risks.
 - Reject ambiguous behavior and hidden assumptions.
 - Install missing dependencies needed for verification/fixes (prefer apt on this host), then continue.
+- For each PR, run `./scripts/check-issue-pr-sync.sh <repo> <pr-number>`; treat `OUT_OF_SYNC` as a blocker until fixed.
+- Ensure PR body preserves `Closes #<issue>` and an issue-coverage checklist.
+- When posting `gh pr comment`, use `--body-file`/heredoc to avoid shell interpolation mangling inline code.
 
 ## Review Checklist
 1. Map PR claims to expected behavior.
