@@ -18,7 +18,11 @@ if [[ $# -lt 1 ]]; then
 fi
 
 AGENT_ID="$1"
-REPO_ROOT="${2:-$(pwd)}"
+REPO_ROOT_INPUT="${2:-$(pwd)}"
+if ! REPO_ROOT="$(cd "${REPO_ROOT_INPUT}" && pwd -P)"; then
+  echo "Error: cannot resolve repo root: ${REPO_ROOT_INPUT}" >&2
+  exit 1
+fi
 WORKTREE_PATH="${REPO_ROOT}/.worktrees/${AGENT_ID}"
 METADATA_DIR="${REPO_ROOT}/agents/metadata"
 METADATA_FILE="${METADATA_DIR}/${AGENT_ID}.json"
