@@ -9,3 +9,4 @@
 - In linked worktrees, `gh issue/pr list` may fail with `no git remotes found`; use explicit repo targeting (`-R alexjaniak/DACL`) to query GitHub reliably.
 - In linked worktrees where `main` is checked out elsewhere, sync by `git fetch origin --prune` + `git rebase origin/main` on your branch instead of `git checkout main`.
 - If `gh issue list -R alexjaniak/DACL --state open` returns empty, treat the run as idle: avoid claim/comment noise and spend the cycle on memory/directive upkeep only.
+- This GH CLI build may not support `gh repo view -R`; use `gh repo view <owner/repo>` and `--repo <owner/repo>` for list/view commands that need explicit targeting.
