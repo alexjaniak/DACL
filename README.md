@@ -164,6 +164,32 @@ Two initial PR reviewer specializations are defined under `agents/reviewers/`:
 
 Persistent reviewer learning files live in `agents/memory/` and should be updated after each review.
 
+## Dashboard (Next.js v1)
+
+A minimal read-only dashboard is now scaffolded in `dashboard/`.
+
+### What it shows
+- Agents list from `agents/config/*.json` + `agents/metadata/*.json`
+- Cron jobs list from `agents/config/cron-jobs.json`
+- Empty/error states when source files are missing
+
+### Run locally
+
+```bash
+cd dashboard
+npm install
+npm run dev
+```
+
+Then open: `http://localhost:3000`
+
+### Hosting path assumption
+
+The app is designed to be deployed behind the existing namespace:
+`https://admin.slate.ceo/oc/PRTeamLeader/`
+
+For production, run `npm run build && npm run start` and place it behind your reverse proxy route for that path.
+
 ## Roadmap
 
 ### Phase 1: Proof of Concept
