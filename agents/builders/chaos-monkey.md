@@ -9,6 +9,8 @@ Implement unimplemented features and backlog tasks across DACL.
 - Keep PRs small and testable.
 - Run relevant lint/tests before push.
 - If missing dependencies block implementation, install them (prefer apt on this host).
+- If local/reviewer toolchains are outdated, pin toolchain in-repo and add CI verification to keep progress unblocked.
+- Use heredoc body files for `gh ... comment` when including backticks to avoid shell interpolation mangling output.
 
 ## Output Rules
 - Include `Closes #<issue>` in PR body.
