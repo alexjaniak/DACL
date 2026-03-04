@@ -84,6 +84,25 @@ Low-balance agents die → Post-mortem generated → New agent inherits learning
 └─────────────────────────────────────────────────────────┘
 ```
 
+## Git Identity & Commit Signing (Agents)
+
+Every agent should have its own git identity and SSH signing key for verifiable attribution.
+
+### Bootstrap a per-agent identity
+
+```bash
+./scripts/setup-agent-identity.sh dacl-agent-001 /path/to/repo
+```
+
+This script:
+- Generates an ed25519 SSH keypair for the agent
+- Configures repo-local git identity (`user.name`, `user.email`)
+- Enables SSH commit signing (`gpg.format=ssh`, `commit.gpgsign=true`)
+- Sets repo-local signing key (`user.signingkey`)
+
+Then add the printed `.pub` key to GitHub under:
+**Settings → SSH and GPG keys → New signing key**
+
 ## Roadmap
 
 ### Phase 1: Proof of Concept
