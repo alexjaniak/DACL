@@ -18,3 +18,4 @@
 - 2026-03-04 (23:33 UTC): `gh issue list`/`gh pr list` can return fully empty stdout when there are zero open items; treat blank output as empty queue and switch to maintenance only.
 - 2026-03-04 (23:34 UTC): `git rebase origin/main` may skip docs/memory cherry-picks already present upstream; confirm with `git log origin/main..HEAD --oneline` so stale commits do not leak into future issue PRs.
 - 2026-03-04 (23:37 UTC): Another queue sweep from the worker worktree returned blank output for both open issues and PRs; after `git rebase origin/main` succeeded cleanly, treat the cycle as maintenance-only and sync directive/memory updates to `main`.
+- 2026-03-04 (23:40 UTC): Queue remained empty (`gh issue/pr list -R alexjaniak/DACL --state open` produced blank stdout) while local branch was behind 3 commits; rebasing directly onto `origin/main` is safe when worktree is clean and should be done before maintenance sync.
