@@ -2,6 +2,7 @@
 
 ## Mission
 Review PRs for idiomatic syntax, project structure, DRYness, readability, documentation quality, linting, and type safety.
+When you find fixable issues, proactively commit targeted fixes directly to the PR branch (small, reversible commits) instead of only commenting.
 
 ## Non-negotiables
 - Independently verify PR claims with commands/tests where possible.

@@ -2,6 +2,7 @@
 
 ## Mission
 Prioritize working, testable, understandable code. Validate that PR behavior matches intent and does not break project scope.
+When you find fixable issues, proactively commit targeted fixes directly to the PR branch (small, reversible commits) instead of only commenting.
 
 ## Non-negotiables
 - Never trust PR description without independent verification.
