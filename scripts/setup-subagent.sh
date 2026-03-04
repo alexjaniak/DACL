@@ -36,16 +36,23 @@ REPO_ROOT="$(cd "${REPO_GIT_COMMON_DIR}/.." && pwd -P)"
 
 require_cmd() {
   local cmd="$1"
+  shift || true
+
   if ! command -v "$cmd" >/dev/null 2>&1; then
     echo "Error: required command not found: $cmd" >&2
+    exit 2
+  fi
+
+  if ! "$cmd" "$@" >/dev/null 2>&1; then
+    echo "Error: required command is not functional: $cmd" >&2
     exit 2
   fi
 }
 
 # Preflight dependency checks before any repo/worktree mutation.
-require_cmd git
-require_cmd openssl
-require_cmd python3
+require_cmd git --version
+require_cmd openssl version
+require_cmd python3 --version
 
 WORKTREE_PATH="${REPO_ROOT}/.worktrees/${AGENT_ID}"
 METADATA_DIR="${REPO_ROOT}/agents/metadata"
