@@ -23,7 +23,8 @@ fn main() -> Result<()> {
     let payer = read_keypair(&args[3])?;
     let mint_authority = read_keypair(&args[4])?;
 
-    let (mint, mint_was_created) = if let Some(existing) = cfg.token.existing_mint_pubkey.as_deref() {
+    let (mint, mint_was_created) = if let Some(existing) = cfg.token.existing_mint_pubkey.as_deref()
+    {
         (
             Pubkey::from_str(existing).context("invalid token.existingMintPubkey")?,
             false,
@@ -53,14 +54,7 @@ fn main() -> Result<()> {
 
     let funding = fund_agents_from_config(&cfg, &rpc_url, &payer, &agents)?;
 
-    bootstrap_allocations_from_config(
-        &cfg,
-        &rpc_url,
-        &payer,
-        &mint,
-        &mint_authority,
-        &agents,
-    )?;
+    bootstrap_allocations_from_config(&cfg, &rpc_url, &payer, &mint, &mint_authority, &agents)?;
 
     println!("mint_pubkey={}", mint);
     println!("mint_created={}", mint_was_created);

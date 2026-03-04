@@ -46,8 +46,10 @@ pub struct ProvisioningConfig {
 }
 
 pub fn load_config(path: &str) -> Result<SolanaBootstrapConfig> {
-    let raw = std::fs::read_to_string(path).with_context(|| format!("failed reading config: {path}"))?;
-    let parsed: SolanaBootstrapConfig = serde_json::from_str(&raw).context("invalid JSON config")?;
+    let raw =
+        std::fs::read_to_string(path).with_context(|| format!("failed reading config: {path}"))?;
+    let parsed: SolanaBootstrapConfig =
+        serde_json::from_str(&raw).context("invalid JSON config")?;
     Ok(parsed)
 }
 
@@ -115,12 +117,13 @@ pub fn mint_to_wallet(
     let ata = get_associated_token_address(destination_owner, mint);
 
     if client.get_account(&ata).is_err() {
-        let create_ata_ix = spl_associated_token_account::instruction::create_associated_token_account(
-            &payer.pubkey(),
-            destination_owner,
-            mint,
-            &spl_token::id(),
-        );
+        let create_ata_ix =
+            spl_associated_token_account::instruction::create_associated_token_account(
+                &payer.pubkey(),
+                destination_owner,
+                mint,
+                &spl_token::id(),
+            );
         let blockhash = client.get_latest_blockhash()?;
         let tx = Transaction::new_signed_with_payer(
             &[create_ata_ix],
@@ -187,7 +190,11 @@ pub fn fund_agents_from_config(
     let mut signatures = Vec::new();
 
     for (agent_id, wallet) in agents {
-        let transfer_ix = system_instruction::transfer(&payer.pubkey(), wallet, config.provisioning.initial_sol_lamports);
+        let transfer_ix = system_instruction::transfer(
+            &payer.pubkey(),
+            wallet,
+            config.provisioning.initial_sol_lamports,
+        );
         let msg = Message::new(&[transfer_ix], Some(&payer.pubkey()));
         let fee = client
             .get_fee_for_message(&msg)
@@ -209,7 +216,11 @@ pub fn fund_agents_from_config(
         }
 
         let blockhash = client.get_latest_blockhash()?;
-        let transfer_ix = system_instruction::transfer(&payer.pubkey(), wallet, config.provisioning.initial_sol_lamports);
+        let transfer_ix = system_instruction::transfer(
+            &payer.pubkey(),
+            wallet,
+            config.provisioning.initial_sol_lamports,
+        );
         let tx = Transaction::new_signed_with_payer(
             &[transfer_ix],
             Some(&payer.pubkey()),
