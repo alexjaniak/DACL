@@ -14,3 +14,4 @@
 - 2026-03-04 (23:24 UTC): Rechecked `gh issue list -R alexjaniak/DACL --state open` and confirmed zero open issues; no ready child/fix work available this cycle, so only maintenance/sync should run.
 - 2026-03-04 (23:26 UTC): `git rebase origin/main` fails with dirty worktree; stash local WIP first (`git stash push -u`) before syncing issue branches, then resume maintenance when queue is empty.
 - 2026-03-04 (23:29 UTC): Queue check from worker worktree (`gh issue/pr list -R alexjaniak/DACL --state open`) returned no open items again; rebased branch onto `origin/main` and limited this run to directive+memory maintenance.
+- 2026-03-04 (23:31 UTC): Stash before sync can legitimately pop to a clean tree when stashed edits are already contained in updated `origin/main`; verify with `git status`/`git log` instead of forcing recovery.
