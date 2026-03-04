@@ -1,0 +1,13 @@
+{
+  "agentId": "dacl-chaos-monkey",
+  "worktreePath": "/home/openclaw/.openclaw/workspace/DACL/.worktrees/dacl-chaos-monkey",
+  "git": {
+    "name": "dacl-chaos-monkey",
+    "email": "dacl-chaos-monkey@users.noreply.github.com"
+  },
+  "wallet": {
+    "network": "solana",
+    "keypairPath": "/home/openclaw/.config/solana/dacl-agents/dacl-chaos-monkey.json",
+    "pubkey": "CiQov5ojygfUQ87QVcFfFJg5CnH6fNBZm4vDg3WMuCsK"
+  }
+}

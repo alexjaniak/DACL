@@ -15,6 +15,10 @@
     {
       "agentId": "dacl-correctness-reviewer",
       "config": "agents/config/dacl-correctness-reviewer.json"
+    },
+    {
+      "agentId": "dacl-chaos-monkey",
+      "config": "agents/config/dacl-chaos-monkey.json"
     }
   ]
 }
