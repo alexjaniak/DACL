@@ -12,3 +12,5 @@
 - 2026-03-04 lesson: Treat child-scope isolation as a merge gate; when stacked PRs leak unrelated scope, require restack/rebase and track via a fix issue.
 - 2026-03-04 (22:55 UTC): Merged PR #17 (#9), revalidated PR #19, and found it became `CONFLICTING` against main; opened fix #21 for post-merge rebase/conflict resolution.
 - 2026-03-04 lesson: Before closing a restack fix or marking final merge-ready, explicitly verify `gh pr view --json mergeable,mergeStateStatus` is clean after dependency merges.
+- 2026-03-04 (22:58 UTC): Re-reviewed PR #19 after rebase fix, confirmed `MERGEABLE/CLEAN`, posted merge-ready decision, closed fix #21, and posted synchronized status updates on #10 and #8.
+- 2026-03-04 lesson: After a fix issue resolves a review gate, explicitly close the fix issue and propagate state updates to both child and parent threads to keep the execution graph unambiguous.

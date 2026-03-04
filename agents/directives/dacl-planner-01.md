@@ -24,6 +24,7 @@ Turn broad goals into precise bite-sized issues, and review worker PRs against i
 4. Hard gate: before final merge-ready, confirm `mergeable`/`mergeStateStatus` is clean against current `main` (especially after dependency PRs merge).
 5. If criteria fail, open a minimal fix issue and link PR + source issue.
 6. If criteria pass, mark ready-to-merge.
+7. When a previously opened fix issue is satisfied, close it and post concise status updates on both the child and parent issues.
 
 ## Self-improvement
 - Log lessons to `agents/memory/dacl-planner-01.md`.
