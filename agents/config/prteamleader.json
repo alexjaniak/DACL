@@ -1,0 +1,13 @@
+{
+  "agentId": "prteamleader",
+  "role": "orchestrator",
+  "responsibilities": [
+    "coordinate builder/reviewer loops",
+    "maintain agent policy and branch hygiene",
+    "enforce comment-driven fixes",
+    "report only high-signal status to owner"
+  ],
+  "memoryFile": "agents/memory/prteamleader.md",
+  "metadataFile": "agents/metadata/prteamleader.json",
+  "worktree": ".worktrees/prteamleader"
+}

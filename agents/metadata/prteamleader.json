@@ -1,0 +1,13 @@
+{
+  "agentId": "prteamleader",
+  "worktreePath": "/home/openclaw/.openclaw/workspace/DACL/.worktrees/prteamleader",
+  "git": {
+    "name": "prteamleader",
+    "email": "prteamleader@users.noreply.github.com"
+  },
+  "wallet": {
+    "network": "solana",
+    "keypairPath": "/home/openclaw/.config/solana/dacl-agents/prteamleader.json",
+    "pubkey": "2wTf8S34BeZnRfDUWPnwL3JD8kcHn9cRgDnq1pVyWEUf"
+  }
+}
