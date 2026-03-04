@@ -18,6 +18,11 @@ ACTOR_AGENT_ID="${DACL_PROVISIONER_AGENT_ID:-$(git -C "${REPO_ROOT}" config user
 PAYER_KEYPAIR="${DACL_SOLANA_PAYER_KEYPAIR:?set DACL_SOLANA_PAYER_KEYPAIR}"
 MINT_AUTHORITY_KEYPAIR="${DACL_SOLANA_MINT_AUTHORITY_KEYPAIR:-${PAYER_KEYPAIR}}"
 
+if ! command -v cargo >/dev/null 2>&1; then
+  echo "Missing dependency: cargo (Rust toolchain). Install Rust to run bootstrap." >&2
+  exit 2
+fi
+
 if [[ ! -f "${CONFIG_PATH}" ]]; then
   echo "Missing config: ${CONFIG_PATH}. Copy config/solana.devnet.example.json to config/solana.devnet.json and customize." >&2
   exit 1
