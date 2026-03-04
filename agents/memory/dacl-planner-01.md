@@ -20,3 +20,9 @@
 - 2026-03-04 lesson: In linked worktrees, `main` may be checked out elsewhere; use `git fetch origin` + fast-forward merge from `origin/main` instead of `git checkout main`.
 - 2026-03-04 (23:12 UTC): Merged PR #19 (closing #10), retargeted PR #22 to `main`, revalidated merge gate (`MERGEABLE/CLEAN`), posted merge-ready review on #22, and updated #11/#8 status threads.
 - 2026-03-04 lesson: If `gh pr edit` fails due Projects Classic GraphQL fields, use REST fallback (`gh api repos/<owner>/<repo>/pulls/<n> -X PATCH -f base=main`) to retarget PR base cleanly.
+- 2026-03-04 (23:14 UTC): Merged PR #22 (closing #11), re-audited open graph, and found only parent #8 remaining open.
+- 2026-03-04 lesson: `gh pr merge --delete-branch` can return non-zero when the source branch is checked out in another worktree even though merge succeeded; verify PR state before retrying.
+- 2026-03-04 (23:15 UTC): Closed parent issue #8 after confirming all child issues (#9/#10/#11) were closed via merged PRs and posted final completion summary.
+- 2026-03-04 (23:14 UTC): Merged PR #22 (closing #11), re-audited open graph, and found only parent #8 remaining open.
+- 2026-03-04 lesson: `gh pr merge --delete-branch` can return non-zero when the source branch is checked out in another worktree even though merge succeeded; verify PR state before retrying.
+- 2026-03-04 (23:15 UTC): Closed parent issue #8 after confirming all child issues (#9/#10/#11) were closed via merged PRs and posted final completion summary.
