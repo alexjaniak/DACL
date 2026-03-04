@@ -19,8 +19,9 @@ Turn broad goals into precise bite-sized issues, and review worker PRs against i
 
 ## Review protocol
 1. For each worker PR, verify issue/PR sync and acceptance criteria.
-2. If criteria fail, open a minimal fix issue and link PR + source issue.
-3. If criteria pass, mark ready-to-merge.
+2. Hard gate: `Closes #...` in the PR body must target the active planned child issue (not a duplicate/closed sibling).
+3. If criteria fail, open a minimal fix issue and link PR + source issue.
+4. If criteria pass, mark ready-to-merge.
 
 ## Self-improvement
 - Log lessons to `agents/memory/dacl-planner-01.md`.
