@@ -109,12 +109,15 @@ Then add the printed `.pub` key to GitHub under:
 ./scripts/setup-subagent.sh dacl-agent-001 /path/to/DACL
 ```
 
-What it does:
+Canonical contract:
 - Creates a dedicated git worktree at `.worktrees/<agent-id>`
 - Configures git identity + SSH signing in that worktree
-- Generates a Solana wallet keypair (if missing)
-- Persists wallet pubkey + paths to `agents/metadata/<agent-id>.json`
+- Generates a Solana-compatible wallet keypair (if missing)
+- Persists metadata to `agents/metadata/<agent-id>.json`
 - Prints a concise success summary (agent id, git identity, wallet pubkey)
+
+Compatibility alias:
+- `./scripts/create-subagent.sh ...` is a thin wrapper that forwards to `setup-subagent.sh`.
 
 Example output:
 
@@ -133,31 +136,6 @@ Two initial PR reviewer specializations are defined under `agents/reviewers/`:
 2. `correctness.md` — behavior validation, tests, integration/regression safety
 
 Persistent reviewer learning files live in `agents/memory/` and should be updated after each review.
-
-## Subagent Bootstrap (v1)
-
-Use a single script to create a new agent workspace + git identity + Solana wallet metadata:
-
-```bash
-./scripts/create-subagent.sh <agent-id>
-```
-
-Example:
-
-```bash
-./scripts/create-subagent.sh dacl-agent-001
-```
-
-Output includes:
-- agent id
-- git identity
-- wallet pubkey
-- metadata path
-
-Notes:
-- Requires Solana CLI (`solana-keygen`) installed on the host.
-- Writes wallet to `agents/wallets/<agent-id>.json`
-- Writes metadata to `agents/meta/<agent-id>.json`
 
 ## Roadmap
 

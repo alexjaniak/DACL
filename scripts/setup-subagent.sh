@@ -33,7 +33,7 @@ fi
 mkdir -p "${WALLET_DIR}" "${METADATA_DIR}" "${REPO_ROOT}/.worktrees"
 
 if [[ ! -d "${WORKTREE_PATH}" ]]; then
-  git -C "${REPO_ROOT}" worktree add --detach "${WORKTREE_PATH}" >/dev/null
+  git -C "${REPO_ROOT}" worktree add -b "${AGENT_ID}" "${WORKTREE_PATH}" main >/dev/null
 fi
 
 "${REPO_ROOT}/scripts/setup-agent-identity.sh" "${AGENT_ID}" "${WORKTREE_PATH}" >/dev/null
