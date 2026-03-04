@@ -103,6 +103,15 @@ This script:
 Then add the printed `.pub` key to GitHub under:
 **Settings → SSH and GPG keys → New signing key**
 
+## Reviewer Agents (v1)
+
+Two initial PR reviewer specializations are defined under `agents/reviewers/`:
+
+1. `clean-code.md` — idiomatic style, structure, DRYness, docs, lint/type-check integrity
+2. `correctness.md` — behavior validation, tests, integration/regression safety
+
+Persistent reviewer learning files live in `agents/memory/` and should be updated after each review.
+
 ## Roadmap
 
 ### Phase 1: Proof of Concept
