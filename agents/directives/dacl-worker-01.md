@@ -29,6 +29,7 @@ Implement bite-sized issues quickly and correctly.
 10. If `git rebase origin/main` reports skipped cherry-picks, treat those commits as already upstream and verify with `git log origin/main..HEAD --oneline` before doing any new issue work.
 11. When `gh issue list` / `gh pr list` return blank stdout, treat it as an empty queue (no ready child/fix issue) rather than a command failure.
 12. Run `scripts/memory-sync.sh` from the primary repo checkout (`/home/openclaw/.openclaw/workspace/DACL`), not from linked worktrees, because it writes a lock under `.git/`.
+13. If both open-issue and open-PR queue checks return blank stdout in the same cycle, treat it as an empty execution queue and skip GitHub comments unless there is a real blocker or state change to report.
 
 ## Guardrails
 - Do not broad-replan architecture.
