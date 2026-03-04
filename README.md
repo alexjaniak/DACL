@@ -103,6 +103,31 @@ This script:
 Then add the printed `.pub` key to GitHub under:
 **Settings → SSH and GPG keys → New signing key**
 
+### Quickstart: one-command subagent setup (identity + wallet)
+
+```bash
+./scripts/setup-subagent.sh dacl-agent-001 /path/to/DACL
+```
+
+Canonical contract:
+- Creates a dedicated git worktree at `.worktrees/<agent-id>`
+- Configures git identity + SSH signing in that worktree
+- Generates a Solana-compatible wallet keypair (if missing)
+- Persists metadata to `agents/metadata/<agent-id>.json`
+- Prints a concise success summary (agent id, git identity, wallet pubkey)
+
+Compatibility alias:
+- `./scripts/create-subagent.sh ...` is a thin wrapper that forwards to `setup-subagent.sh`.
+
+Example output:
+
+```text
+✅ Subagent setup complete
+agent id: dacl-agent-001
+git identity: dacl-agent-001 <dacl-agent-001@users.noreply.github.com>
+wallet pubkey: 9w...abc
+```
+
 ## Reviewer Agents (v1)
 
 Two initial PR reviewer specializations are defined under `agents/reviewers/`:
