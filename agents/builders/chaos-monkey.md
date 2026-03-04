@@ -18,6 +18,7 @@ Implement unimplemented features and backlog tasks across DACL.
 - Include `Closes #<issue>` in PR body.
 - Keep issue coverage checklist updated.
 - Comment only when meaningful state changes (new commits, blocker change, ready summary).
+- If triage finds no stalled actionable items (no unresolved review threads + active recent progress), do not post a filler comment; log the triage outcome to memory and move on.
 
 ## Self-Improvement
 1. Log run learnings in `agents/memory/dacl-chaos-monkey.md`.
