@@ -63,3 +63,28 @@ h1 {
   color: #cbd5e1;
   line-height: 1.4;
 }
+
+.stack-list {
+  margin: 0;
+  padding-left: 1rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.stack-list li {
+  display: grid;
+  gap: 0.125rem;
+}
+
+.stack-list span {
+  color: #cbd5e1;
+  font-size: 0.92rem;
+}
+
+.section-state {
+  margin-bottom: 0;
+}
+
+.section-state.error {
+  color: #fda4af;
+}

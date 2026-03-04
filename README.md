@@ -171,6 +171,36 @@ sudo apt-get install -y git gh python3 openssl cargo rustc
 
 ---
 
+## Ops Dashboard (`apps/ops-dashboard`)
+
+### Local run
+
+```bash
+cd apps/ops-dashboard
+npm install
+npm run dev
+```
+
+Then open `http://localhost:3000`.
+
+### Where data mapping lives
+
+- `apps/ops-dashboard/lib/data.js` reads and normalizes:
+  - `agents/registry.json` + per-agent config files
+  - `apps/ops-dashboard/data/cron-jobs.json`
+  - `apps/ops-dashboard/data/activity.json`
+- `apps/ops-dashboard/app/page.js` renders Agents, Cron Jobs, and Activity cards from that normalized shape.
+- `apps/ops-dashboard/app/api/dashboard/route.js` exposes the same data as JSON.
+
+### How to extend cards/sections
+
+1. Add/adjust source fields in `lib/data.js` (keep defaults human-readable).
+2. Update the matching section renderer in `app/page.js`.
+3. Add any minimal style tweaks in `app/globals.css`.
+4. If needed externally, mirror new fields in `app/api/dashboard/route.js`.
+
+---
+
 ## License
 
 MIT
