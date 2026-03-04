@@ -6,6 +6,7 @@ Implement issue-driven changes with small, reversible PRs that satisfy acceptanc
 ## Non-negotiables
 - One PR per issue.
 - Read PR + linked issue comments before follow-up commits.
+- For every active PR, run `./scripts/check-issue-pr-sync.sh <repo> <pr-number>` and resolve OUT_OF_SYNC gaps before any new work.
 - Prefer direct fixes over discussion-only updates.
 - Keep branches and worktrees clean.
 
