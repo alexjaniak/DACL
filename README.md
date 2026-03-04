@@ -190,7 +190,8 @@ This repo includes a secure bootstrap path for creating a devnet SPL token mint 
    ```
 2. In `config/solana.devnet.json`, set `token.existingMintPubkey` after first mint creation so future agent provisioning mints into the same token.
 3. `defaultStartingTokens` / `agentOverrides` are token units (not base units); decimals are applied automatically by the SDK.
-4. Export required secrets:
+4. Optional: set `provisioning.initialSolLamports` to fund each new agent wallet from the admin payer during bootstrap.
+5. Export required secrets:
    ```bash
    export DACL_SOLANA_RPC_URL="https://..."
    export DACL_SOLANA_PAYER_KEYPAIR="$HOME/.config/solana/id.json"
@@ -213,4 +214,6 @@ DACL_ENABLE_SOLANA_BOOTSTRAP=1 ./scripts/setup-subagent.sh dacl-agent-001 /path/
 When enabled, setup will:
 1. create worktree + git identity,
 2. generate wallet metadata,
-3. call devnet bootstrap wrapper to mint the configured starting balance for the new agent wallet.
+3. optionally fund the new wallet with SOL from the admin payer (`initialSolLamports`, with preflight balance/fee checks),
+4. call devnet bootstrap wrapper to mint the configured starting balance for the new agent wallet,
+5. persist SOL funding transaction signature in `agents/metadata/<agent>.json` when funding is enabled.

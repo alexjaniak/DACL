@@ -10,6 +10,7 @@
   "provisioning": {
     "allowedProvisionerAgentId": "prteamleader",
     "defaultStartingTokens": 1000,
+    "initialSolLamports": 0,
     "agentOverrides": {
       "prteamleader": 5000
     }

@@ -3,6 +3,7 @@ use serde::Deserialize;
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::{
     commitment_config::CommitmentConfig,
+    message::Message,
     program_pack::Pack,
     pubkey::Pubkey,
     signature::{read_keypair_file, Keypair, Signer},
@@ -38,6 +39,8 @@ pub struct ProvisioningConfig {
     pub allowed_provisioner_agent_id: String,
     #[serde(rename = "defaultStartingTokens")]
     pub default_starting_tokens: u64,
+    #[serde(default, rename = "initialSolLamports")]
+    pub initial_sol_lamports: u64,
     #[serde(default, rename = "agentOverrides")]
     pub agent_overrides: std::collections::HashMap<String, u64>,
 }
@@ -168,6 +171,56 @@ pub fn bootstrap_allocations_from_config(
         mint_to_wallet(rpc_url, payer, mint, mint_authority, wallet, amount)?;
     }
     Ok(())
+}
+
+pub fn fund_agents_from_config(
+    config: &SolanaBootstrapConfig,
+    rpc_url: &str,
+    payer: &Keypair,
+    agents: &[(String, Pubkey)],
+) -> Result<Vec<(String, String)>> {
+    if config.provisioning.initial_sol_lamports == 0 {
+        return Ok(Vec::new());
+    }
+
+    let client = RpcClient::new_with_commitment(rpc_url.to_string(), CommitmentConfig::confirmed());
+    let mut signatures = Vec::new();
+
+    for (agent_id, wallet) in agents {
+        let transfer_ix = system_instruction::transfer(&payer.pubkey(), wallet, config.provisioning.initial_sol_lamports);
+        let msg = Message::new(&[transfer_ix], Some(&payer.pubkey()));
+        let fee = client
+            .get_fee_for_message(&msg)
+            .context("failed to estimate transfer fee")?;
+        let balance = client
+            .get_balance(&payer.pubkey())
+            .context("failed to fetch payer balance")?;
+        let required = config
+            .provisioning
+            .initial_sol_lamports
+            .checked_add(fee)
+            .ok_or_else(|| anyhow!("lamports overflow while preparing transfer"))?;
+
+        if balance < required {
+            return Err(anyhow!(
+                "insufficient admin balance for funding '{agent_id}': need {required} lamports (transfer {} + estimated fee {fee}), have {balance}",
+                config.provisioning.initial_sol_lamports
+            ));
+        }
+
+        let blockhash = client.get_latest_blockhash()?;
+        let transfer_ix = system_instruction::transfer(&payer.pubkey(), wallet, config.provisioning.initial_sol_lamports);
+        let tx = Transaction::new_signed_with_payer(
+            &[transfer_ix],
+            Some(&payer.pubkey()),
+            &[payer],
+            blockhash,
+        );
+        let sig = client.send_and_confirm_transaction(&tx)?;
+        signatures.push((agent_id.clone(), sig.to_string()));
+    }
+
+    Ok(signatures)
 }
 
 pub fn read_keypair(path: &str) -> Result<Keypair> {

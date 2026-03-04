@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use dacl_solana_sdk::{
-    bootstrap_allocations_from_config, create_mint, enforce_provisioner, load_config, load_rpc_url,
-    read_keypair,
+    bootstrap_allocations_from_config, create_mint, enforce_provisioner, fund_agents_from_config,
+    load_config, load_rpc_url, read_keypair,
 };
 use solana_sdk::{pubkey::Pubkey, signature::Signer};
 use std::str::FromStr;
@@ -51,6 +51,8 @@ fn main() -> Result<()> {
         agents.push((agent_id.to_string(), Pubkey::from_str(pk)?));
     }
 
+    let funding = fund_agents_from_config(&cfg, &rpc_url, &payer, &agents)?;
+
     bootstrap_allocations_from_config(
         &cfg,
         &rpc_url,
@@ -63,5 +65,9 @@ fn main() -> Result<()> {
     println!("mint_pubkey={}", mint);
     println!("mint_created={}", mint_was_created);
     println!("allocations_applied={}", agents.len());
+    println!("funding_applied={}", funding.len());
+    for (agent_id, sig) in funding {
+        println!("funding_signature_{}={}", agent_id, sig);
+    }
     Ok(())
 }

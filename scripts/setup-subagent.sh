@@ -143,5 +143,30 @@ echo "metadata: ${METADATA_FILE}"
 
 if [[ "${DACL_ENABLE_SOLANA_BOOTSTRAP:-0}" == "1" ]]; then
   echo "Running optional devnet token bootstrap for ${AGENT_ID}..."
-  "${REPO_ROOT}/scripts/solana-bootstrap-devnet.sh" "${AGENT_ID}" "${WALLET_PUBKEY}"
+  BOOTSTRAP_OUTPUT="$(${REPO_ROOT}/scripts/solana-bootstrap-devnet.sh "${AGENT_ID}" "${WALLET_PUBKEY}")"
+  echo "${BOOTSTRAP_OUTPUT}"
+
+  FUNDING_SIG="$(printf '%s\n' "${BOOTSTRAP_OUTPUT}" | awk -F= -v key="funding_signature_${AGENT_ID}" '$1==key {print $2}')"
+  if [[ -n "${FUNDING_SIG}" ]]; then
+    FUNDED_BY_AGENT_ID="${DACL_PROVISIONER_AGENT_ID:-$(git -C "${REPO_ROOT}" config user.name || true)}"
+    python3 - "${METADATA_FILE}" "${FUNDING_SIG}" "${AGENT_ID}" "${FUNDED_BY_AGENT_ID}" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+sig = sys.argv[2]
+agent_id = sys.argv[3]
+funded_by = sys.argv[4]
+data = json.loads(path.read_text())
+data.setdefault("funding", {})
+data["funding"].update({
+    "fundedByAgentId": funded_by,
+    "fundedAgentId": agent_id,
+    "solTransferSignature": sig,
+})
+path.write_text(json.dumps(data, indent=2) + "\n")
+PY
+    echo "funding signature recorded in metadata: ${FUNDING_SIG}"
+  fi
 fi
