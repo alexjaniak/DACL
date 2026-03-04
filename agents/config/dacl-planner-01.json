@@ -1,0 +1,8 @@
+{
+  "agentId": "dacl-planner-01",
+  "role": "planner",
+  "directiveFile": "agents/directives/dacl-planner-01.md",
+  "memoryFile": "agents/memory/dacl-planner-01.md",
+  "metadataFile": "agents/metadata/dacl-planner-01.json",
+  "worktree": ".worktrees/dacl-planner-01"
+}

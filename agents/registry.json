@@ -1,0 +1,19 @@
+{
+  "agents": [
+    {
+      "agentId": "prteamleader",
+      "role": "orchestrator",
+      "directive": "operatives/ORCHESTRATOR.md"
+    },
+    {
+      "agentId": "dacl-planner-01",
+      "role": "planner",
+      "config": "agents/config/dacl-planner-01.json"
+    },
+    {
+      "agentId": "dacl-worker-01",
+      "role": "worker",
+      "config": "agents/config/dacl-worker-01.json"
+    }
+  ]
+}
