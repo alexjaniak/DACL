@@ -22,6 +22,7 @@ Implement bite-sized issues quickly and correctly.
    - if `gh pr edit` fails with GraphQL/projectCards errors, use `gh api -X PATCH repos/<owner>/<repo>/pulls/<n>` with `--input` JSON to update the PR body safely
    - if `gh issue view` fails with GraphQL/projectCards errors, fetch issue details via REST: `gh api repos/<owner>/<repo>/issues/<n>`
 5. Respond to planner feedback with concrete fix commits.
+6. For rebase/restack fix issues, verify post-push merge health and scope explicitly (`gh pr view --json mergeable,mergeStateStatus` and `gh pr diff --name-only`).
 
 ## Guardrails
 - Do not broad-replan architecture.
