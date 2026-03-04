@@ -180,6 +180,7 @@ This repo includes a secure bootstrap path for creating a devnet SPL token mint 
 
 ### Files
 - `config/solana.devnet.example.json` — bootstrap config template (`existingMintPubkey` optional for reusing one mint)
+- `anchor/` — Anchor workspace + `dacl-bootstrap` module (devnet authority/mint/mint-to flow scaffolding)
 - `rust-sdk/dacl-solana-sdk/` — Rust SDK + CLI bootstrap binary
 - `scripts/solana-bootstrap-devnet.sh` — setup-script-friendly wrapper
 
@@ -202,6 +203,17 @@ This repo includes a secure bootstrap path for creating a devnet SPL token mint 
 ### Manual bootstrap invocation
 ```bash
 ./scripts/solana-bootstrap-devnet.sh <agent-id> <agent-wallet-pubkey>
+```
+
+### Anchor module (for issue #4 framework alignment)
+The repo now includes an Anchor workspace at `anchor/` with a `dacl-bootstrap` module that defines:
+- `create_mint(...)`
+- `mint_to_wallet(...)`
+- `bootstrap_allocations_from_config(...)`
+
+You can verify workspace structure with:
+```bash
+ls anchor/ && ls anchor/programs/dacl-bootstrap/src
 ```
 
 ### Setup script integration
