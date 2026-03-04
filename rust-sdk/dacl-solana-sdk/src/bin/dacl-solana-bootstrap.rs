@@ -56,12 +56,12 @@ fn main() -> Result<()> {
 
     bootstrap_allocations_from_config(&cfg, &rpc_url, &payer, &mint, &mint_authority, &agents)?;
 
-    println!("mint_pubkey={}", mint);
-    println!("mint_created={}", mint_was_created);
+    println!("mint_pubkey={mint}");
+    println!("mint_created={mint_was_created}");
     println!("allocations_applied={}", agents.len());
     println!("funding_applied={}", funding.len());
     for (agent_id, sig) in funding {
-        println!("funding_signature_{}={}", agent_id, sig);
+        println!("funding_signature_{agent_id}={sig}");
     }
     Ok(())
 }
