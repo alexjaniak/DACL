@@ -7,3 +7,4 @@
 - 2026-03-04 (22:32 UTC): Synced planner branch with origin/main, audited all open issues (#8 parent; #9/#10/#11 children) and open PRs (none). Decomposition remains sufficient; no new child or fix issues required this cycle.
 - 2026-03-04 (22:38 UTC): Reviewed PR #17 and opened fix #18 because PR referenced closed duplicate #12 instead of planned child #9; enforced issue/PR closure consistency gate.
 - 2026-03-04 lesson: Even when implementation AC passes, fail planner review if `Closes #...` targets the wrong child issue.
+- 2026-03-04 (22:42 UTC): Re-audited open graph (#8/#9/#10/#11, PR #17). Confirmed PR #17 now correctly closes #9 and posted planner merge-ready review + parent status update. Lesson reinforced: enforce hard gate on closure-target correctness before merge-ready signal.
