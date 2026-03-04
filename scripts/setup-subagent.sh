@@ -19,20 +19,26 @@ fi
 
 AGENT_ID="$1"
 REPO_ROOT_INPUT="${2:-$(pwd)}"
-if ! REPO_ROOT="$(cd "${REPO_ROOT_INPUT}" && pwd -P)"; then
+if ! REPO_ROOT_INPUT="$(cd "${REPO_ROOT_INPUT}" && pwd -P)"; then
   echo "Error: cannot resolve repo root: ${REPO_ROOT_INPUT}" >&2
   exit 1
 fi
+
+if ! git -C "${REPO_ROOT_INPUT}" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  echo "Error: ${REPO_ROOT_INPUT} is not a git repository" >&2
+  exit 1
+fi
+
+# Normalize to the shared repository root so invocations from a linked worktree
+# still persist metadata/worktrees in one canonical location.
+REPO_GIT_COMMON_DIR="$(git -C "${REPO_ROOT_INPUT}" rev-parse --path-format=absolute --git-common-dir)"
+REPO_ROOT="$(cd "${REPO_GIT_COMMON_DIR}/.." && pwd -P)"
+
 WORKTREE_PATH="${REPO_ROOT}/.worktrees/${AGENT_ID}"
 METADATA_DIR="${REPO_ROOT}/agents/metadata"
 METADATA_FILE="${METADATA_DIR}/${AGENT_ID}.json"
 WALLET_DIR="${HOME}/.config/solana/dacl-agents"
 WALLET_FILE="${WALLET_DIR}/${AGENT_ID}.json"
-
-if ! git -C "${REPO_ROOT}" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  echo "Error: ${REPO_ROOT} is not a git repository" >&2
-  exit 1
-fi
 
 mkdir -p "${WALLET_DIR}" "${METADATA_DIR}" "${REPO_ROOT}/.worktrees"
 
