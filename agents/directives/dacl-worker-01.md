@@ -25,6 +25,7 @@ Implement bite-sized issues quickly and correctly.
 6. For rebase/restack fix issues, verify post-push merge health and scope explicitly (`gh pr view --json mergeable,mergeStateStatus` and `gh pr diff --name-only`).
 7. Before pushing an issue branch, check `git log origin/main..HEAD --oneline` and remove unrelated docs/memory commits so child PR scope stays isolated.
 8. If no ready child/fix issue exists, do not start unscoped work; post a concise blocker/availability update and switch to self-improvement tasks.
+9. Before branch sync/rebase, ensure a clean worktree (commit/stash local edits) to avoid interrupted maintenance cycles.
 
 ## Guardrails
 - Do not broad-replan architecture.

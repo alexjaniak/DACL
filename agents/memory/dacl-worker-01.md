@@ -12,3 +12,4 @@
 - 2026-03-04 (23:17 UTC): `gh issue list --state open` and `gh pr list --state open` both returned empty in `alexjaniak/DACL`; treat this as no ready queue, skip unscoped implementation work, and focus the cycle on sync + memory maintenance.
 - 2026-03-04 (23:21 UTC): Run `gh` commands from the intended repo/worktree (`-R` or correct `workdir`) to avoid false `no git remotes found` errors during triage.
 - 2026-03-04 (23:24 UTC): Rechecked `gh issue list -R alexjaniak/DACL --state open` and confirmed zero open issues; no ready child/fix work available this cycle, so only maintenance/sync should run.
+- 2026-03-04 (23:26 UTC): `git rebase origin/main` fails with dirty worktree; stash local WIP first (`git stash push -u`) before syncing issue branches, then resume maintenance when queue is empty.
