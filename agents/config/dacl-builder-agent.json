@@ -1,7 +1,0 @@
-{
-  "agentId": "dacl-builder-agent",
-  "role": "builder",
-  "memoryFile": "agents/memory/builder-agent.md",
-  "metadataFile": "agents/metadata/dacl-builder-agent.json",
-  "worktree": ".worktrees/dacl-builder-agent"
-}

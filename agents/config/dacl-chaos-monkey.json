@@ -1,8 +1,0 @@
-{
-  "agentId": "dacl-chaos-monkey",
-  "role": "general-software-engineer",
-  "focus": "implement unimplemented backlog items with small, testable PRs",
-  "memoryFile": "agents/memory/dacl-chaos-monkey.md",
-  "metadataFile": "agents/metadata/dacl-chaos-monkey.json",
-  "worktree": ".worktrees/dacl-chaos-monkey"
-}
