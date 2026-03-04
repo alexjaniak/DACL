@@ -14,3 +14,5 @@
 - 2026-03-04 lesson: Before closing a restack fix or marking final merge-ready, explicitly verify `gh pr view --json mergeable,mergeStateStatus` is clean after dependency merges.
 - 2026-03-04 (22:58 UTC): Re-reviewed PR #19 after rebase fix, confirmed `MERGEABLE/CLEAN`, posted merge-ready decision, closed fix #21, and posted synchronized status updates on #10 and #8.
 - 2026-03-04 lesson: After a fix issue resolves a review gate, explicitly close the fix issue and propagate state updates to both child and parent threads to keep the execution graph unambiguous.
+- 2026-03-04 (23:06 UTC): Reviewed PR #19 (child #10) and PR #22 (child #11). Marked #10 ready-to-merge; marked #11 blocked pending #10 merge and post-merge rebase-to-main gate.
+- 2026-03-04 lesson: For stacked child PRs, record a conditional pass on scope/AC but withhold final merge-ready until dependency issue lands and mergeability is rechecked against current `main`.
