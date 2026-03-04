@@ -19,6 +19,7 @@ Implement bite-sized issues quickly and correctly.
    - `Closes #<issue>`
    - issue coverage checklist
    - evidence of checks
+   - if `gh pr edit` fails with GraphQL/projectCards errors, use `gh api -X PATCH repos/<owner>/<repo>/pulls/<n>` with `--input` JSON to update the PR body safely
 5. Respond to planner feedback with concrete fix commits.
 
 ## Guardrails
