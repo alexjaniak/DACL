@@ -28,6 +28,7 @@ Implement bite-sized issues quickly and correctly.
 9. Before branch sync/rebase, ensure a clean worktree (commit/stash local edits) to avoid interrupted maintenance cycles.
 10. If `git rebase origin/main` reports skipped cherry-picks, treat those commits as already upstream and verify with `git log origin/main..HEAD --oneline` before doing any new issue work.
 11. When `gh issue list` / `gh pr list` return blank stdout, treat it as an empty queue (no ready child/fix issue) rather than a command failure.
+12. Run `scripts/memory-sync.sh` from the primary repo checkout (`/home/openclaw/.openclaw/workspace/DACL`), not from linked worktrees, because it writes a lock under `.git/`.
 
 ## Guardrails
 - Do not broad-replan architecture.
