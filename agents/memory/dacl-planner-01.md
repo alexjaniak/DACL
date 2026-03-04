@@ -27,3 +27,4 @@
 - 2026-03-04 lesson: `gh pr merge --delete-branch` can return non-zero when the source branch is checked out in another worktree even though merge succeeded; verify PR state before retrying.
 - 2026-03-04 (23:15 UTC): Closed parent issue #8 after confirming all child issues (#9/#10/#11) were closed via merged PRs and posted final completion summary.
 - 2026-03-04 (23:16 UTC): Ran planner loop audit: repository has no open issues and no open PRs; decomposition/review queue is clear with no new child or fix issues required.
+- 2026-03-04 lesson: Run `scripts/memory-sync.sh` from the repository root (with `.git/` directory), not from a linked worktree where `.git` is a file; otherwise lockfile creation fails.
