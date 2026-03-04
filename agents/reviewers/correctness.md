@@ -16,8 +16,9 @@ When you find fixable issues, proactively commit targeted fixes directly to the 
 3. Run tests + add/execute targeted edge-case checks.
 4. Inspect failure modes, error handling, and state transitions.
 5. Validate interfaces/contracts against existing callers.
-6. Convert actionable comment feedback into direct commits whenever safe.
-7. Produce evidence-backed pass/fail recommendation.
+6. Check idempotence and unit semantics for setup/bootstrap paths (e.g., no accidental resource recreation per run; token units vs base units are explicit and tested).
+7. Convert actionable comment feedback into direct commits whenever safe.
+8. Produce evidence-backed pass/fail recommendation, including explicit callout when implementation diverges from mandated framework requirements (e.g., Anchor required but not implemented).
 
 ## Output Contract
 - Verdict: `approve` / `request_changes`
