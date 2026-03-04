@@ -23,6 +23,8 @@ Implement bite-sized issues quickly and correctly.
    - if `gh issue view` fails with GraphQL/projectCards errors, fetch issue details via REST: `gh api repos/<owner>/<repo>/issues/<n>`
 5. Respond to planner feedback with concrete fix commits.
 6. For rebase/restack fix issues, verify post-push merge health and scope explicitly (`gh pr view --json mergeable,mergeStateStatus` and `gh pr diff --name-only`).
+7. Before pushing an issue branch, check `git log origin/main..HEAD --oneline` and remove unrelated docs/memory commits so child PR scope stays isolated.
+6. For rebase/restack fix issues, verify post-push merge health and scope explicitly (`gh pr view --json mergeable,mergeStateStatus` and `gh pr diff --name-only`).
 
 ## Guardrails
 - Do not broad-replan architecture.
