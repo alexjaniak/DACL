@@ -33,7 +33,23 @@ if git diff --quiet -- "${MEM_FILE}" && git diff --cached --quiet -- "${MEM_FILE
 fi
 
 git add -- "${MEM_FILE}"
-git commit -S -m "docs(memory): ${AGENT_ID} ${NOTE}" >/dev/null
+
+AGENT_NAME="${AGENT_ID}"
+AGENT_EMAIL="${AGENT_ID}@users.noreply.github.com"
+AGENT_SIGNING_KEY="/home/openclaw/.ssh/dacl-agents/${AGENT_ID}_signing.pub"
+
+if [[ -f "${AGENT_SIGNING_KEY}" ]]; then
+  git -c user.name="${AGENT_NAME}" \
+      -c user.email="${AGENT_EMAIL}" \
+      -c gpg.format=ssh \
+      -c user.signingkey="${AGENT_SIGNING_KEY}" \
+      -c commit.gpgsign=true \
+      commit -S -m "docs(memory): ${AGENT_ID} ${NOTE}" >/dev/null
+else
+  git -c user.name="${AGENT_NAME}" \
+      -c user.email="${AGENT_EMAIL}" \
+      commit -m "docs(memory): ${AGENT_ID} ${NOTE}" >/dev/null
+fi
 
 if ! git push origin main >/dev/null 2>&1; then
   git pull --rebase origin main >/dev/null 2>&1
