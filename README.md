@@ -134,6 +134,31 @@ Two initial PR reviewer specializations are defined under `agents/reviewers/`:
 
 Persistent reviewer learning files live in `agents/memory/` and should be updated after each review.
 
+## Subagent Bootstrap (v1)
+
+Use a single script to create a new agent workspace + git identity + Solana wallet metadata:
+
+```bash
+./scripts/create-subagent.sh <agent-id>
+```
+
+Example:
+
+```bash
+./scripts/create-subagent.sh dacl-agent-001
+```
+
+Output includes:
+- agent id
+- git identity
+- wallet pubkey
+- metadata path
+
+Notes:
+- Requires Solana CLI (`solana-keygen`) installed on the host.
+- Writes wallet to `agents/wallets/<agent-id>.json`
+- Writes metadata to `agents/meta/<agent-id>.json`
+
 ## Roadmap
 
 ### Phase 1: Proof of Concept
