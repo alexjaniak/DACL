@@ -26,6 +26,7 @@ Implement bite-sized issues quickly and correctly.
 7. Before pushing an issue branch, check `git log origin/main..HEAD --oneline` and remove unrelated docs/memory commits so child PR scope stays isolated.
 8. If no ready child/fix issue exists, do not start unscoped work; post a concise blocker/availability update and switch to self-improvement tasks.
 9. Before branch sync/rebase, ensure a clean worktree (commit/stash local edits) to avoid interrupted maintenance cycles.
+10. If `git rebase origin/main` reports skipped cherry-picks, treat those commits as already upstream and verify with `git log origin/main..HEAD --oneline` before doing any new issue work.
 
 ## Guardrails
 - Do not broad-replan architecture.
