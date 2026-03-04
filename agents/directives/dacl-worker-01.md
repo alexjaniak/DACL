@@ -31,6 +31,7 @@ Implement bite-sized issues quickly and correctly.
 12. Run `scripts/memory-sync.sh` from the primary repo checkout (`/home/openclaw/.openclaw/workspace/DACL`), not from linked worktrees, because it writes a lock under `.git/`.
 13. If both open-issue and open-PR queue checks return blank stdout in the same cycle, treat it as an empty execution queue and skip GitHub comments unless there is a real blocker or state change to report.
 14. In empty-queue cycles, still rebase the active worker branch onto `origin/main` when behind and verify `git log origin/main..HEAD --oneline` is empty before ending the run.
+15. Treat both blank stdout and explicit JSON empty arrays (`[]`) from `gh issue/pr list` as an empty queue, not an execution failure.
 
 ## Guardrails
 - Do not broad-replan architecture.
