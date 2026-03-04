@@ -179,7 +179,7 @@ This repo includes a secure bootstrap path for creating a devnet SPL token mint 
 - RPC URL is never hardcoded in repo files; config stores an env var name (`rpcUrlEnv`) and runtime reads the secret from environment.
 
 ### Files
-- `config/solana.devnet.example.json` — bootstrap config template
+- `config/solana.devnet.example.json` — bootstrap config template (`existingMintPubkey` optional for reusing one mint)
 - `rust-sdk/dacl-solana-sdk/` — Rust SDK + CLI bootstrap binary
 - `scripts/solana-bootstrap-devnet.sh` — setup-script-friendly wrapper
 
@@ -188,7 +188,9 @@ This repo includes a secure bootstrap path for creating a devnet SPL token mint 
    ```bash
    cp config/solana.devnet.example.json config/solana.devnet.json
    ```
-2. Export required secrets:
+2. In `config/solana.devnet.json`, set `token.existingMintPubkey` after first mint creation so future agent provisioning mints into the same token.
+3. `defaultStartingTokens` / `agentOverrides` are token units (not base units); decimals are applied automatically by the SDK.
+4. Export required secrets:
    ```bash
    export DACL_SOLANA_RPC_URL="https://..."
    export DACL_SOLANA_PAYER_KEYPAIR="$HOME/.config/solana/id.json"

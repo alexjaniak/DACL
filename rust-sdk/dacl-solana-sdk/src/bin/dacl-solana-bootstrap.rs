@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use dacl_solana_sdk::{
     bootstrap_allocations_from_config, create_mint, enforce_provisioner, load_config, load_rpc_url,
-    read_keypair,
+    read_keypair, resolve_mint_pubkey,
 };
 use solana_sdk::pubkey::Pubkey;
 use std::str::FromStr;
@@ -23,14 +23,19 @@ fn main() -> Result<()> {
     let payer = read_keypair(&args[3])?;
     let mint_authority = read_keypair(&args[4])?;
 
-    let mint = create_mint(
-        &rpc_url,
-        &payer,
-        &mint_authority.pubkey(),
-        &mint_authority.pubkey(),
-        cfg.token.decimals,
-    )
-    .context("failed to create mint")?;
+    let mint_pubkey = if let Some(existing) = resolve_mint_pubkey(&cfg)? {
+        existing
+    } else {
+        create_mint(
+            &rpc_url,
+            &payer,
+            &mint_authority.pubkey(),
+            &mint_authority.pubkey(),
+            cfg.token.decimals,
+        )
+        .context("failed to create mint")?
+        .pubkey()
+    };
 
     let mut agents = Vec::new();
     for pair in &args[5..] {
@@ -44,12 +49,12 @@ fn main() -> Result<()> {
         &cfg,
         &rpc_url,
         &payer,
-        &mint.pubkey(),
+        &mint_pubkey,
         &mint_authority,
         &agents,
     )?;
 
-    println!("mint_created={}", mint.pubkey());
+    println!("mint={}", mint_pubkey);
     println!("allocations_applied={}", agents.len());
     Ok(())
 }
