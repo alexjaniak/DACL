@@ -9,3 +9,4 @@
 - If `git pull --rebase origin <branch>` replays unrelated docs/memory commits, reset/drop them before push so the child PR only contains issue-scope files.
 - When rebasing a worker branch after parent/frontend merges, expect add/add conflicts in `apps/ops-dashboard/app/page.js`; resolve by keeping the child issue intent and re-run `gh pr diff --name-only` to confirm scope did not expand.
 - If the queue has no open `type:task`/`type:fix` issues in ready state, avoid ad-hoc coding; report availability/blocker and use the cycle for directive/memory maintenance synced to `main`.
+- 2026-03-04 (23:17 UTC): `gh issue list --state open` and `gh pr list --state open` both returned empty in `alexjaniak/DACL`; treat this as no ready queue, skip unscoped implementation work, and focus the cycle on sync + memory maintenance.
