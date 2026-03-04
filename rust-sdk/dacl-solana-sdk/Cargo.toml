@@ -1,0 +1,21 @@
+[package]
+name = "dacl-solana-sdk"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "dacl_solana_sdk"
+path = "src/lib.rs"
+
+[[bin]]
+name = "dacl-solana-bootstrap"
+path = "src/bin/dacl-solana-bootstrap.rs"
+
+[dependencies]
+anyhow = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+solana-client = "2"
+solana-sdk = "2"
+spl-associated-token-account = "6"
+spl-token = "7"

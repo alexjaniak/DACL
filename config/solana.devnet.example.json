@@ -1,0 +1,16 @@
+{
+  "cluster": "devnet",
+  "rpcUrlEnv": "DACL_SOLANA_RPC_URL",
+  "token": {
+    "decimals": 6,
+    "mintAuthorityAgentId": "prteamleader",
+    "freezeAuthorityAgentId": "prteamleader"
+  },
+  "provisioning": {
+    "allowedProvisionerAgentId": "prteamleader",
+    "defaultStartingTokens": 1000,
+    "agentOverrides": {
+      "prteamleader": 5000
+    }
+  }
+}

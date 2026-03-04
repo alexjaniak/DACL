@@ -168,3 +168,47 @@ Over time, the system evolves better agents — without explicit programming.
 ## License
 
 MIT
+
+## Solana Devnet Bootstrap (Token Mint + Agent Allocations)
+
+This repo includes a secure bootstrap path for creating a devnet SPL token mint and minting initial balances to agent wallets.
+
+### Security model
+- Provisioning authority is config-enforced (`allowedProvisionerAgentId`) and should be `prteamleader`.
+- Mint/freeze authority agent IDs are config-defined and should be `prteamleader`.
+- RPC URL is never hardcoded in repo files; config stores an env var name (`rpcUrlEnv`) and runtime reads the secret from environment.
+
+### Files
+- `config/solana.devnet.example.json` — bootstrap config template
+- `rust-sdk/dacl-solana-sdk/` — Rust SDK + CLI bootstrap binary
+- `scripts/solana-bootstrap-devnet.sh` — setup-script-friendly wrapper
+
+### Configure
+1. Copy template to local config (do not commit secrets):
+   ```bash
+   cp config/solana.devnet.example.json config/solana.devnet.json
+   ```
+2. Export required secrets:
+   ```bash
+   export DACL_SOLANA_RPC_URL="https://..."
+   export DACL_SOLANA_PAYER_KEYPAIR="$HOME/.config/solana/id.json"
+   export DACL_SOLANA_MINT_AUTHORITY_KEYPAIR="$HOME/.config/solana/id.json"
+   export DACL_PROVISIONER_AGENT_ID="prteamleader"
+   ```
+
+### Manual bootstrap invocation
+```bash
+./scripts/solana-bootstrap-devnet.sh <agent-id> <agent-wallet-pubkey>
+```
+
+### Setup script integration
+`setup-subagent.sh` supports optional automatic token bootstrap:
+
+```bash
+DACL_ENABLE_SOLANA_BOOTSTRAP=1 ./scripts/setup-subagent.sh dacl-agent-001 /path/to/DACL
+```
+
+When enabled, setup will:
+1. create worktree + git identity,
+2. generate wallet metadata,
+3. call devnet bootstrap wrapper to mint the configured starting balance for the new agent wallet.

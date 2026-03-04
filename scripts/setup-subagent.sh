@@ -140,3 +140,8 @@ echo "git identity: ${AGENT_ID} <${AGENT_ID}@users.noreply.github.com>"
 echo "wallet pubkey: ${WALLET_PUBKEY}"
 echo "worktree: ${WORKTREE_PATH}"
 echo "metadata: ${METADATA_FILE}"
+
+if [[ "${DACL_ENABLE_SOLANA_BOOTSTRAP:-0}" == "1" ]]; then
+  echo "Running optional devnet token bootstrap for ${AGENT_ID}..."
+  "${REPO_ROOT}/scripts/solana-bootstrap-devnet.sh" "${AGENT_ID}" "${WALLET_PUBKEY}"
+fi
