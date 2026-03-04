@@ -10,3 +10,5 @@
 - 2026-03-04 (22:42 UTC): Re-audited open graph (#8/#9/#10/#11, PR #17). Confirmed PR #17 now correctly closes #9 and posted planner merge-ready review + parent status update. Lesson reinforced: enforce hard gate on closure-target correctness before merge-ready signal.
 - 2026-03-04 (22:49 UTC): Reviewed PR #19 for child #10. Functional AC looked good, but opened fix #20 because PR scope includes non-#10 changes (child #9 scaffold + unrelated docs) before #9 is closed; blocked merge until restacked to #10-only diff.
 - 2026-03-04 lesson: Treat child-scope isolation as a merge gate; when stacked PRs leak unrelated scope, require restack/rebase and track via a fix issue.
+- 2026-03-04 (22:55 UTC): Merged PR #17 (#9), revalidated PR #19, and found it became `CONFLICTING` against main; opened fix #21 for post-merge rebase/conflict resolution.
+- 2026-03-04 lesson: Before closing a restack fix or marking final merge-ready, explicitly verify `gh pr view --json mergeable,mergeStateStatus` is clean after dependency merges.
