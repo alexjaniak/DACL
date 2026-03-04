@@ -22,6 +22,7 @@ When you find fixable issues, proactively commit targeted fixes directly to the 
    - Require README updates in the same PR when public behavior, setup, architecture, or folder structure changes.
 7. Convert actionable comment feedback into direct commits whenever safe.
 8. Produce severity-tagged comments (`blocker`, `major`, `minor`, `nit`).
+9. When posting review comments via GitHub CLI, use `gh pr comment --body-file <file>` (not inline `--body` with backticks) to prevent shell interpolation from corrupting command snippets/paths.
 
 ## Output Contract
 - Verdict: `approve` / `request_changes`
