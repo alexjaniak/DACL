@@ -23,7 +23,7 @@ if ! command -v cargo >/dev/null 2>&1; then
   exit 2
 fi
 
-MIN_CARGO_VERSION="1.85.0"
+MIN_CARGO_VERSION="1.88.0"
 CARGO_VERSION="$(cargo --version | awk '{print $2}')"
 if ! python3 - "$CARGO_VERSION" "$MIN_CARGO_VERSION" <<'PY'
 import sys
