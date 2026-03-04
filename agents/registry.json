@@ -14,6 +14,11 @@
       "agentId": "dacl-worker-01",
       "role": "worker",
       "config": "agents/config/dacl-worker-01.json"
+    },
+    {
+      "agentId": "dacl-worker-02",
+      "role": "worker",
+      "config": "agents/config/dacl-worker-02.json"
     }
   ]
 }

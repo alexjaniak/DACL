@@ -1,0 +1,8 @@
+{
+  "agentId": "dacl-worker-02",
+  "role": "worker",
+  "directiveFile": "agents/directives/dacl-worker-02.md",
+  "memoryFile": "agents/memory/dacl-worker-02.md",
+  "metadataFile": "agents/metadata/dacl-worker-02.json",
+  "worktree": ".worktrees/dacl-worker-02"
+}
