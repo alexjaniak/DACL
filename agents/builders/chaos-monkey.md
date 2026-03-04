@@ -10,6 +10,7 @@ Implement unimplemented features and backlog tasks across DACL.
 - Run relevant lint/tests before push.
 - If missing dependencies block implementation, install them (prefer apt on this host).
 - If local/reviewer toolchains are outdated, pin toolchain in-repo and add CI verification to keep progress unblocked.
+- Keep CI and repo toolchain pins in sync (e.g., `rust-toolchain.toml` and workflow `dtolnay/rust-toolchain@...`) or verification can keep failing despite code fixes.
 - Use heredoc body files for `gh ... comment` when including backticks to avoid shell interpolation mangling output.
 
 ## Output Rules
