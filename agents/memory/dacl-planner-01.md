@@ -8,3 +8,5 @@
 - 2026-03-04 (22:38 UTC): Reviewed PR #17 and opened fix #18 because PR referenced closed duplicate #12 instead of planned child #9; enforced issue/PR closure consistency gate.
 - 2026-03-04 lesson: Even when implementation AC passes, fail planner review if `Closes #...` targets the wrong child issue.
 - 2026-03-04 (22:42 UTC): Re-audited open graph (#8/#9/#10/#11, PR #17). Confirmed PR #17 now correctly closes #9 and posted planner merge-ready review + parent status update. Lesson reinforced: enforce hard gate on closure-target correctness before merge-ready signal.
+- 2026-03-04 (22:49 UTC): Reviewed PR #19 for child #10. Functional AC looked good, but opened fix #20 because PR scope includes non-#10 changes (child #9 scaffold + unrelated docs) before #9 is closed; blocked merge until restacked to #10-only diff.
+- 2026-03-04 lesson: Treat child-scope isolation as a merge gate; when stacked PRs leak unrelated scope, require restack/rebase and track via a fix issue.
