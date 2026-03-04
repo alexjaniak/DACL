@@ -1,0 +1,7 @@
+{
+  "agentId": "dacl-correctness-reviewer",
+  "role": "reviewer-correctness",
+  "memoryFile": "agents/memory/correctness-reviewer.md",
+  "metadataFile": "agents/metadata/dacl-correctness-reviewer.json",
+  "worktree": ".worktrees/dacl-correctness-reviewer"
+}

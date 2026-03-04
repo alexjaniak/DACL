@@ -1,0 +1,7 @@
+{
+  "agentId": "dacl-clean-code-reviewer",
+  "role": "reviewer-clean-code",
+  "memoryFile": "agents/memory/clean-code-reviewer.md",
+  "metadataFile": "agents/metadata/dacl-clean-code-reviewer.json",
+  "worktree": ".worktrees/dacl-clean-code-reviewer"
+}

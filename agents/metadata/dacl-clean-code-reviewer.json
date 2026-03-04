@@ -1,0 +1,13 @@
+{
+  "agentId": "dacl-clean-code-reviewer",
+  "worktreePath": "/home/openclaw/.openclaw/workspace/DACL/.worktrees/dacl-clean-code-reviewer",
+  "git": {
+    "name": "dacl-clean-code-reviewer",
+    "email": "dacl-clean-code-reviewer@users.noreply.github.com"
+  },
+  "wallet": {
+    "network": "solana",
+    "keypairPath": "/home/openclaw/.config/solana/dacl-agents/dacl-clean-code-reviewer.json",
+    "pubkey": "4wcAtoAKNbwi2grWocp4NoVvBySTp8h9dZpk4UhRZRAb"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "agents": [
+    {
+      "agentId": "prteamleader",
+      "config": "agents/config/prteamleader.json"
+    },
+    {
+      "agentId": "dacl-builder-agent",
+      "config": "agents/config/dacl-builder-agent.json"
+    },
+    {
+      "agentId": "dacl-clean-code-reviewer",
+      "config": "agents/config/dacl-clean-code-reviewer.json"
+    },
+    {
+      "agentId": "dacl-correctness-reviewer",
+      "config": "agents/config/dacl-correctness-reviewer.json"
+    }
+  ]
+}
