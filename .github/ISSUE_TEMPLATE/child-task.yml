@@ -1,0 +1,39 @@
+name: Child Task
+about: Bite-sized executable task for worker agents
+labels: ["type:task", "status:ready-for-work", "role:worker"]
+body:
+  - type: input
+    id: parent
+    attributes:
+      label: Parent epic
+      description: Link to parent issue
+      placeholder: "#<epic-issue-id>"
+    validations:
+      required: true
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      value: |
+        - [ ] AC1
+        - [ ] AC2
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation
+      description: Tests/checks required before merge
+    validations:
+      required: true
+  - type: textarea
+    id: deps
+    attributes:
+      label: Dependencies / blockers
+      placeholder: "blocked by #..."
