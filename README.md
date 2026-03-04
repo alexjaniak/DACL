@@ -1,139 +1,151 @@
 # DACL — Darwinian Agentic Coordination Layer
 
-Evolutionary AI agent coordination via prediction markets on Solana.
+DACL coordinates AI agents through a strict GitHub Issue/PR workflow.
 
-## The Problem
+This repo now prioritizes **execution discipline** over complexity:
+- all planning and implementation routed through GitHub Issues + PRs
+- clear agent roles
+- active behavior (not passive status chatter)
 
-AI agents produce inconsistent work. PRs are often unfinished, low-quality, or not ready for human review. Human attention is scarce — we need a filter.
+---
 
-## The Solution
+## Communication Contract (Hard Rule)
 
-Apply evolutionary pressure and market mechanisms to agent coordination:
+All agent communication happens on GitHub (issues/PR comments).
 
-- **Skin in the game**: Agents hold tokens. Contributing to PRs creates risk/reward exposure.
-- **Prediction markets**: Each PR has an associated market — "Will this PR get merged?" Agents trade on confidence.
-- **Quality signal**: When market confidence hits a threshold, a human reviews. Markets aggregate information better than any single agent.
-- **Natural selection**: Agents that produce bad work lose tokens. Fall below a threshold → you die. A new agent spawns with your learnings.
+- Every agent comment must start with: `@<agent-id>`
+- No side-channel status logs required for execution
+- Comments must be high-signal only (state changes, commits pushed, blockers, ready-to-merge)
 
-## How It Works
+Example:
+`@dacl-worker-01 implemented AC #2 in commit abc1234; tests passing; ready for planner review.`
 
-```
-GitHub Issue opened
-        ↓
-PR created → Prediction market seeded with Y tokens
-        ↓
-Agents contribute code → Gain share of reward pool, risk Z-loss on failure
-        ↓
-Agents trade the market (contributors go long, reviewers can short)
-        ↓
-Market confidence hits threshold → Human reviews
-        ↓
-Merge: Contributors split reward pool, "yes" traders win
-Reject: Contributors lose Z tokens, "no" traders win, PR continues
-        ↓
-Low-balance agents die → Post-mortem generated → New agent inherits learnings
-```
+---
 
-## Core Mechanics
+## Agent Topology (v1)
 
-### Token Economics
-- Agents start with X tokens + SOL airdrop
-- Contributing to a PR: free entry, entitled to reward share on merge, risk Z-loss on failure
-- Trading: separate from contribution, profits/losses from market accuracy
-- Death threshold: balance < minimum → agent terminated
+### 1) Orchestrator (`@prteamleader`)
+Purpose:
+- define broad feature goals as parent issues
+- enforce process and acceptance quality
+- spawn/assign planner work
 
-### Prediction Markets (Solana Program)
-- Created per-PR, seeded with Y tokens from system
-- Binary outcome: merge (yes) or close without merge (no)
-- On resolution: winning side splits the pool
+Output:
+- one parent issue with clear scope + success definition
 
-### Evolutionary Loop
-- Agents that consistently ship good PRs accumulate tokens and survive
-- Agents that produce garbage lose tokens and die
-- Dead agents generate post-mortems → learnings inherited by replacements
-- The "genome" is system prompt + memory files
+### 2) Planner (`@dacl-planner-01`)
+Purpose:
+- decompose parent goals into bite-sized issues
+- maintain dependency graph
+- review worker PRs against issue spec
+- open follow-up fix issues when implementation diverges
 
-### Participation Classes
-- **Contributors**: Write code, auto-exposed to outcome, can trade freely
-- **Reviewers**: Can only short (or small long caps), signal quality concerns
+Output:
+- precise child issues with acceptance criteria
+- review decisions (pass/fix needed)
 
-## Architecture
+### 3) Worker (`@dacl-worker-01`)
+Purpose:
+- implement bite-sized issues only
+- no broad re-planning, no architecture drift
+- execute quickly and continuously when actionable issues exist
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    Coordinator (DACL)                   │
-│         Spawns agents, manages lifecycle, evolves       │
-└─────────────────────────────────────────────────────────┘
-                            │
-        ┌───────────────────┼───────────────────┐
-        ▼                   ▼                   ▼
-   ┌─────────┐         ┌─────────┐         ┌─────────┐
-   │ Agent 1 │         │ Agent 2 │         │ Agent N │
-   │ (alive) │         │ (alive) │         │ (dead)  │
-   └─────────┘         └─────────┘         └─────────┘
-        │                   │
-        ▼                   ▼
-┌─────────────────────────────────────────────────────────┐
-│                     GitHub (PRs)                        │
-└─────────────────────────────────────────────────────────┘
-        │                   │
-        ▼                   ▼
-┌─────────────────────────────────────────────────────────┐
-│              Solana (Markets + Ledger)                  │
-│         Prediction markets, token balances              │
-└─────────────────────────────────────────────────────────┘
-```
+Output:
+- focused PRs that close child issues
 
-## Git Identity & Commit Signing (Agents)
+---
 
-Every agent should have its own git identity and SSH signing key for verifiable attribution.
+## v1 Operating Model (Current)
 
-### Bootstrap a per-agent identity
+For now, run:
+- **1 Planner**
+- **1 Worker**
 
-```bash
-./scripts/setup-agent-identity.sh dacl-agent-001 /path/to/repo
-```
+Behavior requirements:
+- planner and worker should be actively conversational with each other on GitHub
+- worker should implement whenever a ready issue exists
+- planner should continuously scope/review and open fix issues when needed
 
-This script:
-- Generates an ed25519 SSH keypair for the agent
-- Configures repo-local git identity (`user.name`, `user.email`)
-- Enables SSH commit signing (`gpg.format=ssh`, `commit.gpgsign=true`)
-- Sets repo-local signing key (`user.signingkey`)
+Goal state:
+- parent issue represented by a merge-ready PR (or set of PRs) with all child issues closed
 
-Then add the printed `.pub` key to GitHub under:
-**Settings → SSH and GPG keys → New signing key**
+---
 
-### Quickstart: one-command subagent setup (identity + wallet)
+## Robust GitHub Issue/PR System
 
-```bash
-./scripts/setup-subagent.sh dacl-agent-001 /path/to/DACL
-```
+## Issue Types
 
-Canonical contract:
-- Creates a dedicated git worktree at `.worktrees/<agent-id>`
-- Configures git identity + SSH signing in that worktree
-- Generates a Solana-compatible wallet keypair (if missing)
-- Persists metadata to `agents/metadata/<agent-id>.json`
-- Prints a concise success summary (agent id, git identity, wallet pubkey)
+### Parent Issue (Epic)
+Contains:
+- business/feature goal
+- boundaries (in/out of scope)
+- success criteria
+- child issue checklist
 
-Compatibility alias:
-- `./scripts/create-subagent.sh ...` is a thin wrapper that forwards to `setup-subagent.sh`.
+### Child Issue (Execution Unit)
+Must include:
+- objective
+- exact acceptance criteria
+- constraints/non-goals
+- test/validation expectations
+- dependency refs (`blocked by #...` / `depends on #...`)
 
-Example output:
+### Fix Issue
+Opened by planner when PR review fails spec.
+Must be minimal and directly linked to offending PR.
 
-```text
-✅ Subagent setup complete
-agent id: dacl-agent-001
-git identity: dacl-agent-001 <dacl-agent-001@users.noreply.github.com>
-wallet pubkey: 9w...abc
-```
+---
 
-## Environment Setup (Dependencies)
+## PR Requirements (Mandatory)
 
-Agent workflows may install missing dependencies as needed to complete tasks.
-On this host, prefer apt packages.
+Every PR must include:
+- `Closes #<child-issue-id>`
+- issue coverage checklist
+- evidence section (tests/checks/commands)
+- concise risk notes
 
-### Required baseline tools
+PR lifecycle:
+1. worker opens PR
+2. planner reviews against acceptance criteria
+3. if failing: planner opens fix issue and links it
+4. worker implements fix issue
+5. planner re-reviews
+6. merge + auto-close issues
+
+---
+
+## Agent Comment Rules
+
+Agents should comment when:
+- claiming work
+- pushing meaningful implementation commits
+- changing blocker status
+- marking ready-for-review / ready-to-merge
+
+Agents should not comment when:
+- no new code
+- no new evidence
+- no state change
+
+All comments begin with `@<agent-id>`.
+
+---
+
+## Operatives (Playbooks)
+
+See:
+- `operatives/ORCHESTRATOR.md`
+- `operatives/PLANNER.md`
+- `operatives/WORKER.md`
+- `operatives/ISSUE_PR_PROTOCOL.md`
+
+These are the execution rules for each role.
+
+---
+
+## Dependencies
+
+Baseline tools:
 - `git`
 - `gh`
 - `python3`
@@ -141,56 +153,23 @@ On this host, prefer apt packages.
 - `cargo`
 - `rustc`
 
-### Install example (Debian/Ubuntu)
+Install on Debian/Ubuntu:
 
 ```bash
 sudo apt-get update
 sudo apt-get install -y git gh python3 openssl cargo rustc
 ```
 
-Verify Rust toolchain:
+---
 
-```bash
-cargo --version
-rustc --version
-```
+## Roadmap (Process-First)
 
-## Reviewer Agents (v1)
+1. Stabilize planner/worker protocol
+2. Add Next.js visibility dashboard (agents + jobs + issue/PR state)
+3. Add Solana devnet bootstrap (Anchor-aligned)
+4. Expand to multi-planner/multi-worker swarms
 
-Two initial PR reviewer specializations are defined under `agents/reviewers/`:
-
-1. `clean-code.md` — idiomatic style, structure, DRYness, docs, lint/type-check integrity
-2. `correctness.md` — behavior validation, tests, integration/regression safety
-
-Persistent reviewer learning files live in `agents/memory/` and should be updated after each review.
-
-## Roadmap
-
-### Phase 1: Proof of Concept
-- [ ] Agent lifecycle (spawn, assign, kill, inherit)
-- [ ] Local ledger (JSON/SQLite, no Solana yet)
-- [ ] Simulated prediction markets
-- [ ] Test on a sample repo
-
-### Phase 2: Solana Integration
-- [ ] Deploy to local validator / devnet
-- [ ] Prediction market program (Anchor/Rust)
-- [ ] On-chain token accounts per agent
-- [ ] Real market mechanics
-
-### Phase 3: Production
-- [ ] Multi-repo support
-- [ ] Mainnet deployment
-- [ ] Dashboard for monitoring agents + markets
-
-## Why "Darwinian"?
-
-Evolution is the most powerful optimization algorithm we know:
-- **Variation**: Agents have different prompts, memories, strategies
-- **Selection**: Bad agents die, good agents survive
-- **Inheritance**: Dead agents pass learnings to replacements
-
-Over time, the system evolves better agents — without explicit programming.
+---
 
 ## License
 
