@@ -205,7 +205,7 @@ This repo includes a secure bootstrap path for creating a devnet SPL token mint 
 ./scripts/solana-bootstrap-devnet.sh <agent-id> <agent-wallet-pubkey>
 ```
 
-Toolchain requirement: Rust/Cargo is required, and Cargo must be `>=1.85.0` (edition 2024 dependency support).
+Toolchain requirement: Rust/Cargo is required, and Cargo must be `>=1.85.0` (edition 2024 dependency support). The SDK pins this via `rust-sdk/dacl-solana-sdk/rust-toolchain.toml`.
 
 ### Anchor module (for issue #4 framework alignment)
 The repo now includes an Anchor workspace at `anchor/` with a `dacl-bootstrap` module that defines:
@@ -217,6 +217,14 @@ You can verify workspace structure with:
 ```bash
 ls anchor/ && ls anchor/programs/dacl-bootstrap/src
 ```
+
+### CI verification
+PRs that touch the bootstrap SDK/script/config now run `.github/workflows/solana-bootstrap-sdk.yml` to enforce:
+- shell syntax checks,
+- config JSON validity,
+- `cargo fmt --check`,
+- `cargo check --locked`,
+- `cargo clippy -D warnings`.
 
 ### Setup script integration
 `setup-subagent.sh` supports optional automatic token bootstrap:

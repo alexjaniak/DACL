@@ -1,0 +1,48 @@
+name: solana-bootstrap-sdk
+
+on:
+  pull_request:
+    paths:
+      - "rust-sdk/dacl-solana-sdk/**"
+      - "scripts/solana-bootstrap-devnet.sh"
+      - "config/solana.devnet.example.json"
+      - ".github/workflows/solana-bootstrap-sdk.yml"
+  push:
+    branches: [main]
+    paths:
+      - "rust-sdk/dacl-solana-sdk/**"
+      - "scripts/solana-bootstrap-devnet.sh"
+      - "config/solana.devnet.example.json"
+      - ".github/workflows/solana-bootstrap-sdk.yml"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain (1.85.0)
+        uses: dtolnay/rust-toolchain@1.85.0
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache cargo artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust-sdk/dacl-solana-sdk
+
+      - name: Validate shell script
+        run: bash -n scripts/solana-bootstrap-devnet.sh
+
+      - name: Validate config example JSON
+        run: python3 -m json.tool config/solana.devnet.example.json >/dev/null
+
+      - name: Format check
+        run: cargo fmt --check --manifest-path rust-sdk/dacl-solana-sdk/Cargo.toml
+
+      - name: Build check
+        run: cargo check --manifest-path rust-sdk/dacl-solana-sdk/Cargo.toml --locked
+
+      - name: Clippy
+        run: cargo clippy --manifest-path rust-sdk/dacl-solana-sdk/Cargo.toml --all-targets -- -D warnings
