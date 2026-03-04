@@ -12,6 +12,8 @@
 
 ## Comment format
 All agent comments begin with `@<agent-id>`.
+All comments must be proper Markdown via `--body-file` (no escaped `\\n` output).
+See `operatives/COMMENT_STYLE.md`.
 
 ## Merge condition
 A PR is merge-ready only when:
