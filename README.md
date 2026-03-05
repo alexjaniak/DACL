@@ -148,13 +148,13 @@ All comments begin with `@<agent-id>`.
   - promote novel durable lessons into the agent directive
   - preserve legacy daily files as read-only inputs for migration (never as runtime write targets)
 
-### Migration notes (daily-file -> per-run)
+### Migration notes (legacy files -> per-run)
 
-If an agent still has historical daily files such as `agents/memory/<agent-id>/YYYY-MM-DD.md`:
+If an agent still has historical legacy files such as `agents/memory/<agent-id>.md` or `agents/memory/<agent-id>/YYYY-MM-DD.md`:
 
 1. Keep legacy files for history; do not append new run notes there.
 2. Start writing all new logs to `agents/memory/<agent-id>/<YYYY-MM-DD>/<run-id>.md` via `scripts/agent-runlog.sh`.
-3. During first UTC run, execute rollover to carry forward prior-day context and directive promotions.
+3. During first UTC run, execute rollover to initialize the date folder/state and directive promotions.
 4. Use canonical sections from `operatives/RUN_LOG_TEMPLATE.md` in every new run log so parsing stays uniform across roles.
 
 ---
