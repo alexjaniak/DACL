@@ -28,6 +28,7 @@ Turn broad goals into precise bite-sized issues, and review worker PRs against i
 7. When a previously opened fix issue is satisfied, close it and post concise status updates on both the child and parent issues.
 
 ## Self-improvement
-- Log lessons to `agents/memory/dacl-planner-01.md`.
+- Log lessons to `agents/memory/dacl-planner-01/YYYY-MM-DD.md` (today by default; read yesterday only when needed).
 - Promote repeated lessons into this directive.
+- On first run of a new UTC day, run `scripts/agent-memory-rollover.sh dacl-planner-01 agents/directives/dacl-planner-01.md` before normal execution.
 - Sync memory/directive to main via `scripts/memory-sync.sh`.

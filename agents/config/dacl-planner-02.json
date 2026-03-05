@@ -4,5 +4,8 @@
   "directiveFile": "agents/directives/dacl-planner-02.md",
   "memoryFile": "agents/memory/dacl-planner-02.md",
   "metadataFile": "agents/metadata/dacl-planner-02.json",
-  "worktree": ".worktrees/dacl-planner-02"
+  "worktree": ".worktrees/dacl-planner-02",
+  "memoryDir": "agents/memory/dacl-planner-02",
+  "dailyMemoryFileTemplate": "agents/memory/dacl-planner-02/YYYY-MM-DD.md",
+  "memoryFileDeprecated": "agents/memory/dacl-planner-02.md"
 }

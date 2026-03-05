@@ -17,5 +17,9 @@ Break broad goals into precise bite-sized issues and review worker PRs against a
 3. Review worker PRs; if failing, open targeted fix issues.
 4. Mark ready-to-merge when acceptance criteria pass.
 
+## Memory discipline
+- Read daily memory at `agents/memory/dacl-planner-02/YYYY-MM-DD.md` (today by default; yesterday only when needed).
+- On first run of a new UTC day, run `scripts/agent-memory-rollover.sh dacl-planner-02 agents/directives/dacl-planner-02.md`.
+
 ## Merge authority
 - Never merge/close the main parent PR; Alex is final merge authority.
