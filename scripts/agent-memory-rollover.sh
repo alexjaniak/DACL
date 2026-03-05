@@ -13,13 +13,9 @@ AGENT_ID="$1"
 DIRECTIVE_FILE="$2"
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 TODAY="$(date -u +%F)"
-NOW_UTC="$(date -u +"%Y-%m-%d %H:%M UTC")"
-
 MEMORY_DIR="${REPO_ROOT}/agents/memory/${AGENT_ID}"
 TODAY_FILE="${MEMORY_DIR}/${TODAY}.md"
 STATE_FILE="${MEMORY_DIR}/.rollover-state"
-LEGACY_FILE="${REPO_ROOT}/agents/memory/${AGENT_ID}.md"
-LEGACY_ARCHIVE="${MEMORY_DIR}/legacy.md"
 
 mkdir -p "${MEMORY_DIR}"
 
@@ -28,34 +24,7 @@ if [[ ! -f "${DIRECTIVE_FILE}" ]]; then
   exit 1
 fi
 
-# One-time migration/deprecation of monolithic memory file.
-if [[ -f "${LEGACY_FILE}" ]]; then
-  if [[ ! -f "${LEGACY_ARCHIVE}" ]]; then
-    cp "${LEGACY_FILE}" "${LEGACY_ARCHIVE}"
-  fi
-  if [[ ! -f "${TODAY_FILE}" ]]; then
-    {
-      echo "# Memory — ${AGENT_ID} (${TODAY})"
-      echo
-      echo "_Migrated from legacy file on ${NOW_UTC}._"
-      echo
-      cat "${LEGACY_FILE}"
-      echo
-    } > "${TODAY_FILE}"
-  fi
-  cat > "${LEGACY_FILE}" <<EOF
-# Deprecated Memory Path
-
-This file is deprecated.
-
-Use daily memory files under:
-- agents/memory/${AGENT_ID}/YYYY-MM-DD.md
-
-Legacy content archived at:
-- agents/memory/${AGENT_ID}/legacy.md
-EOF
-fi
-
+# Daily-memory-first behavior: create today's file if missing.
 if [[ ! -f "${TODAY_FILE}" ]]; then
   cat > "${TODAY_FILE}" <<EOF
 # Memory — ${AGENT_ID} (${TODAY})
