@@ -23,7 +23,9 @@ All comments must be proper Markdown via `--body-file` (no escaped `\\n` output)
 See `operatives/COMMENT_STYLE.md`.
 
 ## Agent memory protocol
-- Agents store raw execution notes in daily files: `agents/memory/<agent-id>/YYYY-MM-DD.md`.
+- Canonical per-run log template source: `operatives/RUN_LOG_TEMPLATE.md`.
+- Canonical path/write helper: `scripts/agent-runlog.sh` targeting `agents/memory/<agent-id>/<YYYY-MM-DD>/<run-id>.md`.
+- During migration, agents may still maintain daily files (`agents/memory/<agent-id>/YYYY-MM-DD.md`) to avoid data loss.
 - Agents should read today's file by default; read yesterday only when needed for continuity.
 - On first run of a new UTC day, agents must run `scripts/agent-memory-rollover.sh <agent-id> agents/directives/<agent-id>.md` before normal issue/PR work.
 
