@@ -31,5 +31,12 @@ assemble "$OUT_DIR/WORKER_PROMPT.txt" \
   "$ROOT/operatives/WORKER.md" \
   "$ROOT/operatives/cron/WORKER_RUNTIME_TAIL.txt"
 
+assemble "$OUT_DIR/ORCHESTRATOR_PROMPT.txt" \
+  "$ROOT/operatives/ISSUE_PR_PROTOCOL.md" \
+  "$ROOT/operatives/COMMENT_STYLE.md" \
+  "$ROOT/operatives/ORCHESTRATOR.md" \
+  "$ROOT/operatives/ORCHESTRATOR_UNSTUCK.md" \
+  "$ROOT/operatives/cron/ORCHESTRATOR_RUNTIME_TAIL.txt"
+
 echo "Built prompts:"
 ls -1 "$OUT_DIR"
