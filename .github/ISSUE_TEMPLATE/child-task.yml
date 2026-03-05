@@ -1,5 +1,5 @@
 name: Child Task
-about: Bite-sized executable task for worker agents
+description: Bite-sized executable task for worker agents
 labels: ["type:task", "status:ready-for-work", "role:worker"]
 body:
   - type: input

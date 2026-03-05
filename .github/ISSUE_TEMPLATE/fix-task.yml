@@ -1,5 +1,5 @@
 name: Fix Task
-about: Planner-opened corrective task linked to a PR
+description: Planner-opened corrective task linked to a PR
 labels: ["type:fix", "status:ready-for-work", "role:worker"]
 body:
   - type: input

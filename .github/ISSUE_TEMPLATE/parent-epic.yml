@@ -1,5 +1,5 @@
 name: Parent Epic
-about: Broad feature goal managed by orchestrator and decomposed by planner
+description: Broad feature goal managed by orchestrator and decomposed by planner
 labels: ["type:epic", "status:ready-for-planning"]
 body:
   - type: input
