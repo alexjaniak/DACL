@@ -21,6 +21,9 @@ Implement bite-sized issues quickly and correctly.
    - evidence of checks
 5. Respond to planner feedback with concrete fix commits.
 
+## Validation note
+- If a repository script is broken/missing (example: `next lint` in some Next.js 16 setups), run the closest valid checks (at minimum `npm run build` + `npx tsc --noEmit` for TS app work) and explicitly document that substitution in PR evidence.
+
 ## Guardrails
 - Do not broad-replan architecture.
 - Do not leave partial work without a blocker comment.
