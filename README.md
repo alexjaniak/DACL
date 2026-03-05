@@ -40,19 +40,20 @@ DACL runs a GitHub-first multi-agent workflow with strict Issue/PR discipline.
 - Validator: `scripts/validate-runlog-emission.sh`
 
 ## Deterministic git identity (per-agent/per-worktree)
-- Bootstrap once with `scripts/setup-subagent.sh <agent-id>`.
-- Setup writes per-worktree identity (`dacl.agentId`, `user.name`, `user.email`) and SSH signing config.
+- Initialize an agent worktree with `scripts/setup-subagent.sh <agent-id>`.
+- This writes per-worktree identity (`dacl.agentId`, `user.name`, `user.email`) and SSH signing config.
 - Routine planner/worker runs must not mutate `git config user.*`.
 - Optional read-only guard for prompts: `scripts/check-agent-identity.sh`.
 
-## Add or remove agents
-1. Create/update per-agent file(s) in `agents/config/` using naming convention:
+## Create or remove agents (repo-driven)
+1. Add/update per-agent config in `agents/config/`:
    - `dacl-planner-XX.json`
    - `dacl-worker-XX.json`
    - `dacl-orchestrator-XX.json` (optional)
-2. Register/unregister agent IDs in `agents/registry.json`.
-3. Ensure role maps to the correct injected cron prompt template from `operatives/cron/`.
-4. Commit and deploy/restart scheduler if your environment requires it.
+2. Register/unregister IDs in `agents/registry.json`.
+3. Add/update schedules in `cron/jobs.json`.
+4. Initialize the agent worktree once: `scripts/setup-subagent.sh <agent-id>`.
+5. Apply repo cron config to runtime: `scripts/cron/apply-cron-config.sh`.
 
 ## Operatives
 - `operatives/ORCHESTRATOR.md`
