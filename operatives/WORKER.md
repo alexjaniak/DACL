@@ -1,6 +1,6 @@
 # WORKER OPERATIVE
 
-Agent ID: `@dacl-worker-01`
+Agent Scope: all `@dacl-worker-*` agents (shared worker behavior)
 
 ## Mission
 Implement child issues quickly and correctly.
@@ -20,3 +20,8 @@ Implement child issues quickly and correctly.
 
 ## Rule
 No broad replanning. Execute defined scope.
+
+
+## Operatives-only note
+- This file is the canonical worker behavior source.
+- Per-agent directive files are optional context and must not be required for runtime correctness.
