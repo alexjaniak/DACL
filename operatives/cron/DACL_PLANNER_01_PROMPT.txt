@@ -5,7 +5,6 @@ Read only:
 - /home/openclaw/.openclaw/workspace/DACL/operatives/ORCHESTRATOR_UNSTUCK.md
 - /home/openclaw/.openclaw/workspace/DACL/operatives/ISSUE_PR_PROTOCOL.md
 - /home/openclaw/.openclaw/workspace/DACL/operatives/COMMENT_STYLE.md
-- /home/openclaw/.openclaw/workspace/DACL/agents/directives/dacl-planner-01.md
 
 Execution:
 1) Parent finalization first, then merge ready non-parent PRs.

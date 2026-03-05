@@ -1,11 +1,9 @@
 {
   "agentId": "dacl-planner-01",
   "role": "planner",
-  "directiveFile": "agents/directives/dacl-planner-01.md",
   "metadataFile": "agents/metadata/dacl-planner-01.json",
   "worktree": ".worktrees/dacl-planner-01",
-  "memoryDir": "agents/memory/dacl-planner-01",
-  "memoryFileDeprecated": "agents/memory/dacl-planner-01.md",
-  "runLogDirTemplate": "agents/memory/dacl-planner-01/YYYY-MM-DD",
-  "runLogFileTemplate": "agents/memory/dacl-planner-01/YYYY-MM-DD/<run-id>.md"
+  "runLogDirTemplate": "agents/runlogs/dacl-planner-01/YYYY-MM-DD",
+  "runLogFileTemplate": "agents/runlogs/dacl-planner-01/YYYY-MM-DD/<timestamp>.md",
+  "operativeFile": "operatives/PLANNER.md"
 }

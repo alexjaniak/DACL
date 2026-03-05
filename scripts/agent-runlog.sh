@@ -74,7 +74,7 @@ if [[ ! -f "$TEMPLATE_FILE" ]]; then
   exit 1
 fi
 
-TARGET_DIR="$REPO_ROOT/agents/memory/$AGENT_ID/$DATE_UTC"
+TARGET_DIR="$REPO_ROOT/agents/runlogs/$AGENT_ID/$DATE_UTC"
 TARGET_PATH="$TARGET_DIR/$RUN_ID.md"
 
 if [[ $DRY_RUN -eq 0 ]]; then
