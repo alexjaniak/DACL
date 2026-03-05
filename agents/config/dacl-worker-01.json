@@ -1,12 +1,11 @@
 {
   "agentId": "dacl-worker-01",
   "role": "worker",
-  "memoryFile": "agents/memory/dacl-worker-01.md",
+  "directiveFile": "agents/directives/dacl-worker-01.md",
   "metadataFile": "agents/metadata/dacl-worker-01.json",
   "worktree": ".worktrees/dacl-worker-01",
   "memoryDir": "agents/memory/dacl-worker-01",
-  "dailyMemoryFileTemplate": "agents/memory/dacl-worker-01/YYYY-MM-DD.md",
   "memoryFileDeprecated": "agents/memory/dacl-worker-01.md",
-  "operativeFile": "operatives/WORKER.md",
-  "directiveFileDeprecated": "agents/directives/dacl-worker-01.md"
+  "runLogDirTemplate": "agents/memory/dacl-worker-01/YYYY-MM-DD",
+  "runLogFileTemplate": "agents/memory/dacl-worker-01/YYYY-MM-DD/<run-id>.md"
 }
