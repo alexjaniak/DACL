@@ -1,6 +1,10 @@
 # Public Cron Manifest (Verbatim)
 
-This file contains the exact current cron payload prompts (verbatim), not summaries.
+Canonical runtime prompt sources:
+- `operatives/cron/PLANNER_PROMPT.txt`
+- `operatives/cron/WORKER_PROMPT.txt`
+
+These prompt files are intended to be identical to the live cron payloads for planner/worker types.
 
 ## DACL Planner 01 Loop
 - id: `7f8ef56a-eb53-47dd-88c3-a438cd7b936e`
