@@ -2,15 +2,15 @@
 set -euo pipefail
 
 # Ensure daily memory file exists and perform day-rollover consolidation.
-# Usage: ./scripts/agent-memory-rollover.sh <agent-id> <operative-file>
+# Usage: ./scripts/agent-memory-rollover.sh <agent-id> [context-file]
 
-if [[ $# -lt 2 ]]; then
-  echo "Usage: $0 <agent-id> <operative-file>" >&2
+if [[ $# -lt 1 ]]; then
+  echo "Usage: $0 <agent-id> [context-file]" >&2
   exit 1
 fi
 
 AGENT_ID="$1"
-OPERATIVE_FILE="$2"
+CONTEXT_FILE="${2:-}"
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 GIT_COMMON_DIR="$(git rev-parse --git-common-dir)"
 TODAY="$(date -u +%F)"
@@ -24,9 +24,8 @@ LEGACY_ARCHIVE="${MEMORY_DIR}/legacy.md"
 
 mkdir -p "${MEMORY_DIR}"
 
-if [[ ! -f "${OPERATIVE_FILE}" ]]; then
-  echo "Operative file not found: ${OPERATIVE_FILE}" >&2
-  exit 1
+if [[ -n "${CONTEXT_FILE}" && ! -f "${CONTEXT_FILE}" ]]; then
+  echo "[rollover] Context file not found (continuing): ${CONTEXT_FILE}" >&2
 fi
 
 infer_role() {
@@ -160,7 +159,16 @@ if [[ -f "${PREV_FILE}" ]]; then
     fi
   } >> "${TODAY_FILE}"
 
-  promote_to_shared_operative "${AGENT_ID}" "${PREV_FILE}" || true
+  promote_rc=0
+  set +e
+  promote_to_shared_operative "${AGENT_ID}" "${PREV_FILE}"
+  promote_rc=$?
+  set -e
+
+  if [[ ${promote_rc} -eq 75 ]]; then
+    echo "[rollover] Exiting due to lock contention after safe no-op. Retry this command shortly." >&2
+    exit 75
+  fi
 fi
 
 echo "${TODAY}" > "${STATE_FILE}"
