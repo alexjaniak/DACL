@@ -1,90 +1,24 @@
-:root {
-  color-scheme: dark;
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  background: #0f172a;
-  color: #e2e8f0;
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
 }
 
-* {
-  box-sizing: border-box;
+:root {
+  --background: oklch(0.15 0.03 264);
+  --foreground: oklch(0.95 0.02 264);
+  --card: oklch(0.21 0.03 264 / 85%);
+  --card-foreground: oklch(0.95 0.02 264);
+  --muted-foreground: oklch(0.82 0.02 264);
+  --border: oklch(0.32 0.03 264);
 }
 
 body {
-  margin: 0;
-  min-height: 100vh;
-  background: radial-gradient(circle at top, #1e293b 0%, #0f172a 50%);
-}
-
-.container {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 3rem 1.25rem;
-}
-
-.eyebrow {
-  margin: 0;
-  color: #94a3b8;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  font-size: 0.75rem;
-}
-
-h1 {
-  margin: 0.25rem 0 0.5rem;
-  font-size: 2.25rem;
-}
-
-.subtitle {
-  margin: 0 0 1.75rem;
-  color: #cbd5e1;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1rem;
-}
-
-.card {
-  border: 1px solid #334155;
-  border-radius: 0.75rem;
-  padding: 1rem;
-  background: rgba(15, 23, 42, 0.55);
-  backdrop-filter: blur(4px);
-}
-
-.card h2 {
-  margin-top: 0;
-  margin-bottom: 0.5rem;
-}
-
-.card p {
-  margin: 0;
-  color: #cbd5e1;
-  line-height: 1.4;
-}
-
-.stack-list {
-  margin: 0;
-  padding-left: 1rem;
-  display: grid;
-  gap: 0.75rem;
-}
-
-.stack-list li {
-  display: grid;
-  gap: 0.125rem;
-}
-
-.stack-list span {
-  color: #cbd5e1;
-  font-size: 0.92rem;
-}
-
-.section-state {
-  margin-bottom: 0;
-}
-
-.section-state.error {
-  color: #fda4af;
+  @apply min-h-screen bg-background text-foreground antialiased;
+  background-image: radial-gradient(circle at top, oklch(0.28 0.05 264) 0%, oklch(0.15 0.03 264) 52%);
 }
