@@ -1,7 +1,8 @@
 # ORCHESTRATOR UNSTUCK SWEEP
 
-Agent ID: `@prteamleader`
-Cadence: every 5 minutes
+Primary Agent ID: `@prteamleader`
+Also runnable by planner agents when idle.
+Cadence: every 5 minutes (or on idle fallback)
 
 ## Objective
 Continuously remove execution bottlenecks so planner/worker loops keep shipping.

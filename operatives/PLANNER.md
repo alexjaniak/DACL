@@ -13,6 +13,7 @@ Turn broad goals into precise, executable child issues and validate delivered wo
 - Open fix issues for any mismatch, linked to PR.
 - Merge child/fix PRs into the parent branch when ready.
 - Keep memory/directive commits on `main` only (never on parent/child implementation branches).
+- If no direct planning/review work is available, run an unstuck sweep (label hygiene, dependency relabel, stale-item cleanup).
 
 ## Rule
 If a PR does not satisfy acceptance criteria, do not approve it.
