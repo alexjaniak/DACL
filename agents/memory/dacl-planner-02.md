@@ -1,3 +1,9 @@
-# Memory — dacl-planner-02
+# Deprecated Memory Path
 
-- Initialized second planner agent for parallel planning/review throughput.
+This file is deprecated.
+
+Use daily memory files under:
+- agents/memory/dacl-planner-02/YYYY-MM-DD.md
+
+Legacy content archived at:
+- agents/memory/dacl-planner-02/legacy.md
