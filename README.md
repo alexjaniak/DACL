@@ -133,7 +133,10 @@ All comments begin with `@<agent-id>`.
 
 ## Daily Agent Memory Workflow
 
-- Per-agent memory now lives in daily files: `agents/memory/<agent-id>/YYYY-MM-DD.md`.
+- Canonical run-log template source: `operatives/RUN_LOG_TEMPLATE.md`.
+- Canonical path/write helper: `scripts/agent-runlog.sh` creates or resolves:
+  - `agents/memory/<agent-id>/<YYYY-MM-DD>/<run-id>.md`
+- During migration, per-agent daily files (`agents/memory/<agent-id>/YYYY-MM-DD.md`) remain supported to prevent data loss.
 - Runtime read policy: load today's file by default; consult yesterday only when needed.
 - On first run of a new UTC day, run:
   - `scripts/agent-memory-rollover.sh <agent-id> agents/directives/<agent-id>.md`
