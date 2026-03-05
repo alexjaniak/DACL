@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Ensure daily memory file exists and perform day-rollover consolidation.
+# Ensure canonical per-run memory directory exists and perform day-rollover bookkeeping.
 # Usage: ./scripts/agent-memory-rollover.sh <agent-id> <directive-file>
 
 if [[ $# -lt 2 ]]; then
@@ -16,12 +16,10 @@ TODAY="$(date -u +%F)"
 NOW_UTC="$(date -u +"%Y-%m-%d %H:%M UTC")"
 
 MEMORY_DIR="${REPO_ROOT}/agents/memory/${AGENT_ID}"
-TODAY_FILE="${MEMORY_DIR}/${TODAY}.md"
+TODAY_DIR="${MEMORY_DIR}/${TODAY}"
 STATE_FILE="${MEMORY_DIR}/.rollover-state"
-LEGACY_FILE="${REPO_ROOT}/agents/memory/${AGENT_ID}.md"
-LEGACY_ARCHIVE="${MEMORY_DIR}/legacy.md"
 
-mkdir -p "${MEMORY_DIR}"
+mkdir -p "${MEMORY_DIR}" "${TODAY_DIR}"
 
 if [[ ! -f "${DIRECTIVE_FILE}" ]]; then
   echo "Directive file not found: ${DIRECTIVE_FILE}" >&2
@@ -33,34 +31,17 @@ if [[ -f "${LEGACY_FILE}" ]]; then
   if [[ ! -f "${LEGACY_ARCHIVE}" ]]; then
     cp "${LEGACY_FILE}" "${LEGACY_ARCHIVE}"
   fi
-  if [[ ! -f "${TODAY_FILE}" ]]; then
-    {
-      echo "# Memory — ${AGENT_ID} (${TODAY})"
-      echo
-      echo "_Migrated from legacy file on ${NOW_UTC}._"
-      echo
-      cat "${LEGACY_FILE}"
-      echo
-    } > "${TODAY_FILE}"
-  fi
+
   cat > "${LEGACY_FILE}" <<EOF
 # Deprecated Memory Path
 
-This file is deprecated.
 
-Use daily memory files under:
-- agents/memory/${AGENT_ID}/YYYY-MM-DD.md
+Use canonical run logs under:
+- agents/memory/${AGENT_ID}/<YYYY-MM-DD>/<run-id>.md
 
 Legacy content archived at:
-- agents/memory/${AGENT_ID}/legacy.md
-EOF
-fi
 
-if [[ ! -f "${TODAY_FILE}" ]]; then
-  cat > "${TODAY_FILE}" <<EOF
-# Memory — ${AGENT_ID} (${TODAY})
-
-- Initialized daily memory file.
+Updated: ${NOW_UTC}
 EOF
 fi
 
@@ -79,21 +60,19 @@ if [[ "${LAST_ROLLOVER_DATE}" == "${TODAY}" ]]; then
   exit 0
 fi
 
-PREV_FILE="${MEMORY_DIR}/${LAST_ROLLOVER_DATE}.md"
-if [[ -f "${PREV_FILE}" ]]; then
-  SUMMARY_LINES="$(grep -E '^- ' "${PREV_FILE}" | tail -n 8 || true)"
+PREV_DIR="${MEMORY_DIR}/${LAST_ROLLOVER_DATE}"
+if [[ -d "${PREV_DIR}" ]]; then
+  SUMMARY_LINES="$(grep -hE '^- ' "${PREV_DIR}"/*.md 2>/dev/null | tail -n 8 || true)"
 
-  {
-    echo
-    echo "## Rollover summary from ${LAST_ROLLOVER_DATE}"
-    if [[ -n "${SUMMARY_LINES}" ]]; then
+  if [[ -n "${SUMMARY_LINES}" ]]; then
+    {
+      echo
+      echo "## Rollover summary from ${LAST_ROLLOVER_DATE}"
       echo "${SUMMARY_LINES}"
-    else
-      echo "- No bullet learnings captured in previous day file."
-    fi
-  } >> "${TODAY_FILE}"
+    } >> "${DIRECTIVE_FILE}"
+  fi
 
-  CANDIDATES="$(grep -Ei '^- .*\b(always|never|must|should|avoid|ensure|remember|if)\b' "${PREV_FILE}" | sed 's/^- //' || true)"
+  CANDIDATES="$(grep -hEi '^- .*\b(always|never|must|should|avoid|ensure|remember|if)\b' "${PREV_DIR}"/*.md 2>/dev/null | sed 's/^- //' || true)"
 
   if [[ -n "${CANDIDATES}" ]]; then
     ADDED=0
