@@ -12,6 +12,7 @@ fi
 AGENT_ID="$1"
 DIRECTIVE_FILE="$2"
 REPO_ROOT="$(git rev-parse --show-toplevel)"
+GIT_COMMON_DIR="$(git rev-parse --git-common-dir)"
 TODAY="$(date -u +%F)"
 NOW_UTC="$(date -u +"%Y-%m-%d %H:%M UTC")"
 
@@ -27,6 +28,72 @@ if [[ ! -f "${DIRECTIVE_FILE}" ]]; then
   echo "Directive file not found: ${DIRECTIVE_FILE}" >&2
   exit 1
 fi
+
+infer_role() {
+  local raw="${1#dacl-}"
+  echo "${raw%%-*}"
+}
+
+canonical_operative_path() {
+  local role="$1"
+  echo "${REPO_ROOT}/operatives/$(echo "${role}" | tr '[:lower:]' '[:upper:]').md"
+}
+
+promote_to_shared_operative() {
+  local agent_id="$1"
+  local source_file="$2"
+  local role
+  role="$(infer_role "${agent_id}")"
+
+  local operative_file
+  operative_file="$(canonical_operative_path "${role}")"
+
+  if [[ ! -f "${operative_file}" ]]; then
+    echo "[rollover] Shared operative target missing for role '${role}': ${operative_file}" >&2
+    return 0
+  fi
+
+  local candidates
+  candidates="$(grep -Ei '^- .*(always|never|must|should|avoid|ensure|remember|if)\b' "${source_file}" | sed 's/^- //' || true)"
+  if [[ -z "${candidates}" ]]; then
+    echo "[rollover] No durable lesson candidates to promote for role '${role}'."
+    return 0
+  fi
+
+  mkdir -p "${GIT_COMMON_DIR}/locks"
+  local lock_file="${GIT_COMMON_DIR}/locks/operative-${role}.lock"
+
+  exec 8>"${lock_file}"
+  if ! flock -n 8; then
+    echo "[rollover] Lock contention on role '${role}' operative (${lock_file})." >&2
+    echo "[rollover] Another same-role promotion is active. Retry in a few seconds. No files were modified." >&2
+    return 75
+  fi
+
+  local section="## Distilled role learnings"
+  if ! grep -Fq "${section}" "${operative_file}"; then
+    {
+      echo
+      echo "${section}"
+      echo
+    } >> "${operative_file}"
+  fi
+
+  local added=0
+  while IFS= read -r candidate; do
+    [[ -z "${candidate}" ]] && continue
+    if ! grep -Fqi "${candidate}" "${operative_file}"; then
+      printf -- "- %s\n" "${candidate}" >> "${operative_file}"
+      added=1
+    fi
+  done <<< "${candidates}"
+
+  if [[ ${added} -eq 1 ]]; then
+    echo "[rollover] Promoted durable lessons to ${operative_file} (role=${role})."
+  else
+    echo "[rollover] Durable lessons already present in ${operative_file} (role=${role})."
+  fi
+}
 
 # One-time migration/deprecation of monolithic memory file.
 if [[ -f "${LEGACY_FILE}" ]]; then
@@ -93,24 +160,7 @@ if [[ -f "${PREV_FILE}" ]]; then
     fi
   } >> "${TODAY_FILE}"
 
-  CANDIDATES="$(grep -Ei '^- .*\b(always|never|must|should|avoid|ensure|remember|if)\b' "${PREV_FILE}" | sed 's/^- //' || true)"
-
-  if [[ -n "${CANDIDATES}" ]]; then
-    ADDED=0
-    while IFS= read -r candidate; do
-      [[ -z "${candidate}" ]] && continue
-      if ! grep -Fqi "${candidate}" "${DIRECTIVE_FILE}"; then
-        if [[ ${ADDED} -eq 0 ]]; then
-          {
-            echo
-            echo "## Distilled lessons from daily memory rollover"
-          } >> "${DIRECTIVE_FILE}"
-        fi
-        echo "- ${candidate}" >> "${DIRECTIVE_FILE}"
-        ADDED=1
-      fi
-    done <<< "${CANDIDATES}"
-  fi
+  promote_to_shared_operative "${AGENT_ID}" "${PREV_FILE}" || true
 fi
 
 echo "${TODAY}" > "${STATE_FILE}"
