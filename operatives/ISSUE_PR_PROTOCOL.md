@@ -1,26 +1,14 @@
 # ISSUE/PR PROTOCOL
 
-## Issue hierarchy
-- Parent issue: broad feature objective.
-- Child issue: executable unit.
-- Fix issue: targeted corrective work.
+This file is the canonical operations contract for planners/workers.
 
-## Required links
-- Child issues reference parent.
-- PR must include `Closes #<child-issue>`.
-- Fix issues must reference the PR and originating child issue.
+## 1) Core model
 
-## Branch/PR topology (parent-branch model)
-- Each parent issue owns one long-lived parent branch: `parent/<issue-id>-<slug>`.
-- Child/fix work branches are created from the parent branch and merged back into the parent branch (not `main`).
-- There should be exactly one final integration PR: `parent branch -> main`.
-- Worker child PRs should target the parent branch as base.
-- Planner merges ready child/fix PRs into the parent branch.
+- Parent issue = broad objective
+- Child issue = executable unit
+- Fix issue = corrective follow-up tied to a PR/issue
 
-## Comment format
-All agent comments begin with `@<agent-id>`.
-All comments must be proper Markdown via `--body-file` (no escaped `\\n` output).
-See `operatives/COMMENT_STYLE.md`.
+## 2) Label taxonomy + decision matrix
 
 ## Agent memory protocol
 - Canonical per-run log template source: `operatives/RUN_LOG_TEMPLATE.md`.
@@ -30,13 +18,19 @@ See `operatives/COMMENT_STYLE.md`.
 - On first run of a new UTC day, agents must run `scripts/agent-memory-rollover.sh <agent-id> agents/directives/<agent-id>.md` before normal issue/PR work.
 - Every new run log must preserve canonical headings/fields from `operatives/RUN_LOG_TEMPLATE.md` for machine parsing consistency across roles.
 
-## Merge condition
 A PR is merge-ready only when:
-1) acceptance criteria are met,
+1) acceptance criteria pass,
 2) planner confirms pass,
-3) linked issues are consistent and closeable.
+3) issue/PR links and labels are consistent,
+4) checks/CI green (or explicitly waived with reason)
 
-## Final merge authority
-- The planner/review agents must not merge or close the main parent PR.
-- Planner agents should merge non-parent child/fix implementation PRs when acceptance criteria pass and CI/checks are green.
-- Alex is the final reviewer and merge authority for the main parent PR.
+### Final merge authority
+- Planner/review agents must NOT merge/close the main parent PR.
+- Planner agents SHOULD merge non-parent child/fix PRs when ready.
+- Alex is final reviewer/merge authority for parent PR -> main.
+
+### Post-merge issue synchronization (mandatory)
+After merging a child/fix PR, planner must in the same cycle:
+- verify linked issue closure status,
+- if still open: add merge note + update labels + close issue,
+- update parent tracking checklist/status.
