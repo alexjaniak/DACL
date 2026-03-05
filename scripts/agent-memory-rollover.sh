@@ -18,8 +18,6 @@ NOW_UTC="$(date -u +"%Y-%m-%d %H:%M UTC")"
 MEMORY_DIR="${REPO_ROOT}/agents/memory/${AGENT_ID}"
 TODAY_DIR="${MEMORY_DIR}/${TODAY}"
 STATE_FILE="${MEMORY_DIR}/.rollover-state"
-LEGACY_FILE="${REPO_ROOT}/agents/memory/${AGENT_ID}.md"
-LEGACY_ARCHIVE="${MEMORY_DIR}/legacy.md"
 
 mkdir -p "${MEMORY_DIR}" "${TODAY_DIR}"
 
@@ -37,13 +35,11 @@ if [[ -f "${LEGACY_FILE}" ]]; then
   cat > "${LEGACY_FILE}" <<EOF
 # Deprecated Memory Path
 
-This file is deprecated.
 
 Use canonical run logs under:
 - agents/memory/${AGENT_ID}/<YYYY-MM-DD>/<run-id>.md
 
 Legacy content archived at:
-- agents/memory/${AGENT_ID}/legacy.md
 
 Updated: ${NOW_UTC}
 EOF
