@@ -1,0 +1,13 @@
+{
+  "agentId": "dacl-planner-02",
+  "worktreePath": "/home/openclaw/.openclaw/workspace/DACL/.worktrees/dacl-planner-02",
+  "git": {
+    "name": "dacl-planner-02",
+    "email": "dacl-planner-02@users.noreply.github.com"
+  },
+  "wallet": {
+    "network": "solana",
+    "keypairPath": "/home/openclaw/.config/solana/dacl-agents/dacl-planner-02.json",
+    "pubkey": "4uDn4wGTMGEejnE4JvZ7BFguhG4Ab7LTbkGfdZjB1Wos"
+  }
+}
