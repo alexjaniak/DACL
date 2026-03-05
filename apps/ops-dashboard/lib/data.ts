@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import type { Dirent } from 'node:fs';
 import path from 'node:path';
 
 export type AgentRecord = {
@@ -26,14 +27,33 @@ export type ActivityRecord = {
   updatedAt: string;
 };
 
+export type RunlogEntry = {
+  id: string;
+  timestamp: string;
+  preview: string;
+  path: string;
+};
+
+export type AgentRunlogHistory = {
+  agentId: string;
+  latest: RunlogEntry | null;
+  byDate: {
+    date: string;
+    entries: RunlogEntry[];
+  }[];
+  parseErrors: number;
+};
+
 export type DashboardData = {
   agents: AgentRecord[];
   cronJobs: CronJobRecord[];
   activity: ActivityRecord[];
+  runlogs: AgentRunlogHistory[];
   errors: string[];
 };
 
 const repoRoot = path.resolve(process.cwd(), '..', '..');
+const runlogsRoot = path.join(repoRoot, 'agents/runlogs');
 
 type RegistryAgent = {
   agentId?: unknown;
@@ -158,14 +178,117 @@ async function getActivity(errors: string[]): Promise<ActivityRecord[]> {
   });
 }
 
+function parseRunlogTimestamp(content: string, date: string, fileName: string, mtime: Date): string {
+  const fromField = content.match(/^-\s*timestamp_utc:\s*(.+)$/m)?.[1]?.trim();
+  if (fromField) return fromField;
+
+  const fromHeader = content.match(/^# .*—\s*([^\n]+)$/m)?.[1]?.trim();
+  if (fromHeader) return fromHeader;
+
+  const fromName = fileName.match(/^(\d{2})(\d{2})(\d{2})Z\.md$/);
+  if (fromName) return `${date}T${fromName[1]}:${fromName[2]}:${fromName[3]}Z`;
+
+  return mtime.toISOString();
+}
+
+function parseRunlogPreview(content: string): string {
+  const cleaned = content
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith('#'));
+
+  const firstBullet = cleaned.find((line) => line.startsWith('-'));
+  return firstBullet ? firstBullet.replace(/^-\s*/, '') : 'Runlog recorded.';
+}
+
+async function getRunlogs(): Promise<AgentRunlogHistory[]> {
+  let agentDirs: Dirent[] = [];
+  try {
+    agentDirs = await fs.readdir(runlogsRoot, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+
+  const histories = await Promise.all(
+    agentDirs
+      .filter((dir) => dir.isDirectory())
+      .map(async (agentDir): Promise<AgentRunlogHistory> => {
+        const agentId = agentDir.name;
+        const agentPath = path.join(runlogsRoot, agentId);
+        let parseErrors = 0;
+        const entries: RunlogEntry[] = [];
+
+        let dateDirs: Dirent[] = [];
+        try {
+          dateDirs = await fs.readdir(agentPath, { withFileTypes: true });
+        } catch {
+          return { agentId, latest: null, byDate: [], parseErrors: 1 };
+        }
+
+        for (const dateDir of dateDirs.filter((dir) => dir.isDirectory())) {
+          const date = dateDir.name;
+          const datePath = path.join(agentPath, date);
+          let files: Dirent[] = [];
+
+          try {
+            files = await fs.readdir(datePath, { withFileTypes: true });
+          } catch {
+            parseErrors += 1;
+            continue;
+          }
+
+          for (const file of files.filter((f) => f.isFile() && f.name.endsWith('.md'))) {
+            const filePath = path.join(datePath, file.name);
+            try {
+              const [content, stat] = await Promise.all([fs.readFile(filePath, 'utf8'), fs.stat(filePath)]);
+              const timestamp = parseRunlogTimestamp(content, date, file.name, stat.mtime);
+              entries.push({
+                id: `${agentId}:${date}:${file.name}`,
+                timestamp,
+                preview: parseRunlogPreview(content),
+                path: path.relative(repoRoot, filePath)
+              });
+            } catch {
+              parseErrors += 1;
+            }
+          }
+        }
+
+        const sorted = entries.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+        const byDateMap = new Map<string, RunlogEntry[]>();
+        for (const entry of sorted) {
+          const day = entry.timestamp.slice(0, 10);
+          byDateMap.set(day, [...(byDateMap.get(day) ?? []), entry]);
+        }
+
+        return {
+          agentId,
+          latest: sorted[0] ?? null,
+          byDate: [...byDateMap.entries()]
+            .sort((a, b) => b[0].localeCompare(a[0]))
+            .map(([date, dayEntries]) => ({ date, entries: dayEntries })),
+          parseErrors
+        };
+      })
+  );
+
+  return histories.sort((a, b) => a.agentId.localeCompare(b.agentId));
+}
+
 export async function getDashboardData(): Promise<DashboardData> {
   const errors: string[] = [];
-  const [agents, cronJobs, activity] = await Promise.all([getAgents(errors), getCronJobs(errors), getActivity(errors)]);
+  const [agents, cronJobs, activity, runlogs] = await Promise.all([
+    getAgents(errors),
+    getCronJobs(errors),
+    getActivity(errors),
+    getRunlogs()
+  ]);
 
   return {
     agents,
     cronJobs,
     activity,
+    runlogs,
     errors
   };
 }

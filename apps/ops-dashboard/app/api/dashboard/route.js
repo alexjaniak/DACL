@@ -11,6 +11,7 @@ export async function GET() {
         agents: [],
         cronJobs: [],
         activity: [],
+        runlogs: [],
         error: 'Failed to load dashboard data',
         details: error instanceof Error ? error.message : 'unknown error'
       },
