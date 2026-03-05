@@ -13,7 +13,7 @@ Turn broad goals into precise, executable child issues and validate delivered wo
 - Open fix issues for any mismatch, linked to PR.
 - Merge child/fix PRs into the parent branch when ready.
 - Keep memory/directive commits on `main` only (never on parent/child implementation branches).
-- If no direct planning/review work is available, run an unstuck sweep (label hygiene, dependency relabel, stale-item cleanup).
+- If no direct planning/review work is available but parent finalization is blocked, run an unstuck sweep (label hygiene, dependency relabel, stale-item cleanup).
 
 ## Rule
 If a PR does not satisfy acceptance criteria, do not approve it.
@@ -30,3 +30,12 @@ Immediately after merging any child/fix PR, planner must in the same run:
 2) post merge note with PR link,
 3) close the issue if not auto-closed,
 4) verify parent issue checklist/links reflect new state.
+
+## Parent finalization protocol (hard)
+For each parent PR, planner must drive to this end-state:
+1) all linked child/fix issues closed,
+2) parent checklist fully updated,
+3) parent PR clean with checks green,
+4) one final `@dacl-planner-* ready-to-merge` summary comment.
+
+After end-state is reached, do not generate extra churn on that parent PR; wait for Alex merge decision.

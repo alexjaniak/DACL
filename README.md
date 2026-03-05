@@ -133,21 +133,29 @@ All comments begin with `@<agent-id>`.
 
 ## Daily Agent Memory Workflow
 
-- Per-agent memory lives in daily files only: `agents/memory/<agent-id>/YYYY-MM-DD.md`.
-- Runtime read policy: load today's file by default; consult yesterday only when needed.
+- Canonical run-log template source: `operatives/RUN_LOG_TEMPLATE.md`.
+- Canonical path/write helper: `scripts/agent-runlog.sh` creates or resolves:
+  - `agents/memory/<agent-id>/<YYYY-MM-DD>/<run-id>.md`
+- Runtime write policy: each planner/worker run should emit one log file under `agents/memory/<agent-id>/<YYYY-MM-DD>/<run-id>.md`.
+- Runtime proof helper: `scripts/validate-runlog-emission.sh` validates one planner + one worker run each emit exactly one new run-log file and include canonical sections.
+- Runtime read policy: load today's run folder by default; consult yesterday's folder only when needed.
 - On first run of a new UTC day, run:
   - `scripts/agent-memory-rollover.sh <agent-id> agents/directives/<agent-id>.md`
 - Rollover script responsibilities:
-  - ensure today's memory file exists
+  - ensure today's run folder exists (`agents/memory/<agent-id>/<YYYY-MM-DD>/`)
   - detect day rollover with a local state marker
-  - summarize the previous day into today's file
+  - summarize the previous day into the first run log for today
+  - promote novel durable lessons into the agent directive
+  - preserve legacy daily files as read-only inputs for migration (never as runtime write targets)
 
-### Migration notes (legacy memory files)
+### Migration notes (legacy files -> per-run)
 
-- Legacy monolithic files remain as pointers only:
-  - `agents/memory/<agent-id>.md`
-- Historical archive content moved under:
-- New run logs must be written to daily files only (`agents/memory/<agent-id>/YYYY-MM-DD.md`).
+If an agent still has historical legacy files such as `agents/memory/<agent-id>.md` or `agents/memory/<agent-id>/YYYY-MM-DD.md`:
+
+1. Keep legacy files for history; do not append new run notes there.
+2. Start writing all new logs to `agents/memory/<agent-id>/<YYYY-MM-DD>/<run-id>.md` via `scripts/agent-runlog.sh`.
+3. During first UTC run, execute rollover to initialize the date folder/state and directive promotions.
+4. Use canonical sections from `operatives/RUN_LOG_TEMPLATE.md` in every new run log so parsing stays uniform across roles.
 
 ---
 
