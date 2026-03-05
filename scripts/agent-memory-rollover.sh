@@ -19,8 +19,6 @@ NOW_UTC="$(date -u +"%Y-%m-%d %H:%M UTC")"
 MEMORY_DIR="${REPO_ROOT}/agents/memory/${AGENT_ID}"
 TODAY_FILE="${MEMORY_DIR}/${TODAY}.md"
 STATE_FILE="${MEMORY_DIR}/.rollover-state"
-LEGACY_FILE="${REPO_ROOT}/agents/memory/${AGENT_ID}.md"
-LEGACY_ARCHIVE="${MEMORY_DIR}/legacy.md"
 
 mkdir -p "${MEMORY_DIR}"
 
@@ -94,12 +92,7 @@ promote_to_shared_operative() {
   fi
 }
 
-# One-time migration/deprecation of monolithic memory file.
-if [[ -f "${LEGACY_FILE}" ]]; then
-  if [[ ! -f "${LEGACY_ARCHIVE}" ]]; then
-    cp "${LEGACY_FILE}" "${LEGACY_ARCHIVE}"
-  fi
-  if [[ ! -f "${TODAY_FILE}" ]]; then
+if [[ ! -f "${TODAY_FILE}" ]]; then
     {
       echo "# Memory — ${AGENT_ID} (${TODAY})"
       echo
@@ -112,13 +105,11 @@ if [[ -f "${LEGACY_FILE}" ]]; then
   cat > "${LEGACY_FILE}" <<EOF
 # Deprecated Memory Path
 
-This file is deprecated.
 
 Use daily memory files under:
 - agents/memory/${AGENT_ID}/YYYY-MM-DD.md
 
 Legacy content archived at:
-- agents/memory/${AGENT_ID}/legacy.md
 EOF
 fi
 

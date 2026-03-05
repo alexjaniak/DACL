@@ -143,8 +143,7 @@ All comments begin with `@<agent-id>`.
   - detect day rollover with a local state marker
   - summarize the previous day into today's file
   - promote novel durable lessons into the shared role operative (`operatives/PLANNER.md`, `operatives/WORKER.md`, etc.)
-  - migrate/deprecate legacy monolithic memory files under `agents/memory/<agent-id>.md`
-
+  
 ---
 
 
