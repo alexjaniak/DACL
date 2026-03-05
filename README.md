@@ -147,7 +147,6 @@ All comments begin with `@<agent-id>`.
 - Legacy monolithic files remain as pointers only:
   - `agents/memory/<agent-id>.md`
 - Historical archive content moved under:
-  - `agents/memory/<agent-id>/legacy.md`
 - New run logs must be written to daily files only (`agents/memory/<agent-id>/YYYY-MM-DD.md`).
 
 ---
