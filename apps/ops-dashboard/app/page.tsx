@@ -1,14 +1,14 @@
-import { getDashboardData } from '../lib/data';
+import { getDashboardData, type ActivityRecord, type AgentRecord, type CronJobRecord } from '../lib/data';
 
-function EmptyState({ message }) {
+function EmptyState({ message }: { message: string }) {
   return <p className="subtitle section-state">{message}</p>;
 }
 
-function ErrorState({ message }) {
+function ErrorState({ message }: { message: string }) {
   return <p className="subtitle section-state error">{message}</p>;
 }
 
-function AgentSection({ agents }) {
+function AgentSection({ agents }: { agents: AgentRecord[] | undefined }) {
   if (!Array.isArray(agents)) {
     return <ErrorState message="Could not render agents right now." />;
   }
@@ -30,7 +30,7 @@ function AgentSection({ agents }) {
   );
 }
 
-function CronSection({ cronJobs }) {
+function CronSection({ cronJobs }: { cronJobs: CronJobRecord[] | undefined }) {
   if (!Array.isArray(cronJobs)) {
     return <ErrorState message="Could not render cron jobs right now." />;
   }
@@ -54,7 +54,7 @@ function CronSection({ cronJobs }) {
   );
 }
 
-function ActivitySection({ activity }) {
+function ActivitySection({ activity }: { activity: ActivityRecord[] | undefined }) {
   if (!Array.isArray(activity)) {
     return <ErrorState message="Could not render activity right now." />;
   }
@@ -77,7 +77,7 @@ function ActivitySection({ activity }) {
 }
 
 export default async function HomePage() {
-  let data;
+  let data: Awaited<ReturnType<typeof getDashboardData>> | null;
 
   try {
     data = await getDashboardData();
