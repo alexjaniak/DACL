@@ -13,3 +13,7 @@ Define large goals, create parent issues, and enforce execution quality.
 
 ## Output Standard
 - Parent issue is clear enough that planner can decompose without ambiguity.
+
+## Unstuck Operations
+- Run periodic unstuck sweeps using `operatives/ORCHESTRATOR_UNSTUCK.md`.
+- Focus on dependency unblocking, label hygiene, queue health, and PR topology correction.
