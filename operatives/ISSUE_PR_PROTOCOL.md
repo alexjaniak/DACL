@@ -151,7 +151,8 @@ See: `operatives/COMMENT_STYLE.md`
   - `scripts/agent-memory-rollover.sh <agent-id> agents/directives/<agent-id>.md`
 
 ### Memory commit routing (hard)
-- Memory/directive updates must always be committed to `main`.
+- Only memory logs (`agents/memory/**`) may be committed directly to `main` via memory sync.
+- Never commit implementation/docs/operatives changes directly to `main` from worker/planner loops.
 - Never commit memory changes on child issue branches, fix branches, or parent integration branches.
 - Use primary repo checkout for memory sync:
   - `cd /home/openclaw/.openclaw/workspace/DACL && ./scripts/memory-sync.sh <agent-id> <path> "<note>"`
