@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Sync one memory file directly to origin/main with a simple lock + retry.
+# Sync one daily memory/directive file directly to origin/main with a simple lock + retry.
 # Usage: ./scripts/memory-sync.sh <agent-id> <memory-file> [note]
 
 if [[ $# -lt 2 ]]; then
@@ -20,13 +20,18 @@ if [[ ! -f "${MEM_FILE}" ]]; then
   exit 1
 fi
 
-case "${MEM_FILE}" in
-  agents/memory/*|${REPO_ROOT}/agents/memory/*) ;;
-  *)
-    echo "Refusing to sync non-memory path to main: ${MEM_FILE}" >&2
-    exit 2
-    ;;
-esac
+# Enforce daily-memory and directive sync targets only; reject deprecated monolithic paths.
+if [[ "${MEM_FILE}" == *"agents/memory/${AGENT_ID}.md" ]]; then
+  echo "Refusing deprecated memory path: ${MEM_FILE}" >&2
+  echo "Use agents/memory/${AGENT_ID}/YYYY-MM-DD.md instead." >&2
+  exit 1
+fi
+
+if [[ "${MEM_FILE}" != agents/memory/${AGENT_ID}/*.md && "${MEM_FILE}" != agents/directives/${AGENT_ID}.md ]]; then
+  echo "Unsupported sync target: ${MEM_FILE}" >&2
+  echo "Allowed: agents/memory/${AGENT_ID}/YYYY-MM-DD.md or agents/directives/${AGENT_ID}.md" >&2
+  exit 1
+fi
 
 exec 9>"${LOCK_FILE}"
 flock -x 9
