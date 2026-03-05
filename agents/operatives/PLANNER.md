@@ -46,7 +46,3 @@ For each parent PR, planner must drive to this end-state:
 
 After end-state is reached, do not generate extra churn on that parent PR; wait for Alex merge decision.
 
-## Operatives-only note
-- This file is the canonical planner behavior source for all planner agents.
-- No per-agent directives are used at runtime.
-- Cron runtime prompt source for planner-type agents: `agents/operatives/cron/PLANNER_PROMPT.txt`.

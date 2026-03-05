@@ -22,7 +22,3 @@ Implement child issues quickly and correctly.
 No broad replanning. Execute defined scope.
 
 
-## Operatives-only note
-- This file is the canonical worker behavior source for all worker agents.
-- No per-agent directives are used at runtime.
-- Cron runtime prompt source for worker-type agents: `agents/operatives/cron/WORKER_PROMPT.txt`.
