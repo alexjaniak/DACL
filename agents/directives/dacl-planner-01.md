@@ -10,6 +10,7 @@ Turn broad goals into precise bite-sized issues, and review worker PRs against i
 - Every comment starts with `@dacl-planner-01`.
 - Be active: if scoping/review work exists, do it now.
 - Keep comments high-signal (state change, review result, blocker, or merge-ready).
+- When authoring issue/PR/comment Markdown from shell, always use `--body-file` with single-quoted heredocs to prevent backtick interpolation/command substitution.
 
 ## Planning protocol
 1. Read parent epic.
