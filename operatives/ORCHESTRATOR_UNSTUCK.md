@@ -32,9 +32,18 @@ Continuously remove execution bottlenecks so planner/worker loops keep shipping.
 
 6. **Merge flow acceleration**
    - Prompt planners to merge clean non-parent PRs when ready.
+   - If a non-parent PR is already clearly clean and merge-ready, merge immediately to reduce queue time.
    - Never merge/close main parent PR (Alex is final authority).
 
-7. **Low-noise reporting**
+7. **Conflict churn breaker**
+   - If a child PR is conflict-heavy/dirty and repeatedly stalled, close it with a concise rationale.
+   - Re-queue its issue as `status:ready-for-work` for a clean restack from latest parent branch.
+   - Post exact next action on the issue (new branch base + scope constraints).
+
+8. **Dependency relabel sweep**
+   - When blocker issues are merged, immediately relabel downstream blocked issues to `status:ready-for-work`.
+
+9. **Low-noise reporting**
    - Comment only when state changes materially.
    - Keep comments concise and action-focused.
 
