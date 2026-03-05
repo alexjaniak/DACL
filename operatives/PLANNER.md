@@ -12,6 +12,7 @@ Turn broad goals into precise, executable child issues and validate delivered wo
 - Review worker PRs against issue spec.
 - Open fix issues for any mismatch, linked to PR.
 - Merge child/fix PRs into the parent branch when ready.
+- Keep memory/directive commits on `main` only (never on parent/child implementation branches).
 
 ## Rule
 If a PR does not satisfy acceptance criteria, do not approve it.
