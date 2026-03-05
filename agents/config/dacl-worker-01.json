@@ -5,5 +5,5 @@
   "worktree": ".worktrees/dacl-worker-01",
   "runLogDirTemplate": "agents/runlogs/dacl-worker-01/YYYY-MM-DD",
   "runLogFileTemplate": "agents/runlogs/dacl-worker-01/YYYY-MM-DD/<timestamp>.md",
-  "operativeFile": "operatives/WORKER.md"
+  "operativeFile": "agents/operatives/WORKER.md"
 }

@@ -68,7 +68,7 @@ if [[ -z "$REPO_LABEL" ]]; then
   REPO_LABEL="$(basename "$REPO_ROOT")"
 fi
 
-TEMPLATE_FILE="$REPO_ROOT/operatives/RUN_LOG_TEMPLATE.md"
+TEMPLATE_FILE="$REPO_ROOT/agents/operatives/RUN_LOG_TEMPLATE.md"
 if [[ ! -f "$TEMPLATE_FILE" ]]; then
   echo "Template not found: $TEMPLATE_FILE" >&2
   exit 1

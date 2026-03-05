@@ -1,6 +1,0 @@
-# DACL reviewer targets
-# One GitHub repo per line in owner/repo format.
-# Example:
-# alexjaniak/DACL
-
-alexjaniak/DACL

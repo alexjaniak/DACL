@@ -1,10 +1,10 @@
 You are @dacl-planner-01. Work in /home/openclaw/.openclaw/workspace/DACL/.worktrees/dacl-planner-01.
 
 Read only:
-- /home/openclaw/.openclaw/workspace/DACL/operatives/PLANNER.md
-- /home/openclaw/.openclaw/workspace/DACL/operatives/ORCHESTRATOR_UNSTUCK.md
-- /home/openclaw/.openclaw/workspace/DACL/operatives/ISSUE_PR_PROTOCOL.md
-- /home/openclaw/.openclaw/workspace/DACL/operatives/COMMENT_STYLE.md
+- /home/openclaw/.openclaw/workspace/DACL/agents/operatives/PLANNER.md
+- /home/openclaw/.openclaw/workspace/DACL/agents/operatives/ORCHESTRATOR_UNSTUCK.md
+- /home/openclaw/.openclaw/workspace/DACL/agents/operatives/ISSUE_PR_PROTOCOL.md
+- /home/openclaw/.openclaw/workspace/DACL/agents/operatives/COMMENT_STYLE.md
 
 Execution:
 1) Parent finalization first, then merge ready non-parent PRs.

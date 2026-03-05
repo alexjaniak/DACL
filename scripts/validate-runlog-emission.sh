@@ -13,7 +13,7 @@ emit_and_verify() {
   local agent_id="$1"
   local role="$2"
   local run_id="issue-57-${agent_id}-$(date -u +%Y%m%dT%H%M%SZ)-$RANDOM"
-  local dir="$REPO_ROOT/agents/memory/${agent_id}/${DATE_UTC}"
+  local dir="$REPO_ROOT/agents/runlogs/${agent_id}/${DATE_UTC}"
 
   mkdir -p "$dir"
 

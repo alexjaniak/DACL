@@ -5,9 +5,9 @@ Before commit each run enforce identity:
 - git config user.email dacl-worker-01@users.noreply.github.com
 
 Read only:
-- /home/openclaw/.openclaw/workspace/DACL/operatives/WORKER.md
-- /home/openclaw/.openclaw/workspace/DACL/operatives/ISSUE_PR_PROTOCOL.md
-- /home/openclaw/.openclaw/workspace/DACL/operatives/COMMENT_STYLE.md
+- /home/openclaw/.openclaw/workspace/DACL/agents/operatives/WORKER.md
+- /home/openclaw/.openclaw/workspace/DACL/agents/operatives/ISSUE_PR_PROTOCOL.md
+- /home/openclaw/.openclaw/workspace/DACL/agents/operatives/COMMENT_STYLE.md
 
 Execution:
 1) Only pick issues labeled `status:ready-for-work` + `role:worker`.

@@ -8,7 +8,7 @@ This file is the canonical operations contract for planners/workers.
 - Fix issue = corrective follow-up tied to a PR/issue
 
 ## Agent runlog protocol
-- Canonical template: `operatives/RUN_LOG_TEMPLATE.md`
+- Canonical template: `agents/operatives/RUN_LOG_TEMPLATE.md`
 - Canonical helper: `scripts/agent-runlog.sh`
 - Canonical path: `agents/runlogs/<agent-id>/<YYYY-MM-DD>/<run-id>.md`
 - Agents write exactly one new runlog file per run.
