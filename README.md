@@ -38,6 +38,12 @@ DACL runs a GitHub-first multi-agent workflow with strict Issue/PR discipline.
 - Writer helper: `scripts/agent-runlog.sh`
 - Validator: `scripts/validate-runlog-emission.sh`
 
+## Deterministic git identity (per-agent/per-worktree)
+- Bootstrap once with `scripts/setup-subagent.sh <agent-id>`.
+- Setup writes per-worktree identity (`dacl.agentId`, `user.name`, `user.email`) and SSH signing config.
+- Routine planner/worker runs must not mutate `git config user.*`.
+- Optional read-only guard for prompts: `scripts/check-agent-identity.sh`.
+
 ## Add or remove agents
 1. Create/update per-agent file(s) in `agents/config/` using naming convention:
    - `dacl-planner-XX.json`

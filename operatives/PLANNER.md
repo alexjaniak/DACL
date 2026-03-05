@@ -21,6 +21,12 @@ Turn broad goals into precise, executable child issues and validate delivered wo
 - At end of each run, write one runlog file:
   - `agents/runlogs/<agent-id>/YYYY-MM-DD/<timestamp>.md`
 
+## Git identity policy (hard)
+- Identity is bootstrapped once via `scripts/setup-subagent.sh` + `scripts/setup-agent-identity.sh`.
+- Identity is per-worktree and deterministic (`dacl.agentId`, `user.name`, `user.email` in worktree config).
+- Do not run `git config user.*` during routine planner runs.
+- Optional read-only verification: `./scripts/check-agent-identity.sh`.
+
 ## Rule
 If a PR does not satisfy acceptance criteria, do not approve it.
 

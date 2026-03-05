@@ -18,6 +18,12 @@ Implement child issues quickly and correctly.
 - Runlog updates must sync to `main` only (never issue/PR branches).
 - For each run, write one runlog at `agents/runlogs/<agent-id>/<YYYY-MM-DD>/<timestamp>.md`.
 
+## Git identity policy (hard)
+- Identity is bootstrapped once via `scripts/setup-subagent.sh` + `scripts/setup-agent-identity.sh`.
+- Identity is per-worktree and deterministic (`dacl.agentId`, `user.name`, `user.email` in worktree config).
+- Do not run `git config user.*` during routine worker runs.
+- Optional read-only verification: `./scripts/check-agent-identity.sh`.
+
 ## Rule
 No broad replanning. Execute defined scope.
 

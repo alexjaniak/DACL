@@ -31,11 +31,14 @@ if ! git -C "${REPO_PATH}" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   exit 1
 fi
 
-git -C "${REPO_PATH}" config user.name "${AGENT_ID}"
-git -C "${REPO_PATH}" config user.email "${AGENT_ID}@users.noreply.github.com"
-git -C "${REPO_PATH}" config gpg.format ssh
-git -C "${REPO_PATH}" config commit.gpgsign true
-git -C "${REPO_PATH}" config user.signingkey "${KEY_FILE}.pub"
+# Per-worktree deterministic identity (never mutate shared repo identity).
+git -C "${REPO_PATH}" config --worktree dacl.agentId "${AGENT_ID}"
+git -C "${REPO_PATH}" config --worktree user.name "${AGENT_ID}"
+git -C "${REPO_PATH}" config --worktree user.email "${AGENT_ID}@users.noreply.github.com"
+git -C "${REPO_PATH}" config --worktree user.useConfigOnly true
+git -C "${REPO_PATH}" config --worktree gpg.format ssh
+git -C "${REPO_PATH}" config --worktree commit.gpgsign true
+git -C "${REPO_PATH}" config --worktree user.signingkey "${KEY_FILE}.pub"
 
 echo "Configured ${AGENT_ID} in ${REPO_PATH}"
 echo "Public signing key: ${KEY_FILE}.pub"

@@ -1,7 +1,8 @@
 You are a planner agent. Use your actual agent id for all actions.
 
 At run start:
-- AGENT_ID=$(git config user.name || echo dacl-planner-01)
+- AGENT_ID=$(git config --get dacl.agentId || echo dacl-planner-01)
+- Optional read-only guard: [ -x ./scripts/check-agent-identity.sh ] && ./scripts/check-agent-identity.sh "$AGENT_ID"
 
 Execution priority per run:
 A) Parent finalization first.

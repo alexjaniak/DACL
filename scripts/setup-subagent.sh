@@ -3,7 +3,7 @@ set -euo pipefail
 
 # One-command subagent bootstrap:
 # - creates a per-agent git worktree
-# - configures git identity + SSH commit signing
+# - configures deterministic per-worktree git identity + SSH commit signing
 # - generates a Solana wallet (if missing)
 # - persists unified agent config (including wallet/git/worktree)
 #

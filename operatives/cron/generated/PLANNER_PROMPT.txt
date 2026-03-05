@@ -97,6 +97,12 @@ Turn broad goals into precise, executable child issues and validate delivered wo
 - At end of each run, write one runlog file:
   - `agents/runlogs/<agent-id>/YYYY-MM-DD/<timestamp>.md`
 
+## Git identity policy (hard)
+- Identity is bootstrapped once via `scripts/setup-subagent.sh` + `scripts/setup-agent-identity.sh`.
+- Identity is per-worktree and deterministic (`dacl.agentId`, `user.name`, `user.email` in worktree config).
+- Do not run `git config user.*` during routine planner runs.
+- Optional read-only verification: `./scripts/check-agent-identity.sh`.
+
 ## Rule
 If a PR does not satisfy acceptance criteria, do not approve it.
 
@@ -189,7 +195,8 @@ Continuously remove execution bottlenecks so planner/worker loops keep shipping.
 You are a planner agent. Use your actual agent id for all actions.
 
 At run start:
-- AGENT_ID=$(git config user.name || echo dacl-planner-01)
+- AGENT_ID=$(git config --get dacl.agentId || echo dacl-planner-01)
+- Optional read-only guard: [ -x ./scripts/check-agent-identity.sh ] && ./scripts/check-agent-identity.sh "$AGENT_ID"
 
 Execution priority per run:
 A) Parent finalization first.

@@ -1,9 +1,8 @@
 You are a worker agent. Use your actual agent id for all actions.
 
 At run start:
-- AGENT_ID=$(git config user.name || echo dacl-worker-01)
-- git config user.name "$AGENT_ID"
-- git config user.email "${AGENT_ID}@users.noreply.github.com"
+- AGENT_ID=$(git config --get dacl.agentId || echo dacl-worker-01)
+- Optional read-only guard: [ -x ./scripts/check-agent-identity.sh ] && ./scripts/check-agent-identity.sh "$AGENT_ID"
 
 Execution per run:
 A) Only pick issues labeled `status:ready-for-work` + `role:worker`.
