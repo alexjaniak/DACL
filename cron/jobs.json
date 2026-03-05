@@ -1,0 +1,18 @@
+{
+  "jobs": [
+    {
+      "id": "7f8ef56a-eb53-47dd-88c3-a438cd7b936e",
+      "name": "DACL Planner Loop",
+      "every": "2m",
+      "enabled": false,
+      "promptFile": "operatives/cron/generated/PLANNER_PROMPT.txt"
+    },
+    {
+      "id": "2137e328-0d4a-4a67-871a-8ffed8958751",
+      "name": "DACL Worker Loop",
+      "every": "1m",
+      "enabled": false,
+      "promptFile": "operatives/cron/generated/WORKER_PROMPT.txt"
+    }
+  ]
+}

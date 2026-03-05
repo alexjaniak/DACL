@@ -10,14 +10,15 @@ DACL runs a GitHub-first multi-agent workflow with strict Issue/PR discipline.
 `XX` is a zero-padded numeric suffix (`01`, `02`, ...). Add/remove agents by updating config + registry (see below); the protocol stays the same.
 
 ## Source of truth
-- **Role behavior + protocol:** `operatives/*.md` (**canonical**)  
-  This defines what each role does.
-- **Cron prompt templates (canonical):**
-  - `operatives/cron/PLANNER_PROMPT.txt`
-  - `operatives/cron/WORKER_PROMPT.txt`
-  - (optional) orchestrator prompt template(s) under `operatives/cron/`
-- **Per-agent runtime config:** `agents/config/*.json`  
-  Each configured agent gets role-appropriate cron prompt injection from `operatives/cron/*`.
+- **Role behavior + protocol (canonical):** `operatives/*.md`
+- **Prompt composition tails (canonical):**
+  - `operatives/cron/PLANNER_RUNTIME_TAIL.txt`
+  - `operatives/cron/WORKER_RUNTIME_TAIL.txt`
+- **Generated inline runtime prompts:**
+  - `operatives/cron/generated/PLANNER_PROMPT.txt`
+  - `operatives/cron/generated/WORKER_PROMPT.txt`
+- **Cron config source of truth:** `cron/jobs.json`
+- **Per-agent runtime config:** `agents/config/*.json`
 - **Active agent set:** `agents/registry.json`
 
 ## Workflow contract
@@ -60,6 +61,16 @@ DACL runs a GitHub-first multi-agent workflow with strict Issue/PR discipline.
 - `operatives/WORKER.md`
 - `operatives/ISSUE_PR_PROTOCOL.md`
 - `operatives/COMMENT_STYLE.md`
+
+## Cron operations (repo-driven)
+- Build injected inline prompts:
+  - `scripts/build-cron-prompts.sh`
+- Apply repo cron config + generated prompts to runtime:
+  - `scripts/cron/apply-cron-config.sh`
+- Restart enabled configured jobs:
+  - `scripts/cron/restart-crons.sh`
+- Check runtime cron status:
+  - `scripts/cron/cron-status.sh`
 
 ## Ops dashboard
 Path: `apps/ops-dashboard`
