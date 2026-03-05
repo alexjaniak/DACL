@@ -15,6 +15,7 @@ Implement child issues quickly and correctly.
 ## Intake gate (hard)
 - Do not start issues missing either label (`status:ready-for-work`, `role:worker`).
 - If issue is missing labels, ask planner to classify it first.
+- Memory updates are out-of-band and must sync to `main` only (never issue/PR branches).
 - For each run, create/resolve a run log at `agents/memory/<agent-id>/<YYYY-MM-DD>/<run-id>.md` via `scripts/agent-runlog.sh`; run day-rollover consolidation on first UTC run each day.
 
 ## Rule

@@ -20,6 +20,14 @@ if [[ ! -f "${MEM_FILE}" ]]; then
   exit 1
 fi
 
+case "${MEM_FILE}" in
+  agents/memory/*|${REPO_ROOT}/agents/memory/*) ;;
+  *)
+    echo "Refusing to sync non-memory path to main: ${MEM_FILE}" >&2
+    exit 2
+    ;;
+esac
+
 exec 9>"${LOCK_FILE}"
 flock -x 9
 
