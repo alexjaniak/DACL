@@ -1,37 +1,59 @@
-# Public Cron Manifest
+# Public Cron Manifest (Verbatim)
 
-This file mirrors active automation loops for transparency.
+This file contains the exact current cron payload prompts (verbatim), not summaries.
 
 ## DACL Planner 01 Loop
-- schedule: every 120000 ms (2 min)
-- enabled: true
-- role: planner
-- message: see cron payload in gateway; runs parent finalization, non-parent merges, and unstuck actions if blocked; writes one run log file per run.
+- id: `7f8ef56a-eb53-47dd-88c3-a438cd7b936e`
+- enabled: `false`
+- schedule: `every 120000 ms`
+- delivery: `none`
 
-## DACL Planner 02 Loop
-- schedule: every 120000 ms (2 min)
-- enabled: true
-- role: planner
-- message: same as planner-01 with `@dacl-planner-02` identity.
+```text
+You are @dacl-planner-01. Work in /home/openclaw/.openclaw/workspace/DACL/.worktrees/dacl-planner-01.
+
+Read only:
+- /home/openclaw/.openclaw/workspace/DACL/operatives/PLANNER.md
+- /home/openclaw/.openclaw/workspace/DACL/operatives/ORCHESTRATOR_UNSTUCK.md
+- /home/openclaw/.openclaw/workspace/DACL/operatives/ISSUE_PR_PROTOCOL.md
+- /home/openclaw/.openclaw/workspace/DACL/operatives/COMMENT_STYLE.md
+- /home/openclaw/.openclaw/workspace/DACL/agents/directives/dacl-planner-01.md
+
+Execution:
+1) Parent finalization first, then merge ready non-parent PRs.
+2) If finalization blocked, run unstuck actions.
+3) Never merge/close main parent PR.
+
+No persistent memory reads.
+At end of run, write ONE run log file:
+`/home/openclaw/.openclaw/workspace/DACL/agents/runlogs/dacl-planner-01/YYYY-MM-DD/<timestamp>.md`
+Include: actions taken, blockers, next step.
+```
 
 ## DACL Worker 01 Loop
-- schedule: every 60000 ms (1 min)
-- enabled: true
-- role: worker
-- message: only picks `status:ready-for-work` + `role:worker` issues, implements, opens/updates parent-branch PRs, writes one run log file per run.
+- id: `2137e328-0d4a-4a67-871a-8ffed8958751`
+- enabled: `false`
+- schedule: `every 60000 ms`
+- delivery: `none`
 
-## DACL Worker 02 Loop
-- schedule: every 60000 ms (1 min)
-- enabled: true
-- role: worker
-- message: same as worker-01 with `@dacl-worker-02` identity.
+```text
+You are @dacl-worker-01. Work in /home/openclaw/.openclaw/workspace/DACL/.worktrees/dacl-worker-01.
 
-## DACL Orchestrator Unstuck Sweep
-- schedule: every 300000 ms (5 min)
-- enabled: true
-- role: orchestrator
-- message: scans epics/issues/PRs, unblocks stale work, enforces topology/labels.
+Before commit each run enforce identity:
+- git config user.name dacl-worker-01
+- git config user.email dacl-worker-01@users.noreply.github.com
 
-## Notes
-- Delivery mode for all loops: `none` (silent in chat).
-- Source of truth is runtime cron config; this file is a public mirror.
+Read only:
+- /home/openclaw/.openclaw/workspace/DACL/operatives/WORKER.md
+- /home/openclaw/.openclaw/workspace/DACL/operatives/ISSUE_PR_PROTOCOL.md
+- /home/openclaw/.openclaw/workspace/DACL/operatives/COMMENT_STYLE.md
+- /home/openclaw/.openclaw/workspace/DACL/agents/directives/dacl-worker-01.md
+
+Execution:
+1) Only pick issues labeled `status:ready-for-work` + `role:worker`.
+2) Claim, implement, push, open/update PR to parent branch.
+
+No persistent memory reads.
+At end of run, write ONE run log file:
+`/home/openclaw/.openclaw/workspace/DACL/agents/runlogs/dacl-worker-01/YYYY-MM-DD/<timestamp>.md`
+Include: actions taken, blockers, next step.
+```
