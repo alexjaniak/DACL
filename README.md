@@ -133,7 +133,7 @@ All comments begin with `@<agent-id>`.
 
 ## Daily Agent Memory Workflow
 
-- Per-agent memory now lives in daily files: `agents/memory/<agent-id>/YYYY-MM-DD.md`.
+- Per-agent memory lives in daily files only: `agents/memory/<agent-id>/YYYY-MM-DD.md`.
 - Runtime read policy: load today's file by default; consult yesterday only when needed.
 - On first run of a new UTC day, run:
   - `scripts/agent-memory-rollover.sh <agent-id> agents/directives/<agent-id>.md`
@@ -141,8 +141,14 @@ All comments begin with `@<agent-id>`.
   - ensure today's memory file exists
   - detect day rollover with a local state marker
   - summarize the previous day into today's file
-  - promote novel durable lessons into the agent directive
-  - keep historical compatibility notes non-normative while daily files remain the only active memory path
+
+### Migration notes (legacy memory files)
+
+- Legacy monolithic files remain as pointers only:
+  - `agents/memory/<agent-id>.md`
+- Historical archive content moved under:
+  - `agents/memory/<agent-id>/legacy.md`
+- New run logs must be written to daily files only (`agents/memory/<agent-id>/YYYY-MM-DD.md`).
 
 ---
 

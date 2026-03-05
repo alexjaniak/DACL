@@ -23,9 +23,10 @@ All comments must be proper Markdown via `--body-file` (no escaped `\\n` output)
 See `operatives/COMMENT_STYLE.md`.
 
 ## Agent memory protocol
-- Agents store raw execution notes in daily files: `agents/memory/<agent-id>/YYYY-MM-DD.md`.
+- Agents store raw execution notes in daily files only: `agents/memory/<agent-id>/YYYY-MM-DD.md`.
 - Agents should read today's file by default; read yesterday only when needed for continuity.
 - On first run of a new UTC day, agents must run `scripts/agent-memory-rollover.sh <agent-id> agents/directives/<agent-id>.md` before normal issue/PR work.
+- Legacy `agents/memory/<agent-id>.md` files are compatibility pointers only (not active run logs).
 
 ## Merge condition
 A PR is merge-ready only when:
