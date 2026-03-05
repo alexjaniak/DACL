@@ -25,9 +25,10 @@ See `operatives/COMMENT_STYLE.md`.
 ## Agent memory protocol
 - Canonical per-run log template source: `operatives/RUN_LOG_TEMPLATE.md`.
 - Canonical path/write helper: `scripts/agent-runlog.sh` targeting `agents/memory/<agent-id>/<YYYY-MM-DD>/<run-id>.md`.
-- During migration, agents may still maintain daily files (`agents/memory/<agent-id>/YYYY-MM-DD.md`) to avoid data loss.
+- Agents must write new runtime memory only to per-run files; legacy daily files (`agents/memory/<agent-id>/YYYY-MM-DD.md`) are read-only migration inputs.
 - Agents should read today's run-log folder by default and consult yesterday's folder only when needed for continuity.
 - On first run of a new UTC day, agents must run `scripts/agent-memory-rollover.sh <agent-id> agents/directives/<agent-id>.md` before normal issue/PR work.
+- Every new run log must preserve canonical headings/fields from `operatives/RUN_LOG_TEMPLATE.md` for machine parsing consistency across roles.
 
 ## Merge condition
 A PR is merge-ready only when:
