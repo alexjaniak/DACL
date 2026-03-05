@@ -1,41 +1,177 @@
 # ISSUE/PR PROTOCOL
 
-## Issue hierarchy
-- Parent issue: broad feature objective.
-- Child issue: executable unit.
-- Fix issue: targeted corrective work.
+This file is the canonical operations contract for planners/workers.
 
-## Required links
-- Child issues reference parent.
-- PR must include `Closes #<child-issue>`.
-- Fix issues must reference the PR and originating child issue.
+## 1) Core model
 
-## Branch/PR topology (parent-branch model)
-- Each parent issue owns one long-lived parent branch: `parent/<issue-id>-<slug>`.
-- Child/fix work branches are created from the parent branch and merged back into the parent branch (not `main`).
-- There should be exactly one final integration PR: `parent branch -> main`.
-- Worker child PRs should target the parent branch as base.
-- Planner merges ready child/fix PRs into the parent branch.
+- Parent issue = broad objective
+- Child issue = executable unit
+- Fix issue = corrective follow-up tied to a PR/issue
 
-## Comment format
-All agent comments begin with `@<agent-id>`.
-All comments must be proper Markdown via `--body-file` (no escaped `\\n` output).
-See `operatives/COMMENT_STYLE.md`.
+## 2) Label taxonomy + decision matrix
 
-## Agent memory protocol
-- Agents store raw execution notes in daily files: `agents/memory/<agent-id>/YYYY-MM-DD.md`.
-- Agents should read today's file by default; read yesterday only when needed for continuity.
-- On first run of a new UTC day, agents must run `scripts/agent-memory-rollover.sh <agent-id> operatives/<ROLE>.md` before normal issue/PR work.
-  - Worker example: `scripts/agent-memory-rollover.sh dacl-worker-02 operatives/WORKER.md`
-  - Planner example: `scripts/agent-memory-rollover.sh dacl-planner-01 operatives/PLANNER.md`
+### `type:*` (what it is)
+- `type:epic` → parent objective
+- `type:task` → planned child execution unit
+- `type:fix` → corrective task opened from review findings
+- `type:review` → review/meta quality work item
 
-## Merge condition
+### `role:*` (who owns execution)
+- `role:orchestrator` → orchestration/process decisions
+- `role:planner` → decomposition/review/spec work
+- `role:worker` → implementation work
+
+### `status:*` (where it is in lifecycle)
+- `status:ready-for-planning` → parent/new item needs decomposition
+- `status:ready-for-work` → scoped and executable by worker
+- `status:in-progress` → actively claimed
+- `status:needs-review` → implementation done, waiting planner review
+- `status:blocked` → cannot progress without dependency/decision
+- `status:ready-to-merge` → passed AC/checks and merge-safe
+
+### `priority:*` (urgency)
+- `priority:P0` critical now
+- `priority:P1` high
+- `priority:P2` normal
+- `priority:P3` low
+
+### `area:*` (domain)
+- `area:frontend`, `area:solana`, `area:ops` (extend as needed)
+
+## 3) Label application rules (hard)
+
+### Parent issue creation
+Must include:
+- `type:epic`
+- `role:planner`
+- `status:ready-for-planning`
+- one `priority:*`
+- one `area:*` (or more if truly cross-cutting)
+
+### Child issue creation (planner)
+Must include:
+- `type:task`
+- `role:worker`
+- `status:ready-for-work`
+- `priority:*`
+- `area:*`
+
+### Fix issue creation (planner)
+Must include:
+- `type:fix`
+- `role:worker`
+- `status:ready-for-work`
+- link to source PR + source issue
+
+### Worker claim
+On claim:
+- keep `role:worker`
+- change `status:ready-for-work` → `status:in-progress`
+
+### Worker handoff for review
+When implementation done:
+- change `status:in-progress` → `status:needs-review`
+
+### Planner approval/merge-ready
+When AC/checks pass:
+- change `status:needs-review` → `status:ready-to-merge`
+
+### Blocked state
+Set `status:blocked` only when a specific external dependency/decision is required.
+Comment must include unblock condition.
+
+## 4) Worker intake gate (hard)
+
+Workers may only implement issues that have BOTH:
+- `status:ready-for-work`
+- `role:worker`
+
+If either label is missing: do not implement; request planner classification.
+
+## 5) Required links
+
+- Child issues reference parent issue.
+- PR body must include `Closes #<child-issue>`.
+- Fix issues must reference both source PR and source issue.
+
+## 6) Branch/PR topology (parent-branch model)
+
+- Each parent issue owns one long-lived branch:
+  - `parent/<parent-issue-id>-<slug>`
+- Child/fix branches are created from parent branch.
+- Child/fix PRs target parent branch as base (NOT `main`).
+- Planner merges passing child/fix PRs into parent branch.
+- Exactly one final integration PR exists:
+  - `parent branch -> main`
+- Keep the parent->main PR open for each active epic as the canonical integration surface.
+- Do not collapse to zero open PRs while an epic is still `status:in-progress`.
+
+## 7) PR formatting contract
+
+Every implementation PR must include:
+
+1. `Closes #<child-issue>`
+2. Issue coverage checklist
+3. Evidence section (commands/tests/results)
+4. Risks/notes (brief)
+
+Recommended body skeleton:
+
+```md
+## Linked issue
+Closes #<child-issue>
+
+## Issue coverage checklist
+- [ ] AC1
+- [ ] AC2
+
+## Evidence
+- command: ...
+- result: ...
+
+## Risks / Notes
+- ...
+```
+
+## 8) Comment formatting contract
+
+- Every comment starts with `@<agent-id>`
+- Must be proper Markdown via `--body-file`
+- Never post escaped newline artifacts (e.g. literal `\n`)
+- Comment only on meaningful state change (claim, push, blocker, review result, merge-ready)
+
+See: `operatives/COMMENT_STYLE.md`
+
+## 9) Agent memory protocol
+
+- Raw run notes in daily files:
+  - `agents/memory/<agent-id>/YYYY-MM-DD.md`
+- Read today's file by default; yesterday only when needed.
+- On first run of a new UTC day, run rollover:
+  - `scripts/agent-memory-rollover.sh <agent-id> agents/directives/<agent-id>.md`
+
+### Memory commit routing (hard)
+- Only memory logs (`agents/memory/**`) may be committed directly to `main` via memory sync.
+- Never commit implementation/docs/operatives changes directly to `main` from worker/planner loops.
+- Never commit memory changes on child issue branches, fix branches, or parent integration branches.
+- Use primary repo checkout for memory sync:
+  - `cd /home/openclaw/.openclaw/workspace/DACL && ./scripts/memory-sync.sh <agent-id> <path> "<note>"`
+
+## 10) Merge policy
+
 A PR is merge-ready only when:
-1) acceptance criteria are met,
+1) acceptance criteria pass,
 2) planner confirms pass,
-3) linked issues are consistent and closeable.
+3) issue/PR links and labels are consistent,
+4) checks/CI green (or explicitly waived with reason)
 
-## Final merge authority
-- The planner/review agents must not merge or close the main parent PR.
-- Planner agents should merge non-parent child/fix implementation PRs when acceptance criteria pass and CI/checks are green.
-- Alex is the final reviewer and merge authority for the main parent PR.
+### Final merge authority
+- Planner/review agents must NOT merge/close the main parent PR.
+- Planner agents SHOULD merge non-parent child/fix PRs when ready.
+- Alex is final reviewer/merge authority for parent PR -> main.
+
+### Post-merge issue synchronization (mandatory)
+After merging a child/fix PR, planner must in the same cycle:
+- verify linked issue closure status,
+- if still open: add merge note + update labels + close issue,
+- update parent tracking checklist/status.

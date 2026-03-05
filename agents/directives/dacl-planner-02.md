@@ -27,3 +27,6 @@ Break broad goals into precise bite-sized issues and review worker PRs against a
 - Never merge/close the main parent PR; Alex is final merge authority.
 - Merge non-parent implementation PRs promptly once AC pass + checks are green.
 - Before merging, leave one concise `@dacl-planner-02` comment stating why merge is valid.
+
+## Execution notes
+- If untracked per-agent memory files block branch checkout in a planner worktree, bootstrap the parent branch without checkout: `git push origin origin/main:refs/heads/parent/<issue-id>-<slug>`.
