@@ -19,6 +19,7 @@ Implement bite-sized issues quickly and correctly.
    - `Closes #<issue>`
    - issue coverage checklist
    - evidence of checks
+   - base branch set to the active parent branch (`parent/<issue-id>-<slug>`), not `main`
 5. Respond to planner feedback with concrete fix commits.
 
 ## Validation note

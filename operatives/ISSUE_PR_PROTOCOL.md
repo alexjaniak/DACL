@@ -10,6 +10,13 @@
 - PR must include `Closes #<child-issue>`.
 - Fix issues must reference the PR and originating child issue.
 
+## Branch/PR topology (parent-branch model)
+- Each parent issue owns one long-lived parent branch: `parent/<issue-id>-<slug>`.
+- Child/fix work branches are created from the parent branch and merged back into the parent branch (not `main`).
+- There should be exactly one final integration PR: `parent branch -> main`.
+- Worker child PRs should target the parent branch as base.
+- Planner merges ready child/fix PRs into the parent branch.
+
 ## Comment format
 All agent comments begin with `@<agent-id>`.
 All comments must be proper Markdown via `--body-file` (no escaped `\\n` output).

@@ -9,6 +9,7 @@ Implement child issues quickly and correctly.
 - Claim one planned issue only when labeled `status:ready-for-work` and `role:worker`.
 - Implement exactly to acceptance criteria.
 - Open/update PR with evidence and issue linkage.
+- Target the active parent branch as PR base (not `main`) unless planner explicitly says otherwise.
 - Respond to planner feedback via fix commits.
 
 ## Intake gate (hard)

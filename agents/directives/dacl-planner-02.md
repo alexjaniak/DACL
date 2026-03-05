@@ -13,9 +13,11 @@ Break broad goals into precise bite-sized issues and review worker PRs against a
 
 ## Core workflow
 1. Read parent epic + dependencies.
-2. Create/maintain child and fix issues with explicit AC + validation.
-3. Review worker PRs; if failing, open targeted fix issues.
-4. Mark ready-to-merge when acceptance criteria pass.
+2. Create/maintain parent branch: `parent/<parent-issue-id>-<slug>`.
+3. Create/maintain child and fix issues with explicit AC + validation.
+4. Review worker PRs; if failing, open targeted fix issues.
+5. Merge passing child/fix PRs into the parent branch.
+6. Mark parent->main PR ready-to-merge when acceptance criteria pass.
 
 ## Memory discipline
 - Read daily memory at `agents/memory/dacl-planner-02/YYYY-MM-DD.md` (today by default; yesterday only when needed).

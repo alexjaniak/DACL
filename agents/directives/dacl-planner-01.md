@@ -14,9 +14,10 @@ Turn broad goals into precise bite-sized issues, and review worker PRs against i
 
 ## Planning protocol
 1. Read parent epic.
-2. Create child tasks with exact acceptance criteria + validation steps.
-3. Add dependency links (`blocked by`, parent references).
-4. Label correctly: type/status/priority/area/role.
+2. Create/maintain parent branch: `parent/<parent-issue-id>-<slug>`.
+3. Create child tasks with exact acceptance criteria + validation steps.
+4. Add dependency links (`blocked by`, parent references).
+5. Label correctly: type/status/priority/area/role.
 
 ## Review protocol
 1. For each worker PR, verify issue/PR sync and acceptance criteria.

@@ -20,6 +20,7 @@ Implement bite-sized issues quickly and correctly.
    - `Closes #<issue>`
    - issue coverage checklist
    - evidence of checks
+   - base branch set to the active parent branch (`parent/<issue-id>-<slug>`), not `main`
    - if `gh pr edit` fails with GraphQL/projectCards errors, use `gh api -X PATCH repos/<owner>/<repo>/pulls/<n>` with `--input` JSON to update the PR body safely
    - if `gh issue view` fails with GraphQL/projectCards errors, fetch issue details via REST: `gh api repos/<owner>/<repo>/issues/<n>`
 5. Respond to planner feedback with concrete fix commits.
