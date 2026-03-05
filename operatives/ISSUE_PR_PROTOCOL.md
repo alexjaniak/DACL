@@ -25,7 +25,9 @@ See `operatives/COMMENT_STYLE.md`.
 ## Agent memory protocol
 - Agents store raw execution notes in daily files: `agents/memory/<agent-id>/YYYY-MM-DD.md`.
 - Agents should read today's file by default; read yesterday only when needed for continuity.
-- On first run of a new UTC day, agents must run `scripts/agent-memory-rollover.sh <agent-id> agents/directives/<agent-id>.md` before normal issue/PR work.
+- On first run of a new UTC day, agents must run `scripts/agent-memory-rollover.sh <agent-id> operatives/<ROLE>.md` before normal issue/PR work.
+  - Worker example: `scripts/agent-memory-rollover.sh dacl-worker-02 operatives/WORKER.md`
+  - Planner example: `scripts/agent-memory-rollover.sh dacl-planner-01 operatives/PLANNER.md`
 
 ## Merge condition
 A PR is merge-ready only when:

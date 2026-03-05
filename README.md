@@ -136,15 +136,31 @@ All comments begin with `@<agent-id>`.
 - Per-agent memory now lives in daily files: `agents/memory/<agent-id>/YYYY-MM-DD.md`.
 - Runtime read policy: load today's file by default; consult yesterday only when needed.
 - On first run of a new UTC day, run:
-  - `scripts/agent-memory-rollover.sh <agent-id> agents/directives/<agent-id>.md`
+  - `scripts/agent-memory-rollover.sh <agent-id> operatives/<ROLE>.md`
+  - Example (worker): `scripts/agent-memory-rollover.sh dacl-worker-02 operatives/WORKER.md`
 - Rollover script responsibilities:
   - ensure today's memory file exists
   - detect day rollover with a local state marker
   - summarize the previous day into today's file
-  - promote novel durable lessons into the agent directive
+  - promote novel durable lessons into the shared role operative (`operatives/PLANNER.md`, `operatives/WORKER.md`, etc.)
   - migrate/deprecate legacy monolithic memory files under `agents/memory/<agent-id>.md`
 
 ---
+
+
+## Operatives-only Architecture + Migration
+
+Canonical behavior source is role-based operatives under `operatives/`:
+- planners -> `operatives/PLANNER.md`
+- workers -> `operatives/WORKER.md`
+- orchestrator -> `operatives/ORCHESTRATOR.md`
+
+`agents/directives/*` is now migration/legacy context only and must not be treated as a required runtime dependency for planner/worker loops.
+
+### Migration notes (existing agents)
+- Keep per-agent daily memory paths unchanged: `agents/memory/<agent-id>/YYYY-MM-DD.md`.
+- For rollover/self-improvement, point promotion to role operative file, not per-agent directive file.
+- Any leftover `agents/directives/<agent-id>.md` references should be interpreted as backward-compat notes only until removed.
 
 ## Operatives (Playbooks)
 
