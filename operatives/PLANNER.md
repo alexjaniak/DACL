@@ -23,3 +23,10 @@ If a PR does not satisfy acceptance criteria, do not approve it.
 - Planner should merge non-parent implementation PRs once acceptance criteria pass and checks are green.
 - Planner should explicitly comment merge rationale before merging.
 - Alex remains final reviewer/merge authority for the main parent PR.
+
+## Post-merge issue sync (hard)
+Immediately after merging any child/fix PR, planner must in the same run:
+1) ensure linked issue is updated (labels/state),
+2) post merge note with PR link,
+3) close the issue if not auto-closed,
+4) verify parent issue checklist/links reflect new state.

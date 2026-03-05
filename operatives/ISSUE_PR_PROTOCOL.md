@@ -169,3 +169,9 @@ A PR is merge-ready only when:
 - Planner/review agents must NOT merge/close the main parent PR.
 - Planner agents SHOULD merge non-parent child/fix PRs when ready.
 - Alex is final reviewer/merge authority for parent PR -> main.
+
+### Post-merge issue synchronization (mandatory)
+After merging a child/fix PR, planner must in the same cycle:
+- verify linked issue closure status,
+- if still open: add merge note + update labels + close issue,
+- update parent tracking checklist/status.
