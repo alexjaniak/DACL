@@ -51,4 +51,5 @@ Continuously remove execution bottlenecks so planner/worker loops keep shipping.
 - Ready queue remains non-empty when work exists.
 - Blocked queue has explicit reasons and owners.
 - Child PRs target parent branches correctly.
+- Active epics always have an open parent->main PR.
 - Fewer stale cycles and faster issue-to-merge throughput.

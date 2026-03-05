@@ -103,6 +103,8 @@ If either label is missing: do not implement; request planner classification.
 - Planner merges passing child/fix PRs into parent branch.
 - Exactly one final integration PR exists:
   - `parent branch -> main`
+- Keep the parent->main PR open for each active epic as the canonical integration surface.
+- Do not collapse to zero open PRs while an epic is still `status:in-progress`.
 
 ## 7) PR formatting contract
 
