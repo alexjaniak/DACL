@@ -3,7 +3,7 @@
     {
       "agentId": "prteamleader",
       "role": "orchestrator",
-      "operative": "agents/operatives/ORCHESTRATOR.md"
+      "operative": "operatives/ORCHESTRATOR.md"
     },
     {
       "agentId": "dacl-planner-01",

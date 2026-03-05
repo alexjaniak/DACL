@@ -8,10 +8,10 @@ DACL runs a GitHub-first agent workflow with strict Issue/PR discipline.
 - Worker: `@dacl-worker-01`
 
 ## Source of truth
-- Agent operatives: `agents/operatives/*.md`
+- Agent operatives: `operatives/*.md`
 - Cron prompts (canonical):
-  - `agents/operatives/cron/PLANNER_PROMPT.txt`
-  - `agents/operatives/cron/WORKER_PROMPT.txt`
+  - `operatives/cron/PLANNER_PROMPT.txt`
+  - `operatives/cron/WORKER_PROMPT.txt`
 - Agent configs:
   - `agents/config/dacl-planner-01.json`
   - `agents/config/dacl-worker-01.json`
@@ -31,17 +31,17 @@ DACL runs a GitHub-first agent workflow with strict Issue/PR discipline.
 - Subagents do **not** keep long-term memory files.
 - Each run writes exactly one run log:
   - `agents/runlogs/<agent-id>/<YYYY-MM-DD>/<run-id>.md`
-- Template: `agents/operatives/RUN_LOG_TEMPLATE.md`
+- Template: `operatives/RUN_LOG_TEMPLATE.md`
 - Writer helper: `scripts/agent-runlog.sh`
 - Validator: `scripts/validate-runlog-emission.sh`
 
 ## Operatives
-- `agents/operatives/ORCHESTRATOR.md`
-- `agents/operatives/ORCHESTRATOR_UNSTUCK.md`
-- `agents/operatives/PLANNER.md`
-- `agents/operatives/WORKER.md`
-- `agents/operatives/ISSUE_PR_PROTOCOL.md`
-- `agents/operatives/COMMENT_STYLE.md`
+- `operatives/ORCHESTRATOR.md`
+- `operatives/ORCHESTRATOR_UNSTUCK.md`
+- `operatives/PLANNER.md`
+- `operatives/WORKER.md`
+- `operatives/ISSUE_PR_PROTOCOL.md`
+- `operatives/COMMENT_STYLE.md`
 
 ## Ops dashboard
 Path: `apps/ops-dashboard`

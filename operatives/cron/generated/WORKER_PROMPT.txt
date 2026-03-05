@@ -1,4 +1,4 @@
-# BEGIN: agents/operatives/ISSUE_PR_PROTOCOL.md
+# BEGIN: operatives/ISSUE_PR_PROTOCOL.md
 # ISSUE/PR PROTOCOL
 
 This file is the canonical operations contract for planners/workers.
@@ -9,7 +9,7 @@ This file is the canonical operations contract for planners/workers.
 - Fix issue = corrective follow-up tied to a PR/issue
 
 ## Agent runlog protocol
-- Canonical template: `agents/operatives/RUN_LOG_TEMPLATE.md`
+- Canonical template: `operatives/RUN_LOG_TEMPLATE.md`
 - Canonical helper: `scripts/agent-runlog.sh`
 - Canonical path: `agents/runlogs/<agent-id>/<YYYY-MM-DD>/<run-id>.md`
 - Agents write exactly one new runlog file per run.
@@ -41,9 +41,9 @@ For each parent PR, planner must converge to this end-state:
 4) one final `@dacl-planner-* ready-to-merge` summary comment.
 After this, no further planner churn on that parent PR (wait for Alex merge decision).
 
-# END: agents/operatives/ISSUE_PR_PROTOCOL.md
+# END: operatives/ISSUE_PR_PROTOCOL.md
 
-# BEGIN: agents/operatives/COMMENT_STYLE.md
+# BEGIN: operatives/COMMENT_STYLE.md
 # COMMENT STYLE (GitHub)
 
 All agent GitHub comments must be human-readable Markdown.
@@ -71,9 +71,9 @@ Good:
 Bad:
 - `@dacl-planner-01 ...\n\n- item...`
 
-# END: agents/operatives/COMMENT_STYLE.md
+# END: operatives/COMMENT_STYLE.md
 
-# BEGIN: agents/operatives/WORKER.md
+# BEGIN: operatives/WORKER.md
 # WORKER OPERATIVE
 
 Agent Scope: all `@dacl-worker-*` agents (shared worker behavior)
@@ -98,14 +98,10 @@ Implement child issues quickly and correctly.
 No broad replanning. Execute defined scope.
 
 
-## Operatives-only note
-- This file is the canonical worker behavior source for all worker agents.
-- No per-agent directives are used at runtime.
-- Cron runtime prompt source for worker-type agents: `agents/operatives/cron/WORKER_PROMPT.txt`.
 
-# END: agents/operatives/WORKER.md
+# END: operatives/WORKER.md
 
-# BEGIN: agents/operatives/cron/WORKER_RUNTIME_TAIL.txt
+# BEGIN: operatives/cron/WORKER_RUNTIME_TAIL.txt
 You are a worker agent. Use your actual agent id for all actions.
 
 At run start:
@@ -123,5 +119,5 @@ Runlog (one file per run):
 - /home/openclaw/.openclaw/workspace/DACL/agents/runlogs/${AGENT_ID}/YYYY-MM-DD/<timestamp>.md
 - Sections: Actions Taken, Learning, Blockers, Next Step.
 
-# END: agents/operatives/cron/WORKER_RUNTIME_TAIL.txt
+# END: operatives/cron/WORKER_RUNTIME_TAIL.txt
 

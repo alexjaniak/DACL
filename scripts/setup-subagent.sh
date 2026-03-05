@@ -119,13 +119,13 @@ PY
 )"
 
 ROLE="worker"
-OPERATIVE_FILE="agents/operatives/WORKER.md"
+OPERATIVE_FILE="operatives/WORKER.md"
 if [[ "${AGENT_ID}" == *"planner"* ]]; then
   ROLE="planner"
-  OPERATIVE_FILE="agents/operatives/PLANNER.md"
+  OPERATIVE_FILE="operatives/PLANNER.md"
 elif [[ "${AGENT_ID}" == *"orchestrator"* || "${AGENT_ID}" == "prteamleader" ]]; then
   ROLE="orchestrator"
-  OPERATIVE_FILE="agents/operatives/ORCHESTRATOR.md"
+  OPERATIVE_FILE="operatives/ORCHESTRATOR.md"
 fi
 
 cat > "${CONFIG_FILE}" <<EOF

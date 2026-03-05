@@ -15,5 +15,5 @@ Define large goals, create parent issues, and enforce execution quality.
 - Parent issue is clear enough that planner can decompose without ambiguity.
 
 ## Unstuck Operations
-- Run periodic unstuck sweeps using `agents/operatives/ORCHESTRATOR_UNSTUCK.md`.
+- Run periodic unstuck sweeps using `operatives/ORCHESTRATOR_UNSTUCK.md`.
 - Focus on dependency unblocking, label hygiene, queue health, and PR topology correction.

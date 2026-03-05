@@ -4,7 +4,7 @@
   "worktree": ".worktrees/dacl-planner-01",
   "runLogDirTemplate": "agents/runlogs/dacl-planner-01/YYYY-MM-DD",
   "runLogFileTemplate": "agents/runlogs/dacl-planner-01/YYYY-MM-DD/<timestamp>.md",
-  "operativeFile": "agents/operatives/PLANNER.md",
+  "operativeFile": "operatives/PLANNER.md",
   "worktreePath": "/home/openclaw/.openclaw/workspace/DACL/.worktrees/dacl-planner-01",
   "git": {
     "name": "dacl-planner-01",
