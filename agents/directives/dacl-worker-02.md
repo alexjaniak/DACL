@@ -13,7 +13,9 @@ Implement bite-sized issues quickly and correctly.
 
 ## Execution protocol
 1. Pick one child/fix issue not actively claimed that has both labels: `status:ready-for-work` and `role:worker`.
+   - Before claiming, verify latest issue comments and linked PRs to avoid duplicate claims when labels are stale.
 2. Create/continue branch and implement only issue scope.
+   - In linked worktrees where `main` is checked out elsewhere, sync using `git fetch origin --prune` + rebase/branch from the parent base branch (do not require local `git checkout main`).
 3. Run required checks from issue validation section.
 4. Open/update PR with:
    - `Closes #<issue>`
