@@ -5,7 +5,7 @@ set -euo pipefail
 # - creates a per-agent git worktree
 # - configures git identity + SSH commit signing
 # - generates a Solana wallet (if missing)
-# - persists wallet metadata
+# - persists unified agent config (including wallet/git/worktree)
 #
 # Usage:
 #   ./scripts/setup-subagent.sh <agent-id> [repo-root]
@@ -55,12 +55,12 @@ require_cmd openssl version
 require_cmd python3 --version
 
 WORKTREE_PATH="${REPO_ROOT}/.worktrees/${AGENT_ID}"
-METADATA_DIR="${REPO_ROOT}/agents/metadata"
-METADATA_FILE="${METADATA_DIR}/${AGENT_ID}.json"
+CONFIG_DIR="${REPO_ROOT}/agents/config"
+CONFIG_FILE="${CONFIG_DIR}/${AGENT_ID}.json"
 WALLET_DIR="${HOME}/.config/solana/dacl-agents"
 WALLET_FILE="${WALLET_DIR}/${AGENT_ID}.json"
 
-mkdir -p "${WALLET_DIR}" "${METADATA_DIR}" "${REPO_ROOT}/.worktrees"
+mkdir -p "${WALLET_DIR}" "${CONFIG_DIR}" "${REPO_ROOT}/.worktrees"
 
 if [[ ! -d "${WORKTREE_PATH}" ]]; then
   git -C "${REPO_ROOT}" worktree add -b "${AGENT_ID}" "${WORKTREE_PATH}" main >/dev/null
@@ -118,10 +118,25 @@ print(b58encode(pub))
 PY
 )"
 
-cat > "${METADATA_FILE}" <<EOF
+ROLE="worker"
+OPERATIVE_FILE="agents/operatives/WORKER.md"
+if [[ "${AGENT_ID}" == *"planner"* ]]; then
+  ROLE="planner"
+  OPERATIVE_FILE="agents/operatives/PLANNER.md"
+elif [[ "${AGENT_ID}" == *"orchestrator"* || "${AGENT_ID}" == "prteamleader" ]]; then
+  ROLE="orchestrator"
+  OPERATIVE_FILE="agents/operatives/ORCHESTRATOR.md"
+fi
+
+cat > "${CONFIG_FILE}" <<EOF
 {
   "agentId": "${AGENT_ID}",
+  "role": "${ROLE}",
+  "operativeFile": "${OPERATIVE_FILE}",
+  "worktree": ".worktrees/${AGENT_ID}",
   "worktreePath": "${WORKTREE_PATH}",
+  "runLogDirTemplate": "agents/runlogs/${AGENT_ID}/YYYY-MM-DD",
+  "runLogFileTemplate": "agents/runlogs/${AGENT_ID}/YYYY-MM-DD/<timestamp>.md",
   "git": {
     "name": "${AGENT_ID}",
     "email": "${AGENT_ID}@users.noreply.github.com"
@@ -139,4 +154,4 @@ echo "agent id: ${AGENT_ID}"
 echo "git identity: ${AGENT_ID} <${AGENT_ID}@users.noreply.github.com>"
 echo "wallet pubkey: ${WALLET_PUBKEY}"
 echo "worktree: ${WORKTREE_PATH}"
-echo "metadata: ${METADATA_FILE}"
+echo "config: ${CONFIG_FILE}"
