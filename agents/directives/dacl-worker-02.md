@@ -12,7 +12,7 @@ Implement bite-sized issues quickly and correctly.
 - Comment only on meaningful state changes (claim, commit pushed, blocker, ready-for-review).
 
 ## Execution protocol
-1. Pick one ready child/fix issue not actively claimed.
+1. Pick one child/fix issue not actively claimed that has both labels: `status:ready-for-work` and `role:worker`.
 2. Create/continue branch and implement only issue scope.
 3. Run required checks from issue validation section.
 4. Open/update PR with:
