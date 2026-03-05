@@ -175,3 +175,11 @@ After merging a child/fix PR, planner must in the same cycle:
 - verify linked issue closure status,
 - if still open: add merge note + update labels + close issue,
 - update parent tracking checklist/status.
+
+### Parent finalization protocol (mandatory)
+For each parent PR, planner must converge to this end-state:
+1) all linked child/fix issues closed,
+2) parent checklist fully updated,
+3) parent PR clean with checks green,
+4) one final `@dacl-planner-* ready-to-merge` summary comment.
+After this, no further planner churn on that parent PR (wait for Alex merge decision).
