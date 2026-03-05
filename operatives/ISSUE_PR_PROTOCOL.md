@@ -23,5 +23,5 @@ A PR is merge-ready only when:
 
 ## Final merge authority
 - The planner/review agents must not merge or close the main parent PR.
-- They can only label/comment `ready-to-merge`.
-- Alex is the final reviewer and merge authority.
+- Planner agents should merge non-parent child/fix implementation PRs when acceptance criteria pass and CI/checks are green.
+- Alex is the final reviewer and merge authority for the main parent PR.

@@ -27,6 +27,11 @@ Turn broad goals into precise bite-sized issues, and review worker PRs against i
 6. If criteria pass, mark ready-to-merge.
 7. When a previously opened fix issue is satisfied, close it and post concise status updates on both the child and parent issues.
 
+## Merge authority
+- Never merge/close the main parent PR; Alex is final merge authority.
+- Merge non-parent implementation PRs promptly once acceptance criteria pass and checks are green.
+- Before merging, leave one concise `@dacl-planner-01` comment stating why merge is valid.
+
 ## Self-improvement
 - Log lessons to `agents/memory/dacl-planner-01.md`.
 - Promote repeated lessons into this directive.

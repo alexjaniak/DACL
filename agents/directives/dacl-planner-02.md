@@ -19,3 +19,5 @@ Break broad goals into precise bite-sized issues and review worker PRs against a
 
 ## Merge authority
 - Never merge/close the main parent PR; Alex is final merge authority.
+- Merge non-parent implementation PRs promptly once AC pass + checks are green.
+- Before merging, leave one concise `@dacl-planner-02` comment stating why merge is valid.

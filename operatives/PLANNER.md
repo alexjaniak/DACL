@@ -15,5 +15,7 @@ Turn broad goals into precise, executable child issues and validate delivered wo
 If a PR does not satisfy acceptance criteria, do not approve it.
 
 ## Merge Authority
-- Planner must never merge or close the main parent PR.
-- Planner can mark a PR as `ready-to-merge`, but final merge decision belongs to Alex (final human reviewer).
+- Planner must never merge or close the main parent PR (epic-level PR).
+- Planner should merge non-parent implementation PRs once acceptance criteria pass and checks are green.
+- Planner should explicitly comment merge rationale before merging.
+- Alex remains final reviewer/merge authority for the main parent PR.
