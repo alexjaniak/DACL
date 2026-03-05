@@ -49,6 +49,7 @@ export type DashboardData = {
   cronJobs: CronJobRecord[];
   activity: ActivityRecord[];
   runlogs: AgentRunlogHistory[];
+  generatedAt: string;
   errors: string[];
 };
 
@@ -142,40 +143,6 @@ async function getAgents(errors: string[]): Promise<AgentRecord[]> {
       };
     })
   );
-}
-
-async function getCronJobs(errors: string[]): Promise<CronJobRecord[]> {
-  const source = await readJsonSafe('apps/ops-dashboard/data/cron-jobs.json', errors);
-  const sourceObj = asObject(source);
-  const jobs = Array.isArray(sourceObj?.cronJobs) ? (sourceObj.cronJobs as unknown[]) : [];
-
-  return jobs.map((job): CronJobRecord => {
-    const safeJob = asObject(job) ?? {};
-
-    return {
-      name: ensureString(safeJob.name),
-      schedule: ensureString(safeJob.schedule, 'not configured'),
-      enabled: Boolean(safeJob.enabled),
-      nextRun: ensureString(safeJob.nextRun, 'unknown'),
-      lastRunStatus: ensureString(safeJob.lastRunStatus, 'never-run')
-    };
-  });
-}
-
-async function getActivity(errors: string[]): Promise<ActivityRecord[]> {
-  const source = await readJsonSafe('apps/ops-dashboard/data/activity.json', errors);
-  const sourceObj = asObject(source);
-  const rows = Array.isArray(sourceObj?.activity) ? (sourceObj.activity as unknown[]) : [];
-
-  return rows.map((row): ActivityRecord => {
-    const safeRow = asObject(row) ?? {};
-
-    return {
-      agentId: ensureString(safeRow.agentId),
-      lastKnownAction: ensureString(safeRow.lastKnownAction, 'no activity captured'),
-      updatedAt: ensureString(safeRow.updatedAt, 'unknown')
-    };
-  });
 }
 
 function parseRunlogTimestamp(content: string, date: string, fileName: string, mtime: Date): string {
@@ -275,20 +242,43 @@ async function getRunlogs(): Promise<AgentRunlogHistory[]> {
   return histories.sort((a, b) => a.agentId.localeCompare(b.agentId));
 }
 
+async function getCronJobs(errors: string[]): Promise<CronJobRecord[]> {
+  const source = await readJsonSafe('cron/jobs.json', errors);
+  const sourceObj = asObject(source);
+  const jobs = Array.isArray(sourceObj?.jobs) ? (sourceObj.jobs as unknown[]) : [];
+
+  return jobs.map((job): CronJobRecord => {
+    const safeJob = asObject(job) ?? {};
+    return {
+      name: ensureString(safeJob.name),
+      schedule: ensureString(safeJob.every, 'not configured'),
+      enabled: Boolean(safeJob.enabled),
+      nextRun: 'Managed by OpenClaw runtime',
+      lastRunStatus: 'See runlog panel for latest execution output'
+    };
+  });
+}
+
+function getActivity(runlogs: AgentRunlogHistory[]): ActivityRecord[] {
+  return runlogs
+    .map((history) => ({
+      agentId: history.agentId,
+      lastKnownAction: history.latest?.preview ?? 'No activity captured yet',
+      updatedAt: history.latest?.timestamp ?? 'unknown'
+    }))
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+}
+
 export async function getDashboardData(): Promise<DashboardData> {
   const errors: string[] = [];
-  const [agents, cronJobs, activity, runlogs] = await Promise.all([
-    getAgents(errors),
-    getCronJobs(errors),
-    getActivity(errors),
-    getRunlogs()
-  ]);
+  const [agents, cronJobs, runlogs] = await Promise.all([getAgents(errors), getCronJobs(errors), getRunlogs()]);
 
   return {
     agents,
     cronJobs,
-    activity,
+    activity: getActivity(runlogs),
     runlogs,
+    generatedAt: new Date().toISOString(),
     errors
   };
 }
