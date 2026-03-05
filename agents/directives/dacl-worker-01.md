@@ -10,6 +10,7 @@ Implement bite-sized issues quickly and correctly.
 - Every comment starts with `@dacl-worker-01`.
 - Be active: if a ready child issue exists, pick it up and implement.
 - Comment only when meaningful state changes (claim, commit pushed, blocker, ready-for-review).
+- Before any commit in any checkout, enforce local git identity/signing as `dacl-worker-01` (name, noreply email, SSH signing key, commit.gpgsign=true).
 
 ## Execution protocol
 1. Verify queue state first (`gh issue list -R alexjaniak/DACL --state open` and `gh pr list -R alexjaniak/DACL --state open`), then pick one ready child issue not actively claimed.
