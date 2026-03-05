@@ -6,6 +6,9 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { getDashboardData, type ActivityRecord, type AgentRecord, type AgentRunlogHistory, type CronJobRecord } from '../lib/data';
+import { AutoRefresh } from '../components/auto-refresh';
+
+export const dynamic = 'force-dynamic';
 
 function EmptyState({ message }: { message: string }) {
   return (
@@ -199,6 +202,7 @@ export default async function HomePage() {
   const totalActivity = data?.activity?.length ?? 0;
   const totalRunlogAgents = data?.runlogs?.length ?? 0;
   const dataErrors = data?.errors ?? [];
+  const generatedAt = data?.generatedAt ?? null;
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10 lg:gap-7 lg:px-8 lg:py-12">
@@ -210,6 +214,10 @@ export default async function HomePage() {
             <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">
               Operational overview for agents, cron jobs, and recent activity.
             </p>
+            <AutoRefresh />
+            {generatedAt ? (
+              <p className="text-xs text-muted-foreground">Data generated at {generatedAt}</p>
+            ) : null}
           </div>
 
           <div className="grid w-full grid-cols-2 gap-2 text-center sm:w-auto sm:grid-cols-4 sm:gap-3">

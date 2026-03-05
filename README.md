@@ -76,6 +76,11 @@ DACL runs a GitHub-first multi-agent workflow with strict Issue/PR discipline.
 ## Ops dashboard
 Path: `apps/ops-dashboard`
 
+Live panels now read from:
+- `agents/registry.json` + `agents/config/*.json`
+- `cron/jobs.json`
+- `agents/runlogs/**` (runlog history + derived activity)
+
 Run locally:
 ```bash
 cd apps/ops-dashboard
