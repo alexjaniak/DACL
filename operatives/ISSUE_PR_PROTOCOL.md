@@ -20,3 +20,8 @@ A PR is merge-ready only when:
 1) acceptance criteria are met,
 2) planner confirms pass,
 3) linked issues are consistent and closeable.
+
+## Final merge authority
+- The planner/review agents must not merge or close the main parent PR.
+- They can only label/comment `ready-to-merge`.
+- Alex is the final reviewer and merge authority.
