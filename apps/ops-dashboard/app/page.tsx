@@ -70,12 +70,19 @@ function AgentSection({ agents }: { agents: AgentRecord[] | undefined }) {
           key={agent.id}
           className="rounded-xl border border-border/80 bg-background/30 p-4 shadow-sm transition-colors hover:border-border"
         >
-          <div className="flex flex-wrap items-start justify-between gap-2">
+          <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
             <div>
               <p className="text-base font-semibold tracking-tight">{agent.id}</p>
               <p className="mt-0.5 text-xs text-muted-foreground uppercase">{agent.role}</p>
             </div>
             <Pill label={agent.statusSummary} tone={toneFromText(agent.statusSummary)} />
+          </div>
+
+          <div className="space-y-2.5">
+            <StackRow label="Operative" value={agent.operativeFile} />
+            <StackRow label="Worktree" value={agent.worktree} />
+            <StackRow label="Path" value={agent.worktreePath} />
+            <StackRow label="Wallet" value={`${agent.walletNetwork}: ${agent.walletPubkey}`} />
           </div>
         </li>
       ))}
@@ -191,6 +198,7 @@ export default async function HomePage() {
   const totalCronJobs = data?.cronJobs?.length ?? 0;
   const totalActivity = data?.activity?.length ?? 0;
   const totalRunlogAgents = data?.runlogs?.length ?? 0;
+  const dataErrors = data?.errors ?? [];
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10 lg:gap-7 lg:px-8 lg:py-12">
@@ -224,6 +232,10 @@ export default async function HomePage() {
           </div>
         </div>
       </header>
+
+      {dataErrors.length > 0 ? (
+        <ErrorState message={`Some data sources failed to load: ${dataErrors.join(' | ')}`} />
+      ) : null}
 
       <section className="grid gap-4 md:grid-cols-2" aria-label="Agents, cron jobs, activity, and runlogs">
         <Card className="border-border/80 bg-card/95">
