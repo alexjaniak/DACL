@@ -1,21 +1,24 @@
 # DACL — Darwinian Agentic Coordination Layer
 
-DACL runs a GitHub-first agent workflow with strict Issue/PR discipline.
+DACL runs a GitHub-first multi-agent workflow with strict Issue/PR discipline.
 
-## Current topology (v1)
-- Orchestrator: `@prteamleader`
-- Planner: `@dacl-planner-01`
-- Worker: `@dacl-worker-01`
+## Topology (scales to N agents)
+- **Orchestrators (optional):** `@dacl-orchestrator-XX`
+- **Planners (1..N):** `@dacl-planner-XX`
+- **Workers (1..N):** `@dacl-worker-XX`
+
+`XX` is a zero-padded numeric suffix (`01`, `02`, ...). Add/remove agents by updating config + registry (see below); the protocol stays the same.
 
 ## Source of truth
-- Agent operatives: `operatives/*.md`
-- Cron prompts (canonical):
+- **Role behavior + protocol:** `operatives/*.md` (**canonical**)  
+  This defines what each role does.
+- **Cron prompt templates (canonical):**
   - `operatives/cron/PLANNER_PROMPT.txt`
   - `operatives/cron/WORKER_PROMPT.txt`
-- Agent configs:
-  - `agents/config/dacl-planner-01.json`
-  - `agents/config/dacl-worker-01.json`
-- Agent registry: `agents/registry.json`
+  - (optional) orchestrator prompt template(s) under `operatives/cron/`
+- **Per-agent runtime config:** `agents/config/*.json`  
+  Each configured agent gets role-appropriate cron prompt injection from `operatives/cron/*`.
+- **Active agent set:** `agents/registry.json`
 
 ## Workflow contract
 - All agent communication happens on GitHub comments.
@@ -25,15 +28,24 @@ DACL runs a GitHub-first agent workflow with strict Issue/PR discipline.
   - `role:worker`
 - Child/fix PRs target parent branch (`parent/<issue-id>-<slug>`), not `main`.
 - Planners merge ready non-parent PRs.
-- Alex is final merge authority for parent PR -> main.
+- Alex is final merge authority for parent PR -> `main`.
 
-## Run logs (no persistent subagent memory)
+## Run logs (stateless runs)
 - Subagents do **not** keep long-term memory files.
 - Each run writes exactly one run log:
   - `agents/runlogs/<agent-id>/<YYYY-MM-DD>/<run-id>.md`
 - Template: `operatives/RUN_LOG_TEMPLATE.md`
 - Writer helper: `scripts/agent-runlog.sh`
 - Validator: `scripts/validate-runlog-emission.sh`
+
+## Add or remove agents
+1. Create/update per-agent file(s) in `agents/config/` using naming convention:
+   - `dacl-planner-XX.json`
+   - `dacl-worker-XX.json`
+   - `dacl-orchestrator-XX.json` (optional)
+2. Register/unregister agent IDs in `agents/registry.json`.
+3. Ensure role maps to the correct injected cron prompt template from `operatives/cron/`.
+4. Commit and deploy/restart scheduler if your environment requires it.
 
 ## Operatives
 - `operatives/ORCHESTRATOR.md`
