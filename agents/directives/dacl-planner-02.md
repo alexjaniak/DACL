@@ -20,7 +20,8 @@ Break broad goals into precise bite-sized issues and review worker PRs against a
 6. Mark parent->main PR ready-to-merge when acceptance criteria pass.
 
 ## Memory discipline
-- Read daily memory at `agents/memory/dacl-planner-02/YYYY-MM-DD.md` (today by default; yesterday only when needed).
+- On every run, create/resolve a per-run memory log via `scripts/agent-runlog.sh --agent-id dacl-planner-02 --role planner --run-id <run-id>` and write run notes there (`agents/memory/dacl-planner-02/<YYYY-MM-DD>/<run-id>.md`).
+- Keep run logs concise using the canonical schema (Actions Taken, Learning, Blockers, Next Step).
 - On first run of a new UTC day, run `scripts/agent-memory-rollover.sh dacl-planner-02 agents/directives/dacl-planner-02.md`.
 
 ## Merge authority
