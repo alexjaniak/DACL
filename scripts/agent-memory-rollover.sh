@@ -2,15 +2,15 @@
 set -euo pipefail
 
 # Ensure daily memory file exists and perform day-rollover consolidation.
-# Usage: ./scripts/agent-memory-rollover.sh <agent-id> <directive-file>
+# Usage: ./scripts/agent-memory-rollover.sh <agent-id> <operative-file>
 
 if [[ $# -lt 2 ]]; then
-  echo "Usage: $0 <agent-id> <directive-file>" >&2
+  echo "Usage: $0 <agent-id> <operative-file>" >&2
   exit 1
 fi
 
 AGENT_ID="$1"
-DIRECTIVE_FILE="$2"
+OPERATIVE_FILE="$2"
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 TODAY="$(date -u +%F)"
 NOW_UTC="$(date -u +"%Y-%m-%d %H:%M UTC")"
@@ -23,8 +23,8 @@ LEGACY_ARCHIVE="${MEMORY_DIR}/legacy.md"
 
 mkdir -p "${MEMORY_DIR}"
 
-if [[ ! -f "${DIRECTIVE_FILE}" ]]; then
-  echo "Directive file not found: ${DIRECTIVE_FILE}" >&2
+if [[ ! -f "${OPERATIVE_FILE}" ]]; then
+  echo "Operative file not found: ${OPERATIVE_FILE}" >&2
   exit 1
 fi
 
@@ -99,14 +99,14 @@ if [[ -f "${PREV_FILE}" ]]; then
     ADDED=0
     while IFS= read -r candidate; do
       [[ -z "${candidate}" ]] && continue
-      if ! grep -Fqi "${candidate}" "${DIRECTIVE_FILE}"; then
+      if ! grep -Fqi "${candidate}" "${OPERATIVE_FILE}"; then
         if [[ ${ADDED} -eq 0 ]]; then
           {
             echo
             echo "## Distilled lessons from daily memory rollover"
-          } >> "${DIRECTIVE_FILE}"
+          } >> "${OPERATIVE_FILE}"
         fi
-        echo "- ${candidate}" >> "${DIRECTIVE_FILE}"
+        echo "- ${candidate}" >> "${OPERATIVE_FILE}"
         ADDED=1
       fi
     done <<< "${CANDIDATES}"

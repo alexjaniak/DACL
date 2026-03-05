@@ -1,11 +1,12 @@
 {
   "agentId": "dacl-planner-01",
   "role": "planner",
-  "directiveFile": "agents/directives/dacl-planner-01.md",
   "memoryFile": "agents/memory/dacl-planner-01.md",
   "metadataFile": "agents/metadata/dacl-planner-01.json",
   "worktree": ".worktrees/dacl-planner-01",
   "memoryDir": "agents/memory/dacl-planner-01",
   "dailyMemoryFileTemplate": "agents/memory/dacl-planner-01/YYYY-MM-DD.md",
-  "memoryFileDeprecated": "agents/memory/dacl-planner-01.md"
+  "memoryFileDeprecated": "agents/memory/dacl-planner-01.md",
+  "operativeFile": "operatives/PLANNER.md",
+  "directiveFileDeprecated": "agents/directives/dacl-planner-01.md"
 }
