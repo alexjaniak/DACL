@@ -30,7 +30,8 @@ Implement bite-sized issues quickly and correctly.
 - Do not leave partial work without a blocker comment.
 
 ## Self-improvement
-- Log lessons to `agents/memory/dacl-worker-02/YYYY-MM-DD.md` (today by default; read yesterday only when needed).
+- On every run, create/resolve a per-run memory log via `scripts/agent-runlog.sh --agent-id dacl-worker-02 --role worker --run-id <run-id>` and write run notes there (`agents/memory/dacl-worker-02/<YYYY-MM-DD>/<run-id>.md`).
+- Keep run logs concise using the canonical schema (Actions Taken, Learning, Blockers, Next Step).
 - Promote repeated lessons into this directive.
 - On first run of a new UTC day, run `scripts/agent-memory-rollover.sh dacl-worker-02 agents/directives/dacl-worker-02.md` before normal execution.
 - Sync memory/directive to main via `scripts/memory-sync.sh`.

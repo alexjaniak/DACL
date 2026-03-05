@@ -136,8 +136,9 @@ All comments begin with `@<agent-id>`.
 - Canonical run-log template source: `operatives/RUN_LOG_TEMPLATE.md`.
 - Canonical path/write helper: `scripts/agent-runlog.sh` creates or resolves:
   - `agents/memory/<agent-id>/<YYYY-MM-DD>/<run-id>.md`
+- Runtime write policy: each planner/worker run should emit one log file under `agents/memory/<agent-id>/<YYYY-MM-DD>/<run-id>.md`.
 - Runtime proof helper: `scripts/validate-runlog-emission.sh` validates one planner + one worker run each emit exactly one new run-log file and include canonical sections.
-- During migration, per-agent daily files (`agents/memory/<agent-id>/YYYY-MM-DD.md`) remain supported to prevent data loss.
+- During migration, per-agent daily files (`agents/memory/<agent-id>/YYYY-MM-DD.md`) remain supported only as fallback to prevent data loss.
 - Runtime read policy: load today's file by default; consult yesterday only when needed.
 - On first run of a new UTC day, run:
   - `scripts/agent-memory-rollover.sh <agent-id> agents/directives/<agent-id>.md`
