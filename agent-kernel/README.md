@@ -17,10 +17,11 @@ cp agent-kernel/.env.example agent-kernel/.env
 
 | File | Purpose |
 |------|---------|
-| `CONTEXT.md` | System prompt — agent's role, rules, knowledge. Empty = skipped. |
+| `CONTEXT.md` | Base system prompt — always included. Empty = skipped. |
 | `run.sh` | Invokes `claude` CLI once and exits. |
 | `.env` | Auth and overrides (gitignored). See `.env.example`. |
 | `cron/` | Cron management subsystem. See [`cron/README.md`](cron/README.md). |
+| `../contexts/` | Library of reusable context files. See [Context Library](#context-library). |
 
 ## Usage
 
@@ -28,16 +29,43 @@ cp agent-kernel/.env.example agent-kernel/.env
 # Text-only (default — --print, no tools)
 ./agent-kernel/run.sh "Summarize recent commits"
 
-# Agentic (tools enabled — bash, file edits, etc.)
-./agent-kernel/run.sh --agentic "Check for stale PRs and comment on them"
+# With context files (paths relative to repo root)
+./agent-kernel/run.sh --context contexts/IDENTITY.md "Summarize recent commits"
+
+# Agentic with context
+./agent-kernel/run.sh --agentic --context contexts/IDENTITY.md "Check for stale PRs and comment on them"
 
 # Piped
 echo "List open issues" | ./agent-kernel/run.sh
 ```
 
+## Context Library
+
+Reusable context files live in `contexts/` at the repo root. Each `.md` file is a self-contained context snippet.
+
+```
+contexts/
+  IDENTITY.md      # agent identity and rules
+  REPO_MAP.md      # codebase overview
+  CODE_STYLE.md    # coding conventions
+```
+
+Select which contexts to include per invocation with `--context <path>` (repeatable, relative to repo root). The base `CONTEXT.md` is always prepended.
+
+Cron jobs can also specify contexts in `cron-jobs.json`:
+```json
+{
+  "id": "daily-summary",
+  "interval": "1h",
+  "prompt": "Summarize recent activity",
+  "contexts": ["contexts/IDENTITY.md"]
+}
+```
+
 ## How it works
 
-1. `CONTEXT.md` content is passed via `--append-system-prompt` (preserves Claude's built-in capabilities)
-2. Your prompt goes as the message argument
-3. `--dangerously-skip-permissions` is on by default for unattended runs
-4. Default mode is `--print` (text only). Pass `--agentic` to enable tool use.
+1. `CONTEXT.md` content is always included via `--append-system-prompt` (preserves Claude's built-in capabilities)
+2. `--context <path>` flags append additional context files (paths relative to repo root)
+3. Your prompt goes as the message argument
+4. `--dangerously-skip-permissions` is on by default for unattended runs
+5. Default mode is `--print` (text only). Pass `--agentic` to enable tool use.

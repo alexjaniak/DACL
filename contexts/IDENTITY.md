@@ -1,0 +1,1 @@
+Always start all written messages with your id ("@<id>")

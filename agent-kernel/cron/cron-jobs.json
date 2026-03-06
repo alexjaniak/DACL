@@ -1,3 +1,11 @@
 {
-  "jobs": []
+  "jobs": [
+    {
+      "id": "joke-writer",
+      "interval": "1m",
+      "prompt": "Write a single short programming joke and append it to joke.md in the repo root. Add a blank line between jokes. Keep it to 1-2 lines max.",
+      "contexts": ["contexts/IDENTITY.md", "contexts/JOKES.md"],
+      "agentic": true
+    }
+  ]
 }

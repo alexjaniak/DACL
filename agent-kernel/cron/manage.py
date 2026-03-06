@@ -29,10 +29,12 @@ def parse_interval(interval):
     raise ValueError(f"Invalid interval '{interval}': must be Nm or Nh (e.g. 5m, 1h)")
 
 
-def build_cron_command(job_id, prompt, agentic):
+def build_cron_command(job_id, prompt, agentic, contexts=None):
     cmd = f"cd {REPO_DIR} && ./agent-kernel/run.sh"
     if agentic:
         cmd += " --agentic"
+    for ctx in (contexts or []):
+        cmd += f" --context {ctx}"
     cmd += f' "{prompt}" >> /tmp/agent-kernel-{job_id}.log 2>&1'
     return cmd
 
@@ -129,7 +131,8 @@ def cmd_apply(args):
         a = actual[job_id]
         if (d["interval"] != a.get("interval") or
                 d["prompt"] != a.get("prompt") or
-                d.get("agentic", False) != a.get("agentic", False)):
+                d.get("agentic", False) != a.get("agentic", False) or
+                d.get("contexts", []) != a.get("contexts", [])):
             to_update.add(job_id)
 
     no_change = (set(desired.keys()) & set(actual.keys())) - to_update
@@ -144,13 +147,15 @@ def cmd_apply(args):
     for job_id in to_add | to_update:
         job = desired[job_id]
         cron_expr = parse_interval(job["interval"])
-        command = build_cron_command(job_id, job["prompt"], job.get("agentic", False))
+        contexts = job.get("contexts", [])
+        command = build_cron_command(job_id, job["prompt"], job.get("agentic", False), contexts)
         crontab = add_job_to_crontab(crontab, job_id, cron_expr, command)
         state["jobs"][job_id] = {
             "interval": job["interval"],
             "cron_expr": cron_expr,
             "prompt": job["prompt"],
             "agentic": job.get("agentic", False),
+            "contexts": contexts,
             "installed_at": now_iso(),
         }
         action = "Added" if job_id in to_add else "Updated"
@@ -170,7 +175,8 @@ def cmd_add(args):
         sys.exit(1)
 
     cron_expr = parse_interval(args.interval)
-    command = build_cron_command(args.id, args.prompt, args.agentic)
+    contexts = args.context or []
+    command = build_cron_command(args.id, args.prompt, args.agentic, contexts)
 
     crontab = read_crontab()
     crontab = add_job_to_crontab(crontab, args.id, cron_expr, command)
@@ -182,6 +188,7 @@ def cmd_add(args):
         "cron_expr": cron_expr,
         "prompt": args.prompt,
         "agentic": args.agentic,
+        "contexts": contexts,
         "installed_at": now_iso(),
     }
     save_state(state)
@@ -269,6 +276,7 @@ def main():
     p_add.add_argument("interval", help="Interval: Nm or Nh")
     p_add.add_argument("prompt", help="Prompt for run.sh")
     p_add.add_argument("--agentic", action="store_true", help="Enable tool use")
+    p_add.add_argument("--context", action="append", help="Context file path relative to repo root (repeatable)")
 
     p_rm = sub.add_parser("remove", help="Remove a cron job by ID")
     p_rm.add_argument("id", help="Job identifier")

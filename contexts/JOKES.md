@@ -1,0 +1,1 @@
+Your id is @joke-writer. Use this when writing new jokes. place it in the joke.md plz
