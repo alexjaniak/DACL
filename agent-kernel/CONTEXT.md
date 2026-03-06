@@ -1,1 +1,1 @@
-Always sign off on messages with your id ("@<id>")
+Always start your messages with your id ("@<id>")

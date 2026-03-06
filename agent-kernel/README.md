@@ -2,14 +2,25 @@
 
 One-shot Claude CLI wrapper. Cron-friendly.
 
+## Setup
+
+```bash
+# 1. Get a long-lived CLI token
+claude setup-token
+
+# 2. Create your .env
+cp agent-kernel/.env.example agent-kernel/.env
+# Paste your token as CLAUDE_CODE_OAUTH_TOKEN in .env
+```
+
 ## Files
 
 | File | Purpose |
 |------|---------|
 | `CONTEXT.md` | System prompt — agent's role, rules, knowledge. Empty = skipped. |
 | `run.sh` | Invokes `claude` CLI once and exits. |
-| `cron-add.sh` | Add a cron job to the system crontab. |
-| `cron-remove.sh` | Remove a cron job by ID. |
+| `.env` | Auth and overrides (gitignored). See `.env.example`. |
+| `cron/` | Cron management subsystem. See [`cron/README.md`](cron/README.md). |
 
 ## Usage
 
@@ -23,24 +34,6 @@ One-shot Claude CLI wrapper. Cron-friendly.
 # Piped
 echo "List open issues" | ./agent-kernel/run.sh
 ```
-
-## Cron management
-
-```bash
-# Add a job (runs every 5 min with tools enabled)
-./agent-kernel/cron-add.sh pr-checker 5m "Check for stale PRs" --agentic
-
-# Add a text-only job (every hour)
-./agent-kernel/cron-add.sh daily-summary 1h "Summarize today's activity"
-
-# Remove a job
-./agent-kernel/cron-remove.sh pr-checker
-
-# See active jobs
-crontab -l | grep "DACL:agent-kernel"
-```
-
-Intervals: `Nm` (minutes), `Nh` (hours). Logs go to `/tmp/agent-kernel-<id>.log`.
 
 ## How it works
 
