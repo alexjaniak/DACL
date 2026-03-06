@@ -5,7 +5,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { getDashboardData, type ActivityRecord, type AgentRecord, type CronJobRecord } from '../lib/data';
+import { getDashboardData, type ActivityRecord, type AgentRecord, type AgentRunlogHistory, type CronJobRecord } from '../lib/data';
+import { AutoRefresh } from '../components/auto-refresh';
+
+export const dynamic = 'force-dynamic';
 
 function EmptyState({ message }: { message: string }) {
   return (
@@ -70,12 +73,19 @@ function AgentSection({ agents }: { agents: AgentRecord[] | undefined }) {
           key={agent.id}
           className="rounded-xl border border-border/80 bg-background/30 p-4 shadow-sm transition-colors hover:border-border"
         >
-          <div className="flex flex-wrap items-start justify-between gap-2">
+          <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
             <div>
               <p className="text-base font-semibold tracking-tight">{agent.id}</p>
               <p className="mt-0.5 text-xs text-muted-foreground uppercase">{agent.role}</p>
             </div>
             <Pill label={agent.statusSummary} tone={toneFromText(agent.statusSummary)} />
+          </div>
+
+          <div className="space-y-2.5">
+            <StackRow label="Operative" value={agent.operativeFile} />
+            <StackRow label="Worktree" value={agent.worktree} />
+            <StackRow label="Path" value={agent.worktreePath} />
+            <StackRow label="Wallet" value={`${agent.walletNetwork}: ${agent.walletPubkey}`} />
           </div>
         </li>
       ))}
@@ -132,6 +142,52 @@ function ActivitySection({ activity }: { activity: ActivityRecord[] | undefined 
   );
 }
 
+function RunlogSection({ runlogs }: { runlogs: AgentRunlogHistory[] | undefined }) {
+  if (!Array.isArray(runlogs)) return <ErrorState message="Could not render runlog history right now." />;
+  if (runlogs.length === 0) return <EmptyState message="No runlog files found." />;
+
+  return (
+    <ul className="grid gap-3">
+      {runlogs.map((history) => (
+        <li key={history.agentId} className="rounded-xl border border-border/80 bg-background/30 p-4 shadow-sm">
+          <div className="flex items-start justify-between gap-2">
+            <p className="text-base font-semibold tracking-tight">{history.agentId}</p>
+            {history.parseErrors > 0 ? <Pill label={`${history.parseErrors} parse errors`} tone="warn" /> : null}
+          </div>
+
+          {history.latest ? (
+            <div className="mt-2 rounded-lg border border-border/60 bg-background/40 p-3">
+              <p className="text-xs text-muted-foreground uppercase">Latest</p>
+              <p className="mt-1 text-xs text-muted-foreground">{history.latest.timestamp}</p>
+              <p className="mt-1 text-sm text-foreground/90">{history.latest.preview}</p>
+            </div>
+          ) : (
+            <p className="mt-2 text-sm text-muted-foreground">No valid runlogs yet.</p>
+          )}
+
+          <div className="mt-3 space-y-2">
+            {history.byDate.slice(0, 5).map((group) => (
+              <details key={`${history.agentId}-${group.date}`} className="rounded-lg border border-border/60 bg-background/20 px-3 py-2">
+                <summary className="cursor-pointer text-sm font-medium">
+                  {group.date} <span className="text-muted-foreground">({group.entries.length})</span>
+                </summary>
+                <ul className="mt-2 space-y-2">
+                  {group.entries.slice(0, 10).map((entry) => (
+                    <li key={entry.id} className="text-sm text-foreground/90">
+                      <p className="text-xs text-muted-foreground">{entry.timestamp}</p>
+                      <p>{entry.preview}</p>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            ))}
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export default async function HomePage() {
   let data: Awaited<ReturnType<typeof getDashboardData>> | null;
 
@@ -144,6 +200,9 @@ export default async function HomePage() {
   const totalAgents = data?.agents?.length ?? 0;
   const totalCronJobs = data?.cronJobs?.length ?? 0;
   const totalActivity = data?.activity?.length ?? 0;
+  const totalRunlogAgents = data?.runlogs?.length ?? 0;
+  const dataErrors = data?.errors ?? [];
+  const generatedAt = data?.generatedAt ?? null;
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10 lg:gap-7 lg:px-8 lg:py-12">
@@ -155,9 +214,13 @@ export default async function HomePage() {
             <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">
               Operational overview for agents, cron jobs, and recent activity.
             </p>
+            <AutoRefresh />
+            {generatedAt ? (
+              <p className="text-xs text-muted-foreground">Data generated at {generatedAt}</p>
+            ) : null}
           </div>
 
-          <div className="grid w-full grid-cols-3 gap-2 text-center sm:w-auto sm:gap-3">
+          <div className="grid w-full grid-cols-2 gap-2 text-center sm:w-auto sm:grid-cols-4 sm:gap-3">
             <div className="rounded-lg border border-border/70 bg-background/30 px-3 py-2">
               <p className="text-lg font-semibold leading-none sm:text-xl">{totalAgents}</p>
               <p className="mt-1 text-xs text-muted-foreground uppercase">Agents</p>
@@ -170,11 +233,19 @@ export default async function HomePage() {
               <p className="text-lg font-semibold leading-none sm:text-xl">{totalActivity}</p>
               <p className="mt-1 text-xs text-muted-foreground uppercase">Activity</p>
             </div>
+            <div className="rounded-lg border border-border/70 bg-background/30 px-3 py-2">
+              <p className="text-lg font-semibold leading-none sm:text-xl">{totalRunlogAgents}</p>
+              <p className="mt-1 text-xs text-muted-foreground uppercase">Runlog Agents</p>
+            </div>
           </div>
         </div>
       </header>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3" aria-label="Agents, cron jobs, and activity">
+      {dataErrors.length > 0 ? (
+        <ErrorState message={`Some data sources failed to load: ${dataErrors.join(' | ')}`} />
+      ) : null}
+
+      <section className="grid gap-4 md:grid-cols-2" aria-label="Agents, cron jobs, activity, and runlogs">
         <Card className="border-border/80 bg-card/95">
           <CardHeader className="pb-4">
             <CardTitle className="text-xl">Agents</CardTitle>
@@ -195,13 +266,23 @@ export default async function HomePage() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/80 bg-card/95 md:col-span-2 xl:col-span-1">
+        <Card className="border-border/80 bg-card/95">
           <CardHeader className="pb-4">
             <CardTitle className="text-xl">Activity</CardTitle>
             <CardDescription>Latest actions reported by dashboard agents.</CardDescription>
           </CardHeader>
           <CardContent>
             <ActivitySection activity={data?.activity} />
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/80 bg-card/95">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl">Runlog History</CardTitle>
+            <CardDescription>Latest per-agent preview with date-grouped history.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <RunlogSection runlogs={data?.runlogs} />
           </CardContent>
         </Card>
       </section>

@@ -2,12 +2,23 @@
 
 Operations dashboard built with **Next.js (App Router) + TypeScript + Tailwind CSS v4 + shadcn/ui**.
 
-## Stack notes
+## Live data architecture
 
-- **TypeScript** is enabled via `tsconfig.json` and `next-env.d.ts`.
-- **Tailwind CSS v4** is configured through `app/globals.css` using `@import "tailwindcss"` and CSS theme tokens.
-- **shadcn/ui** is configured with `components.json`; card primitives are in `components/ui/card.tsx`.
-- UI data sources are file-backed JSON fixtures under `data/` and loaded by `lib/data.ts`.
+`lib/data.ts` hydrates all primary panels from repo/runtime-backed sources:
+
+- **Agents** → `agents/registry.json` + each `agents/config/*.json`
+- **Cron Jobs** → `cron/jobs.json`
+- **Runlog History** → `agents/runlogs/<agent-id>/<YYYY-MM-DD>/*.md`
+- **Activity** → derived from each agent's latest parsed runlog entry
+
+The dashboard no longer depends on static fixture files for primary views.
+
+## UX resilience
+
+- Route-level loading and error boundaries (`app/loading.tsx`, `app/error.tsx`)
+- Empty/error panel states for each section
+- Auto-refresh every 15s via `router.refresh()` to surface runtime/repo changes
+- `dynamic = 'force-dynamic'` to avoid stale cached responses
 
 ## Local development
 
@@ -26,10 +37,3 @@ Then open: `http://localhost:3000`
 npm --prefix apps/ops-dashboard run build
 npm --prefix apps/ops-dashboard run start
 ```
-
-## Validation checklist
-
-- Dashboard renders the three key card groups: **Agents**, **Cron Jobs**, **Activity**.
-- Layout is responsive across mobile/tablet/desktop widths.
-- Data views remain functional (no schema changes required for existing JSON fixtures).
-- Build passes: `npm --prefix apps/ops-dashboard run build`.
