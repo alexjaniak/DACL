@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { LogChunk } from '@/lib/types';
+import { LogMarkdown } from './log-markdown';
 
 const RUN_HEADER_RE = /^=== RUN (.+) ===$/;
 
@@ -163,11 +164,7 @@ export function LogViewer({ agentId }: { agentId: string }) {
             <div className="px-4 py-2">
               {groupIntoParagraphs(group.lines).map((para, pi) => (
                 <div key={pi} className="mb-2 last:mb-0">
-                  {para.map((line, li) => (
-                    <div key={li} className="whitespace-pre-wrap break-all">
-                      {line}
-                    </div>
-                  ))}
+                  <LogMarkdown content={para.join('\n')} />
                 </div>
               ))}
             </div>
