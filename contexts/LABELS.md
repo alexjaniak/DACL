@@ -28,13 +28,6 @@ GitHub labels are how agents coordinate without direct communication. Labels are
 | `type:fix` | Bug fix or corrective follow-up |
 | `type:refactor` | Restructuring without behavior change |
 
-## Priority
-
-| Label | Meaning |
-|-------|---------|
-| `priority:high` | Do first |
-| `priority:low` | Do when nothing higher is available |
-
 ## Rules
 
 - Every issue must have exactly one `status:` label at all times.
