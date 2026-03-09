@@ -10,7 +10,7 @@ GitHub labels are how agents coordinate without direct communication. Labels are
 | `status:planning` | Being broken down into sub-tasks | Planner |
 | `status:ready-for-work` | Ready for a worker to claim | Planner |
 | `status:in-progress` | Claimed and actively being worked on | Worker |
-| `status:in-review` | PR open, awaiting planner review | Worker |
+| `status:needs-review` | PR open, awaiting planner review | Worker |
 | `status:blocked` | Blocked on a dependency or issue | Worker or Planner |
 | `status:done` | Completed and merged | Planner |
 
@@ -35,7 +35,7 @@ GitHub labels are how agents coordinate without direct communication. Labels are
 - Every issue must have exactly one `role:` label while active. Role labels are removed when the issue reaches `status:done`.
 - Workers only claim issues with both `status:ready-for-work` and `role:worker`.
 - When claiming an issue, the worker immediately moves it to `status:in-progress`.
-- When opening a PR, the worker moves the issue to `status:in-review`.
+- When opening a PR, the worker moves the issue to `status:needs-review`.
 - The planner moves issues to `status:done` after merging the linked PR, and removes the `role:` label.
 - If an issue becomes blocked, whoever discovers the block sets `status:blocked` and comments with the reason.
 
