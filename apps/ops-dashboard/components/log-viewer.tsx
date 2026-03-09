@@ -26,6 +26,25 @@ interface RunGroup {
   lines: string[];
 }
 
+function groupIntoParagraphs(lines: string[]): string[][] {
+  const paragraphs: string[][] = [];
+  let current: string[] = [];
+  for (const line of lines) {
+    if (line === '') {
+      if (current.length > 0) {
+        paragraphs.push(current);
+        current = [];
+      }
+    } else {
+      current.push(line);
+    }
+  }
+  if (current.length > 0) {
+    paragraphs.push(current);
+  }
+  return paragraphs;
+}
+
 function groupByRuns(lines: string[]): RunGroup[] {
   const groups: RunGroup[] = [];
   let current: RunGroup | null = null;
@@ -142,9 +161,13 @@ export function LogViewer({ agentId }: { agentId: string }) {
               </div>
             )}
             <div className="px-4 py-2">
-              {group.lines.map((line, li) => (
-                <div key={li} className="whitespace-pre-wrap break-all">
-                  {line || '\u00a0'}
+              {groupIntoParagraphs(group.lines).map((para, pi) => (
+                <div key={pi} className="mb-2 last:mb-0">
+                  {para.map((line, li) => (
+                    <div key={li} className="whitespace-pre-wrap break-all">
+                      {line}
+                    </div>
+                  ))}
                 </div>
               ))}
             </div>

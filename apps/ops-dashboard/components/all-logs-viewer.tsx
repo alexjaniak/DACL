@@ -39,6 +39,25 @@ function formatTimestamp(raw: string): string {
   }
 }
 
+function groupIntoParagraphs(lines: string[]): string[][] {
+  const paragraphs: string[][] = [];
+  let current: string[] = [];
+  for (const line of lines) {
+    if (line === '') {
+      if (current.length > 0) {
+        paragraphs.push(current);
+        current = [];
+      }
+    } else {
+      current.push(line);
+    }
+  }
+  if (current.length > 0) {
+    paragraphs.push(current);
+  }
+  return paragraphs;
+}
+
 export function AllLogsViewer({ agents }: { agents: Agent[] }) {
   const [logs, setLogs] = useState<Map<string, LogChunk>>(new Map());
   const [loading, setLoading] = useState(true);
@@ -154,12 +173,16 @@ export function AllLogsViewer({ agents }: { agents: Agent[] }) {
             </div>
           )}
           <div className="px-4 py-2">
-            {group.lines.map((line, li) => (
-              <div key={li} className="flex gap-2 whitespace-pre-wrap break-all">
-                <span className={`shrink-0 select-none font-medium ${group.colorClass}`}>
-                  {group.agentId.padEnd(12).slice(0, 12)}
-                </span>
-                <span>{line || '\u00a0'}</span>
+            {groupIntoParagraphs(group.lines).map((para, pi) => (
+              <div key={pi} className="mb-2 last:mb-0">
+                {para.map((line, li) => (
+                  <div key={li} className="flex gap-2 whitespace-pre-wrap break-all">
+                    <span className={`shrink-0 select-none font-medium ${group.colorClass}`}>
+                      {group.agentId.padEnd(12).slice(0, 12)}
+                    </span>
+                    <span>{line}</span>
+                  </div>
+                ))}
               </div>
             ))}
           </div>
