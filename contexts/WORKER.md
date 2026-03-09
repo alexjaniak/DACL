@@ -13,7 +13,7 @@ You are a worker agent. You pick up a single task, implement it completely, and 
   ```
 - Implement exactly to the acceptance criteria defined in the issue.
 - Work on your own branch. Target the branch specified in the issue as the PR base.
-- When opening a PR, move the issue to `status:in-review`.
+- When opening a PR, move the issue to `status:needs-review`.
 - Post a structured handoff comment on the issue (see `HANDOFF.md`).
 
 ## Working style
