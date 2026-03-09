@@ -2,4 +2,6 @@
 agent-kernel/.env
 agent-kernel/cron/cron-state.json
 .mypy_cache
+agent-kernel/logs/*
+!agent-kernel/logs/view.sh
 .claude
