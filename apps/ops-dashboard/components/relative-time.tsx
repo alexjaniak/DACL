@@ -7,22 +7,24 @@ function format(iso: string): string {
   const abs = Math.abs(diff);
   const future = diff < 0;
 
-  if (abs < 60_000) return future ? 'in <1m' : '<1m ago';
+  const totalSeconds = Math.floor(abs / 1_000);
+  const totalMinutes = Math.floor(totalSeconds / 60);
+  const totalHours = Math.floor(totalMinutes / 60);
+  const totalDays = Math.floor(totalHours / 24);
 
-  const minutes = Math.floor(abs / 60_000);
-  if (minutes < 60) {
-    const label = `${minutes}m`;
-    return future ? `in ${label}` : `${label} ago`;
+  let label: string;
+
+  if (totalHours >= 24) {
+    const remainHours = totalHours % 24;
+    label = `${totalDays}d ${remainHours}h`;
+  } else if (totalMinutes >= 60) {
+    const remainMinutes = totalMinutes % 60;
+    label = `${totalHours}h ${remainMinutes}m`;
+  } else {
+    const remainSeconds = totalSeconds % 60;
+    label = `${totalMinutes}m ${remainSeconds}s`;
   }
 
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) {
-    const label = `${hours}h`;
-    return future ? `in ${label}` : `${label} ago`;
-  }
-
-  const days = Math.floor(hours / 24);
-  const label = `${days}d`;
   return future ? `in ${label}` : `${label} ago`;
 }
 
@@ -31,7 +33,7 @@ export function RelativeTime({ iso }: { iso: string }) {
 
   useEffect(() => {
     setText(format(iso));
-    const id = setInterval(() => setText(format(iso)), 15_000);
+    const id = setInterval(() => setText(format(iso)), 1_000);
     return () => clearInterval(id);
   }, [iso]);
 
