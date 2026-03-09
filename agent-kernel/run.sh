@@ -94,6 +94,11 @@ for ctx in "${CONTEXTS[@]}"; do
   SYSTEM_PROMPT+=$'\n\n'"$(cat "$CTX_PATH")"
 done
 
+# ── inject agent identity ─────────────────────────────────────
+if [[ -n "$WORKSPACE_ID" ]]; then
+  SYSTEM_PROMPT="AGENT_ID: $WORKSPACE_ID"$'\n\n'"$SYSTEM_PROMPT"
+fi
+
 # ── build claude args ─────────────────────────────────────────
 CLAUDE_ARGS=()
 
