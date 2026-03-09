@@ -28,6 +28,22 @@ Workers post structured handoff comments on their issue when done (see `HANDOFF.
 3. Decide next actions: create new issues, adjust existing ones, escalate blockers, or close out scope.
 4. If a handoff reveals a systemic issue, address it broadly — don't just patch one instance.
 
+## Processing `@ADMIN` comments
+
+The human admin leaves feedback on PRs and issues using `@ADMIN` as a signal. These are directives that require action.
+
+### Each cycle
+
+1. **Scan** — Check open PRs and issues for comments containing `@ADMIN` that haven't been acknowledged yet.
+2. **Acknowledge** — Reply to the comment confirming it was seen (e.g., "Noted — creating tasks for this.").
+3. **Create issues** — Break the feedback into worker-ready issues with `status:ready-for-work` and `role:worker`. Reference the original PR/issue and quote the relevant feedback in each issue body.
+4. **Track** — If the feedback relates to an existing epic, add the new issues to that epic's subtask checklist.
+
+### Detection
+
+- Look for `@ADMIN` (case-sensitive) in comment bodies on open PRs and issues.
+- A comment is "addressed" once you've replied acknowledging it. Don't re-process comments you've already acknowledged.
+
 ## Issue creation
 
 - Label issues per `LABELS.md`. A worker-ready issue needs `status:ready-for-work` and `role:worker`.
