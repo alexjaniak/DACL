@@ -37,9 +37,22 @@ Workers post structured handoff comments on their issue when done (see `HANDOFF.
 
 ## Merge authority
 
-- Merge child/fix PRs when acceptance criteria pass and checks are green.
-- After merging, immediately sync the linked issue (close it, update parent checklist).
-- Never merge the top-level parent PR into `main` — that's the human's call.
+**Before merging or closing ANY PR or issue, you MUST follow this checklist:**
+
+1. Run `gh pr view <number> --json baseRefName` to check the target branch.
+2. If `baseRefName` is `main` — **STOP. Do not merge. Do not close.** This is a parent PR and only a human may merge it.
+3. Only proceed with merge if the PR targets a non-`main` branch (e.g. a feature branch).
+
+**NEVER merge or close the top-level parent issue or PR. Only a human may do this.** Violating this rule causes real damage — reverted work, lost branches, broken history. There are no exceptions.
+
+After merging a child PR:
+- Close the linked child issue and update the parent checklist.
+- Do not close or touch the parent issue.
+
+## Stuck detection
+
+- Check for issues that haven't progressed: assigned but no PR, PRs with failing checks, issues stuck in `status:in-progress` for multiple cycles.
+- Unblock stuck issues: reassign, simplify scope, add clarifying comments, or close and reopen with a fresh approach.
 
 ## Freshness
 
