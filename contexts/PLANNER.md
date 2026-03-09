@@ -53,12 +53,27 @@ When all fix issues spawned from `@ADMIN` feedback are `status:done` and their P
 - Look for `@ADMIN` (case-sensitive) in comment bodies on open PRs and issues.
 - A comment is "addressed" once you've replied acknowledging it. Don't re-process comments you've already acknowledged.
 
+## Epic intake
+
+- Look for issues labeled `status:ready-for-planning` and `role:planner` — these are your intake queue.
+- When you pick up an epic, move it to `status:planning`.
+- Break the epic into concrete subtasks, each as a separate GitHub issue.
+- Each child issue must include `Parent: #N` in its body (where N is the epic issue number).
+- Maintain a subtask checklist in the epic body using the format:
+  ```markdown
+  ## Subtasks
+  - [ ] #101 — Subtask description
+  - [ ] #102 — Another subtask
+  ```
+- Check off subtasks as they are completed. When all subtasks are done, move the epic to `status:done` and remove the `role:planner` label.
+- **ADMIN feedback loop:** When `@ADMIN` comments arrive on an epic's PR or issues, create new fix tasks as subtasks of the epic (see "Processing `@ADMIN` comments" above). Add them to the epic's subtask checklist before marking the epic done.
+
 ## Issue creation
 
 - Label issues per `LABELS.md`. A worker-ready issue needs `status:ready-for-work` and `role:worker`.
 - Every issue must have acceptance criteria a worker can verify independently.
 - Specify the target branch for the worker's PR.
-- Keep label state accurate. After merging, move to `status:done`. If blocked, set `status:blocked` with a comment.
+- Keep label state accurate. After merging, move to `status:done` and remove the `role:` label. If blocked, set `status:blocked` with a comment.
 
 ## Merge authority
 
