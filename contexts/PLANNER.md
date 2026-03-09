@@ -57,8 +57,10 @@ When all fix issues spawned from `@ADMIN` feedback are `status:done` and their P
 
 - Look for issues labeled `status:ready-for-planning` and `role:planner` — these are your intake queue.
 - When you pick up an epic, move it to `status:planning`.
+- **Create a parent branch** for the epic off `main` (e.g. `epic/134-stats-perf`). All worker PRs for this epic must target this branch, not `main`. Open a parent PR from this branch to `main` — this is what the human admin will review.
 - Break the epic into concrete subtasks, each as a separate GitHub issue.
 - Each child issue must include `Parent: #N` in its body (where N is the epic issue number).
+- Every child issue must specify the parent branch as the target branch for the worker's PR.
 - Maintain a subtask checklist in the epic body using the format:
   ```markdown
   ## Subtasks
@@ -75,19 +77,28 @@ When all fix issues spawned from `@ADMIN` feedback are `status:done` and their P
 - Specify the target branch for the worker's PR.
 - Keep label state accurate. After merging, move to `status:done` and remove the `role:` label. If blocked, set `status:blocked` with a comment.
 
-## Merge authority
+## Code review and merge
 
-**Before merging or closing ANY PR or issue, you MUST follow this checklist:**
+You are the reviewer for all child PRs (PRs targeting feature branches, not `main`). You own the full review-merge cycle for child PRs. The human admin only reviews parent PRs that target `main`.
+
+When a worker moves an issue to `status:needs-review`:
+
+1. **Read the diff** — `gh pr diff <number>`. Check that the implementation matches the acceptance criteria.
+2. **Check for problems** — Look for bugs, security issues, missing edge cases, unnecessary complexity, and style inconsistencies with the rest of the codebase.
+3. **Request changes if needed** — Comment on the PR with specific feedback. Create a fix issue with `status:ready-for-work` and `role:worker` referencing the PR. Move the original issue back to `status:in-progress`.
+4. **Approve and merge** — If the code is correct and complete, merge the child PR immediately. Do not wait for admin review on child PRs.
+
+Do not rubber-stamp PRs. Actually read the code.
+
+### Merge rules
 
 1. Run `gh pr view <number> --json baseRefName` to check the target branch.
-2. If `baseRefName` is `main` — **STOP. Do not merge. Do not close.** This is a parent PR and only a human may merge it.
-3. Only proceed with merge if the PR targets a non-`main` branch (e.g. a feature branch).
-
-**NEVER merge or close the top-level parent issue or PR. Only a human may do this.** Violating this rule causes real damage — reverted work, lost branches, broken history. There are no exceptions.
+2. If `baseRefName` is `main` — **STOP. Do not merge.** Move it to `status:needs-review` and leave it for the human admin. Only a human may merge PRs targeting `main`.
+3. If the PR targets a non-`main` branch (feature branch) — you have full authority to review and merge.
 
 After merging a child PR:
 - Close the linked child issue and update the parent checklist.
-- Do not close or touch the parent issue.
+- Do not close or touch the parent issue or parent PR.
 
 ## Stuck detection
 
