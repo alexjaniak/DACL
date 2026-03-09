@@ -34,6 +34,31 @@ color_for_agent() {
   echo "${COLORS[$hash]}"
 }
 
+# ── run-grouped line formatter ─────────────────────────────────
+# Detects "=== RUN <timestamp> ===" boundaries and groups output.
+# Falls back to per-line timestamps for lines outside a run block.
+format_lines() {
+  local agent="$1"
+  local color
+  color=$(color_for_agent "$agent")
+  local tag="\033[${color}m[${agent}]\033[0m"
+  local separator="─────────────────────────"
+
+  while IFS= read -r line; do
+    # Run boundary marker from run.sh
+    if [[ "$line" =~ ^===\ RUN\ ([0-9T:.Z-]+)\ ===$ ]]; then
+      local run_ts="${BASH_REMATCH[1]}"
+      # Convert ISO timestamp to HH:MM:SS for display
+      local display_ts
+      display_ts=$(date -jf '%Y-%m-%dT%H:%M:%SZ' "$run_ts" '+%H:%M:%S' 2>/dev/null || echo "$run_ts")
+      printf "\n%b \033[90m%s\033[0m \033[90m%s\033[0m\n" "$tag" "$display_ts" "$separator"
+      continue
+    fi
+    [[ -z "$line" ]] && continue
+    printf "  %s\n" "$line"
+  done
+}
+
 # ── parse args ─────────────────────────────────────────────────
 FOLLOW=false
 AGENT=""
@@ -56,19 +81,10 @@ if [[ -n "$AGENT" ]]; then
     exit 1
   fi
 
-  COLOR=$(color_for_agent "$AGENT")
-  TAG="\033[${COLOR}m[${AGENT}]\033[0m"
-
   if $FOLLOW; then
-    tail -n "$LINES" -f "$LOG_FILE" | while IFS= read -r line; do
-      ts=$(date '+%H:%M:%S')
-      printf "\033[90m%s\033[0m %b %s\n" "$ts" "$TAG" "$line"
-    done
+    tail -n "$LINES" -f "$LOG_FILE" | format_lines "$AGENT"
   else
-    tail -n "$LINES" "$LOG_FILE" | while IFS= read -r line; do
-      ts=$(date '+%H:%M:%S')
-      printf "\033[90m%s\033[0m %b %s\n" "$ts" "$TAG" "$line"
-    done
+    tail -n "$LINES" "$LOG_FILE" | format_lines "$AGENT"
   fi
   exit 0
 fi
@@ -82,7 +98,7 @@ if [[ ! -e "${LOG_FILES[0]}" ]]; then
 fi
 
 if $FOLLOW; then
-  # Use tail -f on all log files, prefix each line with the agent tag
+  CURRENT_AGENT="unknown"
   tail -n "$LINES" -f "${LOG_FILES[@]}" 2>/dev/null | while IFS= read -r line; do
     # tail -f prefixes with "==> path <=="; extract agent ID from filename
     if [[ "$line" =~ ^==\>\ (.+)\ \<== ]]; then
@@ -92,22 +108,24 @@ if $FOLLOW; then
       continue
     fi
     [[ -z "$line" ]] && continue
-    COLOR=$(color_for_agent "${CURRENT_AGENT:-unknown}")
-    TAG="\033[${COLOR}m[${CURRENT_AGENT:-unknown}]\033[0m"
-    ts=$(date '+%H:%M:%S')
-    printf "\033[90m%s\033[0m %b %s\n" "$ts" "$TAG" "$line"
+
+    # Run boundary marker
+    if [[ "$line" =~ ^===\ RUN\ ([0-9T:.Z-]+)\ ===$ ]]; then
+      local_color=$(color_for_agent "$CURRENT_AGENT")
+      local_tag="\033[${local_color}m[${CURRENT_AGENT}]\033[0m"
+      run_ts="${BASH_REMATCH[1]}"
+      display_ts=$(date -jf '%Y-%m-%dT%H:%M:%SZ' "$run_ts" '+%H:%M:%S' 2>/dev/null || echo "$run_ts")
+      printf "\n%b \033[90m%s\033[0m \033[90m%s\033[0m\n" "$local_tag" "$display_ts" "─────────────────────────"
+      continue
+    fi
+
+    printf "  %s\n" "$line"
   done
 else
-  # Show last N lines from each agent
+  # Show last N lines from each agent, grouped by run
   for log_file in "${LOG_FILES[@]}"; do
     basename="${log_file##*/}"
     agent="${basename%.log}"
-    COLOR=$(color_for_agent "$agent")
-    TAG="\033[${COLOR}m[${agent}]\033[0m"
-
-    tail -n "$LINES" "$log_file" | while IFS= read -r line; do
-      ts=$(date '+%H:%M:%S')
-      printf "\033[90m%s\033[0m %b %s\n" "$ts" "$TAG" "$line"
-    done
+    tail -n "$LINES" "$log_file" | format_lines "$agent"
   done
 fi
