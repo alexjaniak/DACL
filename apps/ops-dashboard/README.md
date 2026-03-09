@@ -4,14 +4,14 @@ Operations dashboard built with **Next.js (App Router) + TypeScript + Tailwind C
 
 ## Live data architecture
 
-`lib/data.ts` hydrates all primary panels from repo/runtime-backed sources:
+`lib/data.ts` hydrates all primary panels from repo-backed sources:
 
-- **Agents** → `agents/registry.json` + each `agents/config/*.json`
-- **Cron Jobs** → `cron/jobs.json`
-- **Runlog History** → `agents/runlogs/<agent-id>/<YYYY-MM-DD>/*.md`
-- **Activity** → derived from each agent's latest parsed runlog entry
+- **Agents** → derived from `agent-kernel/cron/cron-jobs.json` entries (role inferred from `contexts` array)
+- **Cron Jobs** → `agent-kernel/cron/cron-jobs.json`
+- **Runlog History** → not yet available (graceful empty state); target schema: `agents/runlogs/<agent-id>/<YYYY-MM-DD>/*.md`
+- **Activity** → derived from each agent's latest parsed runlog entry (empty until runlogs exist)
 
-The dashboard no longer depends on static fixture files for primary views.
+There is no separate agent registry — agents are defined by their cron job entries.
 
 ## UX resilience
 
