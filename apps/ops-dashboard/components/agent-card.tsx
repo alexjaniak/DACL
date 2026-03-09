@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Agent } from '@/lib/types';
+import { LogPanel } from './log-panel';
 import { RelativeTime } from './relative-time';
 import { RoleBadge } from './role-badge';
 
@@ -40,6 +41,7 @@ export function AgentCard({ agent }: { agent: Agent }) {
             </span>
           </div>
         </div>
+        <LogPanel agentId={agent.id} />
       </CardContent>
     </Card>
   );
