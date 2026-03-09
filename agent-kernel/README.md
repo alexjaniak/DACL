@@ -72,4 +72,4 @@ Cron jobs can also specify contexts in `cron-jobs.json`:
 3. Your prompt goes as the message argument
 4. `--dangerously-skip-permissions` is on by default for unattended runs
 5. Default mode is `--print` (text only). Pass `--agentic` to enable tool use.
-6. `--workspace <id>` runs inside an isolated git worktree at `.worktrees/<id>`
+6. `--workspace <id>` runs inside an isolated git worktree at `.repos/<id>`
