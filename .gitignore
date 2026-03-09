@@ -1,5 +1,6 @@
 .worktrees/
 agent-kernel/.env
 agent-kernel/cron/cron-state.json
+agent-kernel/logs/*.log
 .mypy_cache
 .claude

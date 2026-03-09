@@ -61,7 +61,7 @@ If the state file gets deleted or out of sync, just run `apply` — it reconverg
 
 ## Logs
 
-Each job logs to `/tmp/agent-kernel-<id>.log`. View with:
+Each job logs to `agent-kernel/logs/<id>.log` (persistent across reboots, gitignored). View with:
 
 ```bash
 # Show last 50 lines for a specific job
@@ -73,3 +73,21 @@ Each job logs to `/tmp/agent-kernel-<id>.log`. View with:
 # Show last N lines
 ./agent-kernel/cron/manage.py logs <id> -n 100
 ```
+
+### Pretty log viewer
+
+A color-coded log viewer is available at `agent-kernel/logs/view.sh`:
+
+```bash
+# Tail all agents interleaved
+./agent-kernel/logs/view.sh
+
+# Tail a specific agent
+./agent-kernel/logs/view.sh worker-01
+
+# Live follow mode
+./agent-kernel/logs/view.sh -f
+./agent-kernel/logs/view.sh worker-01 -f
+```
+
+Each agent gets a distinct color for easy scanning.

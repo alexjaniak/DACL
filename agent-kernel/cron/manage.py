@@ -14,6 +14,7 @@ KERNEL_DIR = os.path.dirname(SCRIPT_DIR)
 REPO_DIR = os.path.dirname(KERNEL_DIR)
 JOBS_FILE = os.path.join(SCRIPT_DIR, "cron-jobs.json")
 STATE_FILE = os.path.join(SCRIPT_DIR, "cron-state.json")
+LOGS_DIR = os.path.join(KERNEL_DIR, "logs")
 TAG_PREFIX = "# DACL:agent-kernel"
 
 
@@ -30,14 +31,15 @@ def parse_interval(interval):
 
 
 def build_cron_command(job_id, prompt, agentic, contexts=None, workspace=False):
-    cmd = f"cd {REPO_DIR} && ./agent-kernel/run.sh"
+    cmd = f"cd {REPO_DIR} && mkdir -p {LOGS_DIR} && ./agent-kernel/run.sh"
     if agentic:
         cmd += " --agentic"
     if workspace:
         cmd += f" --workspace {job_id}"
     for ctx in (contexts or []):
         cmd += f" --context {ctx}"
-    cmd += f' "{prompt}" >> /tmp/agent-kernel-{job_id}.log 2>&1'
+    log_path = os.path.join(LOGS_DIR, f"{job_id}.log")
+    cmd += f' "{prompt}" >> {log_path} 2>&1'
     return cmd
 
 
@@ -199,7 +201,7 @@ def cmd_add(args):
     save_state(state)
 
     print(f"Added cron job '{args.id}' ({args.interval}): {cron_expr}")
-    print(f"  Log: /tmp/agent-kernel-{args.id}.log")
+    print(f"  Log: {os.path.join(LOGS_DIR, f'{args.id}.log')}")
 
 
 def cmd_remove(args):
@@ -238,7 +240,7 @@ def cmd_logs(args):
         print(f"No active job with id '{job_id}'", file=sys.stderr)
         sys.exit(1)
 
-    log_path = f"/tmp/agent-kernel-{job_id}.log"
+    log_path = os.path.join(LOGS_DIR, f"{job_id}.log")
     if not os.path.exists(log_path):
         print(f"No log file found at {log_path}")
         return
