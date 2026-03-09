@@ -118,7 +118,7 @@ export function AllLogsViewer({ agents }: { agents: Agent[] }) {
 
   if (loading) {
     return (
-      <div className="flex h-48 items-center justify-center rounded-lg bg-zinc-950/80 text-sm text-muted-foreground">
+      <div className="flex h-full items-center justify-center rounded-lg bg-zinc-950/80 text-sm text-muted-foreground">
         Loading logs…
       </div>
     );
@@ -154,7 +154,7 @@ export function AllLogsViewer({ agents }: { agents: Agent[] }) {
 
   if (allGroups.length === 0) {
     return (
-      <div className="flex h-48 items-center justify-center rounded-lg bg-zinc-950/80 text-sm text-muted-foreground">
+      <div className="flex h-full items-center justify-center rounded-lg bg-zinc-950/80 text-sm text-muted-foreground">
         No logs available
       </div>
     );
@@ -163,16 +163,14 @@ export function AllLogsViewer({ agents }: { agents: Agent[] }) {
   return (
     <div
       ref={scrollRef}
-      className="max-h-[28rem] overflow-y-auto rounded-lg bg-zinc-950/80 font-mono text-[13px] leading-relaxed text-zinc-300"
+      className="h-full overflow-y-auto rounded-lg bg-zinc-950/80 font-mono text-[13px] leading-relaxed text-zinc-300"
     >
       {allGroups.map((group, gi) => (
         <div key={gi}>
-          {group.timestamp && (
-            <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-zinc-800 bg-zinc-900/95 px-4 py-2 text-xs font-medium text-zinc-400">
-              <span className={group.colorClass}>{group.agentId}</span>
-              <span>{formatTimestamp(group.timestamp)}</span>
-            </div>
-          )}
+          <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-zinc-800 bg-zinc-900/95 px-4 py-2 text-xs font-medium text-zinc-400">
+            <span className={group.colorClass}>{group.agentId}</span>
+            {group.timestamp && <span>{formatTimestamp(group.timestamp)}</span>}
+          </div>
           <div className="px-4 py-2">
             {groupIntoParagraphs(group.lines).map((para, pi) => (
               <div key={pi} className="mb-2 flex gap-2 last:mb-0">

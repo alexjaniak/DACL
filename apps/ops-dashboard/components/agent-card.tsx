@@ -1,11 +1,27 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 import type { Agent } from '@/lib/types';
 import { RelativeTime } from './relative-time';
 import { RoleBadge } from './role-badge';
 
-export function AgentCard({ agent }: { agent: Agent }) {
+export function AgentCard({
+  agent,
+  selected = false,
+  onClick,
+}: {
+  agent: Agent;
+  selected?: boolean;
+  onClick?: () => void;
+}) {
   return (
-    <Card className="gap-4 border-border/60 bg-card/70 py-5">
+    <Card
+      className={cn(
+        'gap-4 border-border/60 bg-card/70 py-5 transition-colors',
+        onClick && 'cursor-pointer hover:border-zinc-500/60',
+        selected && 'border-zinc-400 bg-card/90 ring-1 ring-zinc-400/30',
+      )}
+      onClick={onClick}
+    >
       <CardHeader className="flex-row items-center justify-between gap-2 pb-0">
         <CardTitle className="text-lg font-semibold tracking-tight">{agent.id}</CardTitle>
         <RoleBadge role={agent.role} />
