@@ -5,6 +5,7 @@ export interface Agent {
   agentic: boolean
   workspace: boolean
   contexts: string[]
+  repo: string
   lastRun: string | null
   nextRun: string | null
 }

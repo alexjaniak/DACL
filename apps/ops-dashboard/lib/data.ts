@@ -13,6 +13,7 @@ type CronJobEntry = {
   contexts?: unknown;
   agentic?: unknown;
   workspace?: unknown;
+  repo?: unknown;
 };
 
 function str(value: unknown, fallback = 'unknown'): string {
@@ -69,6 +70,7 @@ export async function getAgents(): Promise<Agent[]> {
         agentic: Boolean(job.agentic),
         workspace: Boolean(job.workspace),
         contexts,
+        repo: str(job.repo, 'DACL'),
         lastRun,
         nextRun,
       };
