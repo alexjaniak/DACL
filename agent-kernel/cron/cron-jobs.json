@@ -1,11 +1,20 @@
 {
   "jobs": [
     {
-      "id": "joke-writer",
-      "interval": "1m",
-      "prompt": "Write a single short programming joke and append it to joke.md in the repo root. Add a blank line between jokes. Keep it to 1-2 lines max.",
-      "contexts": ["contexts/IDENTITY.md", "contexts/JOKES.md"],
-      "agentic": true
+      "id": "planner-01",
+      "interval": "5m",
+      "prompt": "Review the current state of GitHub issues and PRs. Process any new worker handoff comments. Create new issues or adjust existing ones to progress toward the project goals. Spawn subplanner issues if scope is too large.",
+      "contexts": ["contexts/IDENTITY.md", "contexts/PLANNER.md", "contexts/CONSTRAINTS.md", "contexts/LABELS.md", "contexts/HANDOFF.md", "contexts/WORKSPACE.md"],
+      "agentic": true,
+      "workspace": true
+    },
+    {
+      "id": "worker-01",
+      "interval": "5m",
+      "prompt": "Find one issue labeled status:ready-for-work and role:worker. Read it and all its comments. Implement the task, open a PR, and post a handoff comment on the issue.",
+      "contexts": ["contexts/IDENTITY.md", "contexts/WORKER.md", "contexts/CONSTRAINTS.md", "contexts/LABELS.md", "contexts/HANDOFF.md", "contexts/WORKSPACE.md"],
+      "agentic": true,
+      "workspace": true
     }
   ]
 }
