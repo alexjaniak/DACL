@@ -111,4 +111,7 @@ if [[ -n "$WORKSPACE_ID" ]]; then
   cd "$WORKTREE_DIR"
 fi
 
+# ── run delimiter (consumed by logs/view.sh for grouping) ────
+echo "=== RUN $(date -u +%Y-%m-%dT%H:%M:%SZ) ==="
+
 "$CLAUDE" "${CLAUDE_ARGS[@]}" "$PROMPT"

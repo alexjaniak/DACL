@@ -48,6 +48,31 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+# ── format a single line, grouping by run headers ─────────────
+# Expects CURRENT_AGENT to be set by the caller.
+format_line() {
+  local line="$1"
+  local agent="${2:-unknown}"
+  local color
+  color=$(color_for_agent "$agent")
+
+  # Detect run header: === RUN <timestamp> ===
+  if [[ "$line" =~ ^===\ RUN\ ([^ ]+)\ ===$ ]]; then
+    local run_ts="${BASH_REMATCH[1]}"
+    # Convert ISO timestamp to HH:MM:SS for display
+    local display_ts
+    display_ts=$(date -jf '%Y-%m-%dT%H:%M:%SZ' "$run_ts" '+%H:%M:%S' 2>/dev/null || echo "$run_ts")
+    printf "\n\033[${color}m[%s]\033[0m \033[90m%s\033[0m ─────────────────────────\n" "$agent" "$display_ts"
+    return
+  fi
+
+  # Skip blank lines
+  [[ -z "$line" ]] && return
+
+  # Regular content line — indent under the run group
+  printf "  %s\n" "$line"
+}
+
 # ── single agent mode ─────────────────────────────────────────
 if [[ -n "$AGENT" ]]; then
   LOG_FILE="${LOGS_DIR}/${AGENT}.log"
@@ -56,18 +81,13 @@ if [[ -n "$AGENT" ]]; then
     exit 1
   fi
 
-  COLOR=$(color_for_agent "$AGENT")
-  TAG="\033[${COLOR}m[${AGENT}]\033[0m"
-
   if $FOLLOW; then
     tail -n "$LINES" -f "$LOG_FILE" | while IFS= read -r line; do
-      ts=$(date '+%H:%M:%S')
-      printf "\033[90m%s\033[0m %b %s\n" "$ts" "$TAG" "$line"
+      format_line "$line" "$AGENT"
     done
   else
     tail -n "$LINES" "$LOG_FILE" | while IFS= read -r line; do
-      ts=$(date '+%H:%M:%S')
-      printf "\033[90m%s\033[0m %b %s\n" "$ts" "$TAG" "$line"
+      format_line "$line" "$AGENT"
     done
   fi
   exit 0
@@ -82,7 +102,7 @@ if [[ ! -e "${LOG_FILES[0]}" ]]; then
 fi
 
 if $FOLLOW; then
-  # Use tail -f on all log files, prefix each line with the agent tag
+  CURRENT_AGENT="unknown"
   tail -n "$LINES" -f "${LOG_FILES[@]}" 2>/dev/null | while IFS= read -r line; do
     # tail -f prefixes with "==> path <=="; extract agent ID from filename
     if [[ "$line" =~ ^==\>\ (.+)\ \<== ]]; then
@@ -91,23 +111,15 @@ if $FOLLOW; then
       CURRENT_AGENT="${basename%.log}"
       continue
     fi
-    [[ -z "$line" ]] && continue
-    COLOR=$(color_for_agent "${CURRENT_AGENT:-unknown}")
-    TAG="\033[${COLOR}m[${CURRENT_AGENT:-unknown}]\033[0m"
-    ts=$(date '+%H:%M:%S')
-    printf "\033[90m%s\033[0m %b %s\n" "$ts" "$TAG" "$line"
+    format_line "$line" "$CURRENT_AGENT"
   done
 else
-  # Show last N lines from each agent
   for log_file in "${LOG_FILES[@]}"; do
     basename="${log_file##*/}"
     agent="${basename%.log}"
-    COLOR=$(color_for_agent "$agent")
-    TAG="\033[${COLOR}m[${agent}]\033[0m"
 
     tail -n "$LINES" "$log_file" | while IFS= read -r line; do
-      ts=$(date '+%H:%M:%S')
-      printf "\033[90m%s\033[0m %b %s\n" "$ts" "$TAG" "$line"
+      format_line "$line" "$agent"
     done
   done
 fi
