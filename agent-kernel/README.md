@@ -17,7 +17,6 @@ cp agent-kernel/.env.example agent-kernel/.env
 
 | File | Purpose |
 |------|---------|
-| `CONTEXT.md` | Base system prompt — always included. Empty = skipped. |
 | `run.sh` | Invokes `claude` CLI once and exits. |
 | `.env` | Auth and overrides (gitignored). See `.env.example`. |
 | `cron/` | Cron management subsystem. See [`cron/README.md`](cron/README.md). |
@@ -46,11 +45,15 @@ Reusable context files live in `contexts/` at the repo root. Each `.md` file is 
 ```
 contexts/
   IDENTITY.md      # agent identity and rules
-  REPO_MAP.md      # codebase overview
-  CODE_STYLE.md    # coding conventions
+  CONSTRAINTS.md   # operational constraints
+  PLANNER.md       # planner agent instructions
+  WORKER.md        # worker agent instructions
+  HANDOFF.md       # task handoff protocol
+  LABELS.md        # GitHub issue labeling conventions
+  WORKSPACE.md     # git worktree and branching guidelines
 ```
 
-Select which contexts to include per invocation with `--context <path>` (repeatable, relative to repo root). The base `CONTEXT.md` is always prepended.
+Select which contexts to include per invocation with `--context <path>` (repeatable, relative to repo root).
 
 Cron jobs can also specify contexts in `cron-jobs.json`:
 ```json
@@ -64,8 +67,9 @@ Cron jobs can also specify contexts in `cron-jobs.json`:
 
 ## How it works
 
-1. `CONTEXT.md` content is always included via `--append-system-prompt` (preserves Claude's built-in capabilities)
-2. `--context <path>` flags append additional context files (paths relative to repo root)
+1. `--context <path>` flags assemble a system prompt from context files (paths relative to repo root)
+2. System prompt is passed via `--append-system-prompt` (preserves Claude's built-in capabilities)
 3. Your prompt goes as the message argument
 4. `--dangerously-skip-permissions` is on by default for unattended runs
 5. Default mode is `--print` (text only). Pass `--agentic` to enable tool use.
+6. `--workspace <id>` runs inside an isolated git worktree at `.worktrees/<id>`
