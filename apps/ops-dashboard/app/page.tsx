@@ -45,13 +45,6 @@ function Pill({
   return <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${toneClass}`}>{label}</span>;
 }
 
-function toneFromText(input: string): 'neutral' | 'good' | 'warn' | 'bad' {
-  const value = input.toLowerCase();
-  if (value.includes('ok') || value.includes('healthy') || value.includes('success') || value.includes('online')) return 'good';
-  if (value.includes('degrad') || value.includes('retry') || value.includes('slow') || value.includes('pending')) return 'warn';
-  if (value.includes('error') || value.includes('fail') || value.includes('down') || value.includes('offline')) return 'bad';
-  return 'neutral';
-}
 
 function StackRow({ label, value }: { label: string; value: string }) {
   return (
@@ -78,14 +71,12 @@ function AgentSection({ agents }: { agents: AgentRecord[] | undefined }) {
               <p className="text-base font-semibold tracking-tight">{agent.id}</p>
               <p className="mt-0.5 text-xs text-muted-foreground uppercase">{agent.role}</p>
             </div>
-            <Pill label={agent.statusSummary} tone={toneFromText(agent.statusSummary)} />
+            <Pill label={agent.agentic ? 'Agentic' : 'Non-agentic'} tone={agent.agentic ? 'good' : 'neutral'} />
           </div>
 
           <div className="space-y-2.5">
-            <StackRow label="Operative" value={agent.operativeFile} />
-            <StackRow label="Worktree" value={agent.worktree} />
-            <StackRow label="Path" value={agent.worktreePath} />
-            <StackRow label="Wallet" value={`${agent.walletNetwork}: ${agent.walletPubkey}`} />
+            <StackRow label="Interval" value={agent.interval} />
+            <StackRow label="Workspace" value={agent.workspace ? 'Isolated worktree' : 'Shared'} />
           </div>
         </li>
       ))}
@@ -106,13 +97,14 @@ function CronSection({ cronJobs }: { cronJobs: CronJobRecord[] | undefined }) {
         >
           <div className="mb-3 flex items-start justify-between gap-2">
             <p className="text-base font-semibold tracking-tight">{job.name}</p>
-            <Pill label={job.enabled ? 'Enabled' : 'Disabled'} tone={job.enabled ? 'good' : 'warn'} />
+            <Pill label={`Every ${job.interval}`} tone="good" />
           </div>
 
           <div className="space-y-2.5">
-            <StackRow label="Schedule" value={job.schedule} />
-            <StackRow label="Next run" value={job.nextRun} />
-            <StackRow label="Last run" value={job.lastRunStatus} />
+            <StackRow label="Prompt" value={job.prompt.length > 120 ? `${job.prompt.slice(0, 120)}…` : job.prompt} />
+            <StackRow label="Contexts" value={job.contexts.map((c) => c.split('/').pop()).join(', ') || 'none'} />
+            <StackRow label="Agentic" value={job.agentic ? 'Yes' : 'No'} />
+            <StackRow label="Workspace" value={job.workspace ? 'Isolated worktree' : 'Shared'} />
           </div>
         </li>
       ))}
