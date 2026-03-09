@@ -77,7 +77,9 @@ if [[ -n "$TARGET_REPO" ]]; then
       git -C "$LOCAL_CLONE" pull --ff-only 2>/dev/null || true
     else
       mkdir -p "$(dirname "$LOCAL_CLONE")"
-      git clone "https://$TARGET_REPO.git" "$LOCAL_CLONE"
+      # Convert github.com/owner/repo to git@github.com:owner/repo.git
+      SSH_URL="git@$(echo "$TARGET_REPO" | sed 's|/|:|1')"
+      git clone "$SSH_URL.git" "$LOCAL_CLONE"
     fi
     WORK_REPO_DIR="$LOCAL_CLONE"
   else
