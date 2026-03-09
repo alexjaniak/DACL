@@ -250,6 +250,32 @@ def cmd_logs(args):
         os.execvp("tail", ["tail", "-n", n, log_path])
 
 
+def cmd_run(args):
+    if not os.path.exists(JOBS_FILE):
+        print(f"Error: {JOBS_FILE} not found", file=sys.stderr)
+        sys.exit(1)
+
+    with open(JOBS_FILE) as f:
+        config = json.load(f)
+
+    job = next((j for j in config.get("jobs", []) if j["id"] == args.id), None)
+    if not job:
+        print(f"No job with id '{args.id}' in {JOBS_FILE}", file=sys.stderr)
+        sys.exit(1)
+
+    cmd = [os.path.join(REPO_DIR, "agent-kernel", "run.sh")]
+    if job.get("agentic"):
+        cmd.append("--agentic")
+    if job.get("workspace"):
+        cmd += ["--workspace", job["id"]]
+    for ctx in job.get("contexts", []):
+        cmd += ["--context", ctx]
+    cmd.append(job["prompt"])
+
+    print(f"Running {args.id}...")
+    os.execv(cmd[0], cmd)
+
+
 def cmd_clear(args):
     state = load_state()
     if not state["jobs"]:
@@ -294,6 +320,9 @@ def main():
     p_logs.add_argument("-f", "--follow", action="store_true", help="Follow log output")
     p_logs.add_argument("-n", "--lines", type=int, default=50, help="Number of lines (default: 50)")
 
+    p_run = sub.add_parser("run", help="Run a job once immediately")
+    p_run.add_argument("id", help="Job identifier from cron-jobs.json")
+
     sub.add_parser("clear", help="Remove all agent-kernel cron jobs")
 
     args = parser.parse_args()
@@ -303,6 +332,7 @@ def main():
         "remove": cmd_remove,
         "list": cmd_list,
         "logs": cmd_logs,
+        "run": cmd_run,
         "clear": cmd_clear,
     }
     commands[args.command](args)
