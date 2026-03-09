@@ -22,7 +22,9 @@ Source of truth for desired cron state. Checked into git.
       "interval": "5m",
       "prompt": "Check for stale PRs",
       "agentic": true,
-      "enabled": true
+      "enabled": true,
+      "contexts": ["contexts/IDENTITY.md", "contexts/WORKER.md"],
+      "workspace": true
     }
   ]
 }
@@ -35,6 +37,8 @@ Source of truth for desired cron state. Checked into git.
 | `prompt` | string | required | Prompt passed to `run.sh`. |
 | `agentic` | bool | `false` | Enable tool use (`--agentic`). |
 | `enabled` | bool | `true` | Set `false` to remove from crontab without deleting config. |
+| `contexts` | string[] | `[]` | List of context file paths passed to `run.sh` via `--context`. |
+| `workspace` | bool | `false` | Allocate an isolated git worktree for the job via `--workspace`. |
 
 ## Commands
 
