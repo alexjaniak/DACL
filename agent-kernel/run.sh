@@ -21,8 +21,10 @@ AGENTIC=false
 PROMPT=""
 CONTEXTS=()
 WORKSPACE_ID=""
+TARGET_REPO=""
 NEXT_IS_CONTEXT=false
 NEXT_IS_WORKSPACE=false
+NEXT_IS_REPO=false
 
 for arg in "$@"; do
   if [[ "$NEXT_IS_CONTEXT" == true ]]; then
@@ -35,10 +37,16 @@ for arg in "$@"; do
     NEXT_IS_WORKSPACE=false
     continue
   fi
+  if [[ "$NEXT_IS_REPO" == true ]]; then
+    TARGET_REPO="$arg"
+    NEXT_IS_REPO=false
+    continue
+  fi
   case "$arg" in
     --agentic)    AGENTIC=true ;;
     --context)    NEXT_IS_CONTEXT=true ;;
     --workspace)  NEXT_IS_WORKSPACE=true ;;
+    --repo)       NEXT_IS_REPO=true ;;
     *)            PROMPT="$arg" ;;
   esac
 done
@@ -49,17 +57,42 @@ if [[ -z "$PROMPT" ]] && [[ ! -t 0 ]]; then
 fi
 
 if [[ -z "$PROMPT" ]]; then
-  echo "Usage: $0 [--agentic] [--workspace <id>] [--context <path> ...] \"<prompt>\"" >&2
+  echo "Usage: $0 [--agentic] [--workspace <id>] [--repo <path-or-url>] [--context <path> ...] \"<prompt>\"" >&2
   exit 1
+fi
+
+# ── resolve target repo ──────────────────────────────────────
+# When --repo is provided, the worktree is created under the target repo
+# instead of DACL's own repo. Context files still resolve from DACL's REPO_DIR.
+WORK_REPO_DIR="$REPO_DIR"
+
+if [[ -n "$TARGET_REPO" ]]; then
+  if [[ "$TARGET_REPO" == /* ]]; then
+    # Absolute local path — use directly
+    WORK_REPO_DIR="$TARGET_REPO"
+  elif [[ "$TARGET_REPO" == github.com/* ]]; then
+    # GitHub URL — clone into .repos/ under DACL root
+    LOCAL_CLONE="$REPO_DIR/.repos/$TARGET_REPO"
+    if [[ -d "$LOCAL_CLONE/.git" ]]; then
+      git -C "$LOCAL_CLONE" pull --ff-only 2>/dev/null || true
+    else
+      mkdir -p "$(dirname "$LOCAL_CLONE")"
+      git clone "https://$TARGET_REPO.git" "$LOCAL_CLONE"
+    fi
+    WORK_REPO_DIR="$LOCAL_CLONE"
+  else
+    # Relative or other path — treat as local path
+    WORK_REPO_DIR="$TARGET_REPO"
+  fi
 fi
 
 # ── workspace (git worktree) isolation ───────────────────────
 if [[ -n "$WORKSPACE_ID" ]]; then
-  WORKTREE_DIR="$REPO_DIR/.worktrees/$WORKSPACE_ID"
+  WORKTREE_DIR="$WORK_REPO_DIR/.worktrees/$WORKSPACE_ID"
 
   # Create worktree if missing
   if [[ ! -d "$WORKTREE_DIR" ]]; then
-    git -C "$REPO_DIR" worktree add "$WORKTREE_DIR" --detach main
+    git -C "$WORK_REPO_DIR" worktree add "$WORKTREE_DIR" --detach main
   fi
 
   # Skip if another run is still active in this workspace
