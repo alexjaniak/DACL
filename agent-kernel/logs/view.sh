@@ -43,20 +43,43 @@ format_lines() {
   color=$(color_for_agent "$agent")
   local tag="\033[${color}m[${agent}]\033[0m"
   local separator="─────────────────────────"
+  local buffer=""
+  local in_block=false
 
   while IFS= read -r line; do
-    # Run boundary marker from run.sh
+    # Run boundary marker from run.sh — start buffering a new block
     if [[ "$line" =~ ^===\ RUN\ ([0-9T:.Z-]+)\ ===$ ]]; then
       local run_ts="${BASH_REMATCH[1]}"
-      # Convert ISO timestamp to HH:MM:SS for display
       local display_ts
       display_ts=$(date -jf '%Y-%m-%dT%H:%M:%SZ' "$run_ts" '+%H:%M:%S' 2>/dev/null || echo "$run_ts")
-      printf "\n%b \033[90m%s\033[0m \033[90m%s\033[0m\n" "$tag" "$display_ts" "$separator"
+      buffer="$(printf "\n%b \033[90m%s\033[0m \033[90m%s\033[0m\n" "$tag" "$display_ts" "$separator")"
+      in_block=true
       continue
     fi
+
+    # End-of-run marker — flush the buffered block atomically
+    if [[ "$line" == "=== END RUN ===" ]]; then
+      if [[ -n "$buffer" ]]; then
+        printf '%s\n' "$buffer"
+      fi
+      buffer=""
+      in_block=false
+      continue
+    fi
+
     [[ -z "$line" ]] && continue
-    printf "  %s\n" "$line"
+
+    if $in_block; then
+      buffer+="$(printf "\n  %s" "$line")"
+    else
+      printf "  %s\n" "$line"
+    fi
   done
+
+  # Flush any remaining buffer (e.g. run still in progress during follow mode)
+  if [[ -n "$buffer" ]]; then
+    printf '%s\n' "$buffer"
+  fi
 }
 
 # ── parse args ─────────────────────────────────────────────────
