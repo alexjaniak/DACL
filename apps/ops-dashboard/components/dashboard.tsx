@@ -9,12 +9,23 @@ import { StatsBar } from './stats-bar';
 
 const POLL_INTERVAL = 10_000;
 
+const AGENT_COLORS: Record<number, string> = {
+  0: 'text-teal-400',
+  1: 'text-purple-400',
+  2: 'text-amber-400',
+  3: 'text-sky-400',
+  4: 'text-rose-400',
+  5: 'text-emerald-400',
+  6: 'text-indigo-400',
+  7: 'text-orange-400',
+};
+
 export function Dashboard({ initialAgents }: { initialAgents: Agent[] }) {
   const [agents, setAgents] = useState<Agent[]>(initialAgents);
   const [updatedAt, setUpdatedAt] = useState<Date>(new Date());
   const [secondsAgo, setSecondsAgo] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeLogTab, setActiveLogTab] = useState<string>('all');
+  const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const mountedRef = useRef(true);
 
   const fetchAgents = useCallback(async () => {
@@ -50,10 +61,11 @@ export function Dashboard({ initialAgents }: { initialAgents: Agent[] }) {
     return () => clearInterval(id);
   }, [updatedAt]);
 
-  const logTabs = [
-    { id: 'all', label: 'All Agents' },
-    ...agents.map((a) => ({ id: a.id, label: a.id })),
-  ];
+  // Build color map for selected agent display
+  const colorMap = new Map<string, string>();
+  agents.forEach((agent, i) => {
+    colorMap.set(agent.id, AGENT_COLORS[i % Object.keys(AGENT_COLORS).length]);
+  });
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-8 sm:px-6 sm:py-10">
@@ -76,41 +88,33 @@ export function Dashboard({ initialAgents }: { initialAgents: Agent[] }) {
         <StatsBar agents={agents} />
       </header>
 
-      {/* Agents Section */}
+      {/* Unified Agents + Logs Section */}
       <section className="space-y-4">
-        <h2 className="text-lg font-medium text-foreground">Agents</h2>
-        <AgentGrid agents={agents} />
-      </section>
-
-      <div className="border-t border-border/40" />
-
-      {/* Logs Section */}
-      <section className="space-y-4">
-        <h2 className="text-lg font-medium text-foreground">Logs</h2>
-
-        {/* Tab bar */}
-        <div className="flex gap-1 overflow-x-auto rounded-lg bg-zinc-900/50 p-1">
-          {logTabs.map((tab) => (
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-medium text-foreground">Agents</h2>
+          {selectedAgent && (
             <button
-              key={tab.id}
-              onClick={() => setActiveLogTab(tab.id)}
-              className={`shrink-0 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                activeLogTab === tab.id
-                  ? 'bg-zinc-800 text-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
+              onClick={() => setSelectedAgent(null)}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              {tab.label}
+              Show all logs
             </button>
-          ))}
+          )}
         </div>
+        <AgentGrid agents={agents} selectedId={selectedAgent} onSelect={setSelectedAgent} />
 
-        {/* Log content */}
-        {activeLogTab === 'all' ? (
-          <AllLogsViewer agents={agents} />
-        ) : (
-          <LogViewer key={activeLogTab} agentId={activeLogTab} />
-        )}
+        {/* Log viewer */}
+        <div className="h-[28rem]">
+          {selectedAgent ? (
+            <LogViewer
+              key={selectedAgent}
+              agentId={selectedAgent}
+              colorClass={colorMap.get(selectedAgent)}
+            />
+          ) : (
+            <AllLogsViewer agents={agents} />
+          )}
+        </div>
       </section>
     </main>
   );

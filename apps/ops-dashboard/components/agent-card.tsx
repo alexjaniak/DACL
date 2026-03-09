@@ -3,9 +3,24 @@ import type { Agent } from '@/lib/types';
 import { RelativeTime } from './relative-time';
 import { RoleBadge } from './role-badge';
 
-export function AgentCard({ agent }: { agent: Agent }) {
+interface AgentCardProps {
+  agent: Agent;
+  selected?: boolean;
+  onClick?: () => void;
+}
+
+export function AgentCard({ agent, selected, onClick }: AgentCardProps) {
   return (
-    <Card className="gap-4 border-border/60 bg-card/70 py-5">
+    <Card
+      className={`gap-4 py-5 transition-colors ${
+        selected
+          ? 'border-zinc-500 bg-card/90 cursor-pointer'
+          : onClick
+            ? 'border-border/60 bg-card/70 cursor-pointer hover:border-border'
+            : 'border-border/60 bg-card/70'
+      }`}
+      onClick={onClick}
+    >
       <CardHeader className="flex-row items-center justify-between gap-2 pb-0">
         <CardTitle className="text-lg font-semibold tracking-tight">{agent.id}</CardTitle>
         <RoleBadge role={agent.role} />

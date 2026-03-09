@@ -163,7 +163,7 @@ export function AllLogsViewer({ agents }: { agents: Agent[] }) {
   return (
     <div
       ref={scrollRef}
-      className="max-h-[28rem] overflow-y-auto rounded-lg bg-zinc-950/80 font-mono text-[13px] leading-relaxed text-zinc-300"
+      className="h-full overflow-y-auto rounded-lg bg-zinc-950/80 font-mono text-[13px] leading-relaxed text-zinc-300"
     >
       {allGroups.map((group, gi) => (
         <div key={gi}>
@@ -175,13 +175,8 @@ export function AllLogsViewer({ agents }: { agents: Agent[] }) {
           )}
           <div className="px-4 py-2">
             {groupIntoParagraphs(group.lines).map((para, pi) => (
-              <div key={pi} className="mb-2 flex gap-2 last:mb-0">
-                <span className={`shrink-0 select-none pt-0.5 font-medium ${group.colorClass}`}>
-                  {group.agentId.padEnd(12).slice(0, 12)}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <LogMarkdown content={para.join('\n')} />
-                </div>
+              <div key={pi} className="mb-2 last:mb-0">
+                <LogMarkdown content={para.join('\n')} />
               </div>
             ))}
           </div>

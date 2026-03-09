@@ -68,7 +68,7 @@ function groupByRuns(lines: string[]): RunGroup[] {
   return groups;
 }
 
-export function LogViewer({ agentId }: { agentId: string }) {
+export function LogViewer({ agentId, colorClass }: { agentId: string; colorClass?: string }) {
   const [log, setLog] = useState<LogChunk | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -149,16 +149,17 @@ export function LogViewer({ agentId }: { agentId: string }) {
   const groups = groupByRuns(log.lines);
 
   return (
-    <div className="space-y-1.5">
+    <div className="flex h-full flex-col gap-1.5">
       <div
         ref={scrollRef}
-        className="max-h-[28rem] overflow-y-auto rounded-lg bg-zinc-950/80 font-mono text-[13px] leading-relaxed text-zinc-300"
+        className="flex-1 overflow-y-auto rounded-lg bg-zinc-950/80 font-mono text-[13px] leading-relaxed text-zinc-300"
       >
         {groups.map((group, gi) => (
           <div key={gi}>
             {group.timestamp && (
-              <div className="sticky top-0 z-10 border-b border-zinc-800 bg-zinc-900/95 px-4 py-2 text-xs font-medium text-zinc-400">
-                {formatTimestamp(group.timestamp)}
+              <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-zinc-800 bg-zinc-900/95 px-4 py-2 text-xs font-medium text-zinc-400">
+                {colorClass && <span className={colorClass}>{agentId}</span>}
+                <span>{formatTimestamp(group.timestamp)}</span>
               </div>
             )}
             <div className="px-4 py-2">
