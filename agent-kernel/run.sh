@@ -111,4 +111,7 @@ if [[ -n "$WORKSPACE_ID" ]]; then
   cd "$WORKTREE_DIR"
 fi
 
+# ── run boundary marker (used by logs/view.sh to group output) ──
+echo "=== RUN $(date -u +%Y-%m-%dT%H:%M:%SZ) ==="
+
 "$CLAUDE" "${CLAUDE_ARGS[@]}" "$PROMPT"
