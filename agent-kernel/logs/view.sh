@@ -104,29 +104,23 @@ if [[ ${#LOG_FILES[@]} -eq 0 ]]; then
 fi
 
 if $FOLLOW; then
-  CURRENT_AGENT="unknown"
-  tail -n "$LINES" -f "${LOG_FILES[@]}" 2>/dev/null | while IFS= read -r line; do
-    # tail -f prefixes with "==> path <=="; extract agent ID from filename
-    if [[ "$line" =~ ^==\>\ (.+)\ \<== ]]; then
-      filepath="${BASH_REMATCH[1]}"
-      basename="${filepath##*/}"
-      CURRENT_AGENT="${basename%.log}"
-      continue
-    fi
-    [[ -z "$line" ]] && continue
+  # Run a separate tail -f per agent so each stream always knows its own
+  # agent identity. This avoids the interleaving bug where a single
+  # tail -f on multiple files omits the "==> path <==" header when
+  # files receive data nearly simultaneously.
+  TAIL_PIDS=()
+  cleanup() { kill "${TAIL_PIDS[@]}" 2>/dev/null; wait 2>/dev/null; }
+  trap cleanup EXIT INT TERM
 
-    # Run boundary marker
-    if [[ "$line" =~ ^===\ RUN\ ([0-9T:.Z-]+)\ ===$ ]]; then
-      local_color=$(color_for_agent "$CURRENT_AGENT")
-      local_tag="\033[${local_color}m[${CURRENT_AGENT}]\033[0m"
-      run_ts="${BASH_REMATCH[1]}"
-      display_ts=$(date -jf '%Y-%m-%dT%H:%M:%SZ' "$run_ts" '+%H:%M:%S' 2>/dev/null || echo "$run_ts")
-      printf "\n%b \033[90m%s\033[0m \033[90m%s\033[0m\n" "$local_tag" "$display_ts" "─────────────────────────"
-      continue
-    fi
-
-    printf "  %s\n" "$line"
+  for log_file in "${LOG_FILES[@]}"; do
+    basename="${log_file##*/}"
+    agent="${basename%.log}"
+    tail -n "$LINES" -f "$log_file" 2>/dev/null | format_lines "$agent" &
+    TAIL_PIDS+=($!)
   done
+
+  # Wait for any child to exit (or Ctrl-C)
+  wait
 else
   # Show last N lines from each agent, grouped by run
   for log_file in "${LOG_FILES[@]}"; do
