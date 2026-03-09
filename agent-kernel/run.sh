@@ -67,7 +67,9 @@ if [[ -n "$WORKSPACE_ID" ]]; then
   if [[ -f "$LOCKFILE" ]]; then
     OLD_PID=$(cat "$LOCKFILE" 2>/dev/null)
     if kill -0 "$OLD_PID" 2>/dev/null; then
-      echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] $WORKSPACE_ID: skipped (pid $OLD_PID still running)"
+      SYSTEM_LOG="$KERNEL_DIR/logs/system.log"
+      mkdir -p "$(dirname "$SYSTEM_LOG")"
+      echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] $WORKSPACE_ID: skipped (pid $OLD_PID still running)" >> "$SYSTEM_LOG"
       exit 0
     fi
   fi
