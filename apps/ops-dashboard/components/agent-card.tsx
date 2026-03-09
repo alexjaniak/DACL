@@ -26,6 +26,9 @@ export function AgentCard({ agent }: { agent: Agent }) {
               workspace
             </span>
           )}
+          <span className="rounded border border-border/50 bg-background/30 px-1.5 py-0.5 text-muted-foreground">
+            {agent.repo}
+          </span>
         </div>
         <div className="grid grid-cols-2 gap-2 text-xs">
           <div>
