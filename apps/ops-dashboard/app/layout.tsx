@@ -8,7 +8,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Ops Dashboard',
+  title: 'DACL Ops',
   description: 'DACL operations dashboard',
 };
 
