@@ -21,4 +21,5 @@
 body {
   @apply min-h-screen bg-background text-foreground antialiased;
   background-image: radial-gradient(circle at top, oklch(0.28 0.05 264) 0%, oklch(0.15 0.03 264) 52%);
+  background-attachment: fixed;
 }
