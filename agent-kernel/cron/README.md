@@ -22,6 +22,7 @@ Source of truth for desired cron state. Checked into git.
       "interval": "5m",
       "prompt": "Check for stale PRs",
       "agentic": true,
+      "repo": "github.com/owner/repo",
       "enabled": true
     }
   ]
@@ -34,6 +35,7 @@ Source of truth for desired cron state. Checked into git.
 | `interval` | string | required | `Nm` (minutes) or `Nh` (hours). |
 | `prompt` | string | required | Prompt passed to `run.sh`. |
 | `agentic` | bool | `false` | Enable tool use (`--agentic`). |
+| `repo` | string | `""` | Target repo (e.g. `"github.com/owner/repo"`). When omitted, the agent targets the DACL repo itself. |
 | `enabled` | bool | `true` | Set `false` to remove from crontab without deleting config. |
 
 ## Commands
