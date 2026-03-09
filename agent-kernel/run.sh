@@ -14,7 +14,6 @@ if [[ -f "$KERNEL_DIR/.env" ]]; then
   source "$KERNEL_DIR/.env"
   set +a
 fi
-CONTEXT_FILE="$KERNEL_DIR/CONTEXT.md"
 CLAUDE="${CLAUDE_BIN:-claude}"
 
 # ── parse flags ────────────────────────────────────────────────
@@ -80,10 +79,6 @@ fi
 
 # ── assemble system prompt from context files ─────────────────
 SYSTEM_PROMPT=""
-
-if [[ -s "$CONTEXT_FILE" ]]; then
-  SYSTEM_PROMPT="$(cat "$CONTEXT_FILE")"
-fi
 
 for ctx in "${CONTEXTS[@]}"; do
   CTX_PATH="$REPO_DIR/$ctx"
