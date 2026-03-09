@@ -30,12 +30,14 @@ def parse_interval(interval):
     raise ValueError(f"Invalid interval '{interval}': must be Nm or Nh (e.g. 5m, 1h)")
 
 
-def build_cron_command(job_id, prompt, agentic, contexts=None, workspace=False):
+def build_cron_command(job_id, prompt, agentic, contexts=None, workspace=False, repo=None):
     cmd = f"mkdir -p {LOGS_DIR} && cd {REPO_DIR} && ./agent-kernel/run.sh"
     if agentic:
         cmd += " --agentic"
     if workspace:
         cmd += f" --workspace {job_id}"
+    if repo:
+        cmd += f" --repo {repo}"
     for ctx in (contexts or []):
         cmd += f" --context {ctx}"
     cmd += f' "{prompt}" >> {LOGS_DIR}/{job_id}.log 2>&1'
@@ -136,7 +138,8 @@ def cmd_apply(args):
                 d["prompt"] != a.get("prompt") or
                 d.get("agentic", False) != a.get("agentic", False) or
                 d.get("workspace", False) != a.get("workspace", False) or
-                d.get("contexts", []) != a.get("contexts", [])):
+                d.get("contexts", []) != a.get("contexts", []) or
+                d.get("repo", "") != a.get("repo", "")):
             to_update.add(job_id)
 
     no_change = (set(desired.keys()) & set(actual.keys())) - to_update
@@ -152,7 +155,8 @@ def cmd_apply(args):
         job = desired[job_id]
         cron_expr = parse_interval(job["interval"])
         contexts = job.get("contexts", [])
-        command = build_cron_command(job_id, job["prompt"], job.get("agentic", False), contexts, job.get("workspace", False))
+        repo = job.get("repo", "")
+        command = build_cron_command(job_id, job["prompt"], job.get("agentic", False), contexts, job.get("workspace", False), repo or None)
         crontab = add_job_to_crontab(crontab, job_id, cron_expr, command)
         state["jobs"][job_id] = {
             "interval": job["interval"],
@@ -161,6 +165,7 @@ def cmd_apply(args):
             "agentic": job.get("agentic", False),
             "workspace": job.get("workspace", False),
             "contexts": contexts,
+            "repo": repo,
             "installed_at": now_iso(),
         }
         action = "Added" if job_id in to_add else "Updated"
@@ -181,7 +186,8 @@ def cmd_add(args):
 
     cron_expr = parse_interval(args.interval)
     contexts = args.context or []
-    command = build_cron_command(args.id, args.prompt, args.agentic, contexts, args.workspace)
+    repo = args.repo or ""
+    command = build_cron_command(args.id, args.prompt, args.agentic, contexts, args.workspace, repo or None)
 
     crontab = read_crontab()
     crontab = add_job_to_crontab(crontab, args.id, cron_expr, command)
@@ -195,6 +201,7 @@ def cmd_add(args):
         "agentic": args.agentic,
         "workspace": args.workspace,
         "contexts": contexts,
+        "repo": repo,
         "installed_at": now_iso(),
     }
     save_state(state)
@@ -269,6 +276,8 @@ def cmd_run(args):
         cmd.append("--agentic")
     if job.get("workspace"):
         cmd += ["--workspace", job["id"]]
+    if job.get("repo"):
+        cmd += ["--repo", job["repo"]]
     for ctx in job.get("contexts", []):
         cmd += ["--context", ctx]
     cmd.append(job["prompt"])
@@ -310,6 +319,7 @@ def main():
     p_add.add_argument("--agentic", action="store_true", help="Enable tool use")
     p_add.add_argument("--workspace", action="store_true", help="Run in isolated git worktree")
     p_add.add_argument("--context", action="append", help="Context file path relative to repo root (repeatable)")
+    p_add.add_argument("--repo", help="Target repo (e.g. github.com/owner/repo or absolute path)")
 
     p_rm = sub.add_parser("remove", help="Remove a cron job by ID")
     p_rm.add_argument("id", help="Job identifier")
