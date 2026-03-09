@@ -108,7 +108,7 @@ if [[ -n "$SYSTEM_PROMPT" ]]; then
 fi
 
 if [[ -n "$WORKSPACE_ID" ]]; then
-  CLAUDE_ARGS+=(--cwd "$WORKTREE_DIR")
+  cd "$WORKTREE_DIR"
 fi
 
 "$CLAUDE" "${CLAUDE_ARGS[@]}" "$PROMPT"
