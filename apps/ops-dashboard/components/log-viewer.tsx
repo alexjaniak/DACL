@@ -61,7 +61,7 @@ export function LogViewer({ agentId }: { agentId: string }) {
 
   if (loading) {
     return (
-      <div className="flex h-32 items-center justify-center rounded-md bg-zinc-950 text-xs text-muted-foreground">
+      <div className="flex h-32 items-center justify-center rounded-md bg-background/60 text-xs text-muted-foreground">
         Loading logs…
       </div>
     );
@@ -69,7 +69,7 @@ export function LogViewer({ agentId }: { agentId: string }) {
 
   if (error) {
     return (
-      <div className="flex h-32 items-center justify-center rounded-md bg-zinc-950 text-xs text-muted-foreground">
+      <div className="flex h-32 items-center justify-center rounded-md bg-background/60 text-xs text-muted-foreground">
         {error}
       </div>
     );
@@ -77,7 +77,7 @@ export function LogViewer({ agentId }: { agentId: string }) {
 
   if (!log || log.lines.length === 0) {
     return (
-      <div className="flex h-32 items-center justify-center rounded-md bg-zinc-950 text-xs text-muted-foreground">
+      <div className="flex h-32 items-center justify-center rounded-md bg-background/60 text-xs text-muted-foreground">
         No logs available
       </div>
     );
@@ -87,7 +87,7 @@ export function LogViewer({ agentId }: { agentId: string }) {
     <div className="space-y-1">
       <div
         ref={scrollRef}
-        className="max-h-64 overflow-y-auto rounded-md bg-zinc-950 p-3 font-mono text-[11px] leading-relaxed text-zinc-300"
+        className="max-h-64 overflow-y-auto rounded-md bg-background/60 p-3 font-mono text-[11px] leading-relaxed text-muted-foreground"
       >
         {log.lines.map((line, i) => (
           <div key={i} className="whitespace-pre-wrap break-all">
