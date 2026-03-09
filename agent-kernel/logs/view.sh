@@ -90,9 +90,15 @@ if [[ -n "$AGENT" ]]; then
 fi
 
 # ── all agents mode ───────────────────────────────────────────
-LOG_FILES=("${LOGS_DIR}"/*.log)
+# Collect agent log files, excluding the system log
+LOG_FILES=()
+for f in "${LOGS_DIR}"/*.log; do
+  [[ ! -e "$f" ]] && continue
+  [[ "$(basename "$f")" == "system.log" ]] && continue
+  LOG_FILES+=("$f")
+done
 
-if [[ ! -e "${LOG_FILES[0]}" ]]; then
+if [[ ${#LOG_FILES[@]} -eq 0 ]]; then
   echo "No log files found in ${LOGS_DIR}/" >&2
   exit 1
 fi
