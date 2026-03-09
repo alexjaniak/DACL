@@ -37,7 +37,16 @@ The human admin leaves feedback on PRs and issues using `@ADMIN` as a signal. Th
 1. **Scan** — Check open PRs and issues for comments containing `@ADMIN` that haven't been acknowledged yet.
 2. **Acknowledge** — Reply to the comment confirming it was seen (e.g., "Noted — creating tasks for this.").
 3. **Create issues** — Break the feedback into worker-ready issues with `status:ready-for-work` and `role:worker`. Reference the original PR/issue and quote the relevant feedback in each issue body.
-4. **Track** — If the feedback relates to an existing epic, add the new issues to that epic's subtask checklist.
+4. **Update parent status** — Move the target PR/issue to `status:in-progress` since new work is now pending against it. Do not leave it in `status:ready-to-merge` or `status:needs-review` while fix tasks are outstanding.
+5. **Track** — If the feedback relates to an existing epic, add the new issues to that epic's subtask checklist.
+
+### Restoring status after fixes
+
+When all fix issues spawned from `@ADMIN` feedback are `status:done` and their PRs are merged:
+
+1. Verify every spawned fix issue is closed with `status:done`.
+2. Move the parent PR/issue back to `status:ready-to-merge`.
+3. Update the parent epic checklist to reflect completion.
 
 ### Detection
 
