@@ -88,7 +88,7 @@ fi
 
 # ── workspace (git worktree) isolation ───────────────────────
 if [[ -n "$WORKSPACE_ID" ]]; then
-  WORKTREE_DIR="$REPO_DIR/.repos/$WORKSPACE_ID"
+  WORKTREE_DIR="$WORK_REPO_DIR/.worktrees/$WORKSPACE_ID"
 
   # Create worktree if missing
   if [[ ! -d "$WORKTREE_DIR" ]]; then
