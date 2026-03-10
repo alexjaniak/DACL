@@ -331,9 +331,30 @@ def cmd_list(args):
         print("No active jobs")
         return
 
+    # Load config to detect stagger mode and compute offsets
+    stagger_info = {}
+    if os.path.exists(JOBS_FILE):
+        with open(JOBS_FILE) as f:
+            config = json.load(f)
+        if config.get("stagger", False):
+            desired = {j["id"]: j for j in config.get("jobs", []) if j.get("enabled", True)}
+            by_interval = {}
+            for jid, job in desired.items():
+                by_interval.setdefault(job["interval"], []).append(jid)
+            for interval, ids in by_interval.items():
+                ids.sort()
+                for i, jid in enumerate(ids):
+                    _, sleep_secs = staggered_cron(interval, i, len(ids))
+                    stagger_info[jid] = sleep_secs
+
     for job_id, info in jobs.items():
         mode = "agentic" if info.get("agentic") else "text"
-        print(f"  {job_id:<20} {info['cron_expr']:<20} {mode:<10} \"{info['prompt']}\"")
+        cron_col = info["cron_expr"]
+        if job_id in stagger_info and stagger_info[job_id] > 0:
+            cron_col += f" (+{stagger_info[job_id]}s)"
+        elif job_id in stagger_info:
+            cron_col += " (stagger: base)"
+        print(f"  {job_id:<20} {cron_col:<30} {mode:<10} \"{info['prompt']}\"")
 
 
 def cmd_status(args):
