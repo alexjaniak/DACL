@@ -130,23 +130,62 @@ class _LogView(Widget):
             self._auto_scroll = True
 
 
+AGENT_POLL_INTERVAL = 5
+
+
 class LogPanel(Widget):
     """Tabbed log panel showing real-time agent output."""
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self._repo_root = _find_repo_root()
+        self._known_agents: set[str] = set()
 
     def compose(self) -> ComposeResult:
         agent_ids = _load_agent_ids(self._repo_root)
+        self._known_agents = set(agent_ids)
         logs_dir = self._repo_root / "agent-kernel" / "logs"
 
         if not agent_ids:
             yield Static("No agents configured.", id="log-empty")
             return
 
-        with TabbedContent():
+        with TabbedContent(id="log-tabs"):
             for agent_id in agent_ids:
                 log_path = logs_dir / f"{agent_id}.log"
                 with TabPane(agent_id, id=f"tab-{agent_id}"):
                     yield _LogView(agent_id, log_path)
+
+    def on_mount(self) -> None:
+        self.set_interval(AGENT_POLL_INTERVAL, self._check_for_new_agents)
+
+    def _check_for_new_agents(self) -> None:
+        current_ids = _load_agent_ids(self._repo_root)
+        new_ids = [aid for aid in current_ids if aid not in self._known_agents]
+        if not new_ids:
+            return
+
+        logs_dir = self._repo_root / "agent-kernel" / "logs"
+
+        try:
+            tabbed = self.query_one("#log-tabs", TabbedContent)
+        except Exception:
+            # No TabbedContent yet (panel started with no agents).
+            # Remove the empty placeholder and create a TabbedContent.
+            try:
+                empty = self.query_one("#log-empty", Static)
+                empty.remove()
+            except Exception:
+                pass
+            tabbed = TabbedContent(id="log-tabs")
+            self.mount(tabbed)
+
+        for agent_id in new_ids:
+            log_path = logs_dir / f"{agent_id}.log"
+            pane = TabPane(
+                agent_id,
+                _LogView(agent_id, log_path),
+                id=f"tab-{agent_id}",
+            )
+            tabbed.add_pane(pane)
+            self._known_agents.add(agent_id)
