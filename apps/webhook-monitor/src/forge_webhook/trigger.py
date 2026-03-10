@@ -76,14 +76,20 @@ def _invoke_agent(repo_dir: str, rule: dict, event: dict) -> None:
         cmd.extend(["--context", context])
     cmd.append(prompt)
 
+    log_dir = Path(repo_dir) / "agent-kernel" / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    log_path = log_dir / f"{workspace}.log"
+    log_file = open(log_path, "a")
+
     logger.info("Invoking agent: %s (workspace=%s, issue=#%s)", " ".join(cmd[:5]), workspace, issue_num)
     subprocess.Popen(
         cmd,
         cwd=repo_dir,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
+        stdout=log_file,
+        stderr=subprocess.STDOUT,
         start_new_session=True,
     )
+    log_file.close()
 
 
 def evaluate_triggers(event: dict, rules: list[dict], repo_dir: str) -> None:
