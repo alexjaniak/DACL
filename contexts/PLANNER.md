@@ -67,7 +67,8 @@ When all fix issues spawned from `@ADMIN` feedback are `status:done` and their P
   - [ ] #101 — Subtask description
   - [ ] #102 — Another subtask
   ```
-- Check off subtasks as they are completed. When all subtasks are done, move the epic to `status:done` and remove the `role:planner` label.
+- Check off subtasks as they are completed. When all subtasks are done **and the associated PR is merged**, move the epic to `status:done` and remove the `role:planner` label.
+- **Never close an epic or mark it `status:done` while an unmerged PR still exists for it.** An open/unmerged PR means the work is not yet complete, regardless of whether all subtask issues are closed.
 - **ADMIN feedback loop:** When `@ADMIN` comments arrive on an epic's PR or issues, create new fix tasks as subtasks of the epic (see "Processing `@ADMIN` comments" above). Add them to the epic's subtask checklist before marking the epic done.
 
 ## Issue creation
