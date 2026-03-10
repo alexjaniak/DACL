@@ -149,6 +149,19 @@ if [[ "$IS_WORKER" == true ]]; then
   # If gh fails (network error, etc.), proceed with the run rather than skipping
 fi
 
+# ── preflight: Innies proxy connectivity ─────────────────────
+if [[ "${USE_INNIES:-false}" == "true" ]]; then
+  if ! command -v innies &>/dev/null; then
+    echo "Error: USE_INNIES=true but 'innies' is not installed." >&2
+    echo "Install with: npm install -g innies" >&2
+    exit 1
+  fi
+  if ! innies doctor &>/dev/null; then
+    echo "Error: innies doctor failed. Run 'innies doctor' to diagnose." >&2
+    exit 1
+  fi
+fi
+
 # ── assemble system prompt from context files ─────────────────
 SYSTEM_PROMPT=""
 
