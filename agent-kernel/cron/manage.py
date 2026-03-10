@@ -121,6 +121,52 @@ def now_iso():
     return datetime.now(timezone.utc).isoformat()
 
 
+def compute_stagger_offsets(jobs):
+    """Group jobs by interval and compute per-job offsets in seconds.
+
+    Returns dict: {job_id: offset_seconds}.
+    """
+    from collections import defaultdict
+    groups = defaultdict(list)
+    for job in jobs:
+        groups[job["interval"]].append(job["id"])
+
+    offsets = {}
+    for interval, job_ids in groups.items():
+        total_secs = interval_to_seconds(interval)
+        group_size = len(job_ids)
+        for i, job_id in enumerate(sorted(job_ids)):
+            offsets[job_id] = (i * total_secs) // group_size
+    return offsets
+
+
+def apply_offset_to_interval(interval, offset_seconds):
+    """Apply a stagger offset to an interval, returning (cron_expr, sleep_seconds).
+
+    For minute intervals (Nm): shifts the minute field and adds sub-minute sleep.
+    For hour intervals (Nh): shifts the minute field within the hour.
+    """
+    minute_offset = offset_seconds // 60
+    sleep_seconds = offset_seconds % 60
+
+    m = re.fullmatch(r"(\d+)m", interval)
+    if m:
+        step = int(m.group(1))
+        if minute_offset == 0:
+            cron_expr = f"*/{step} * * * *"
+        else:
+            cron_expr = f"{minute_offset}/{step} * * * *"
+        return cron_expr, sleep_seconds
+
+    m = re.fullmatch(r"(\d+)h", interval)
+    if m:
+        step = int(m.group(1))
+        cron_expr = f"{minute_offset} */{step} * * *"
+        return cron_expr, sleep_seconds
+
+    raise ValueError(f"Invalid interval '{interval}'")
+
+
 # ── crontab manipulation ──────────────────────────────────────
 
 def remove_job_from_crontab(crontab, job_id):
@@ -160,21 +206,33 @@ def cmd_apply(args):
 
     state = load_state()
 
+    stagger = config.get("stagger", False)
+
     desired = {}
     for job in config.get("jobs", []):
         if job.get("enabled", True):
             desired[job["id"]] = job
+
+    # Compute stagger offsets when enabled
+    stagger_offsets = {}
+    if stagger:
+        enabled_jobs = [job for job in config.get("jobs", []) if job.get("enabled", True)]
+        stagger_offsets = compute_stagger_offsets(enabled_jobs)
 
     actual = state["jobs"]
 
     to_remove = set(actual.keys()) - set(desired.keys())
     to_add = set(desired.keys()) - set(actual.keys())
 
+    # Detect changes — include stagger state change as a reason to update all jobs
+    stagger_changed = stagger != state.get("stagger", False)
+
     to_update = set()
     for job_id in set(desired.keys()) & set(actual.keys()):
         d = desired[job_id]
         a = actual[job_id]
-        if (d["interval"] != a.get("interval") or
+        if (stagger_changed or
+                d["interval"] != a.get("interval") or
                 d["prompt"] != a.get("prompt") or
                 d.get("agentic", False) != a.get("agentic", False) or
                 d.get("workspace", False) != a.get("workspace", False) or
@@ -193,10 +251,19 @@ def cmd_apply(args):
 
     for job_id in to_add | to_update:
         job = desired[job_id]
-        cron_expr = parse_interval(job["interval"])
         contexts = job.get("contexts", [])
         repo = job.get("repo", "")
         command = build_cron_command(job_id, job["prompt"], job.get("agentic", False), contexts, job.get("workspace", False), repo or None)
+
+        offset = stagger_offsets.get(job_id, 0)
+        if stagger and offset > 0:
+            cron_expr, sleep_secs = apply_offset_to_interval(job["interval"], offset)
+            if sleep_secs > 0:
+                command = f"sleep {sleep_secs} && {command}"
+        else:
+            cron_expr = parse_interval(job["interval"])
+            sleep_secs = 0
+
         crontab = add_job_to_crontab(crontab, job_id, cron_expr, command)
         state["jobs"][job_id] = {
             "interval": job["interval"],
@@ -206,13 +273,16 @@ def cmd_apply(args):
             "workspace": job.get("workspace", False),
             "contexts": contexts,
             "repo": repo,
+            "stagger_offset": offset if stagger else 0,
             "installed_at": now_iso(),
         }
         action = "Added" if job_id in to_add else "Updated"
         sym = "+" if job_id in to_add else "~"
-        print(f"  {sym} {action}: {job_id}")
+        offset_info = f" (stagger: +{offset}s)" if stagger and offset > 0 else ""
+        print(f"  {sym} {action}: {job_id}{offset_info}")
 
     write_crontab(crontab)
+    state["stagger"] = stagger
     save_state(state)
 
     print(f"Applied: +{len(to_add)} added, ~{len(to_update)} updated, "
