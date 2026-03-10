@@ -1,0 +1,96 @@
+# Forge Webhook Monitor
+
+Receives GitHub webhook events and stores them as normalized JSONL for the Forge event system.
+
+## Prerequisites
+
+- Python 3.11+
+- A tunnel tool: `gh webhook forward` (GitHub CLI) or [ngrok](https://ngrok.com/download)
+
+## Setup
+
+### 1. Install the webhook server
+
+```bash
+cd apps/webhook-monitor
+pip install -e .
+```
+
+### 2. Configure
+
+Copy the example config and fill in your values:
+
+```bash
+cp config.example.toml config.toml
+```
+
+Edit `config.toml`:
+
+```toml
+[webhook]
+secret = "your-secret-here"   # Required — generate with: openssl rand -hex 32
+port = 8471
+events_file = "./events.jsonl"
+
+[trigger]
+rules_file = "./trigger-rules.json"
+
+[repo]
+name = "owner/repo"           # Required for gh webhook forward
+dir = "/path/to/repo"         # Absolute path to repo root
+```
+
+Environment variables still override config file values for CI/deploy:
+
+| Env var | Overrides |
+|---------|-----------|
+| `FORGE_WEBHOOK_SECRET` | `webhook.secret` |
+| `FORGE_WEBHOOK_PORT` | `webhook.port` |
+| `FORGE_EVENTS_FILE` | `webhook.events_file` |
+| `FORGE_TRIGGER_RULES` | `trigger.rules_file` |
+| `FORGE_REPO_DIR` | `repo.dir` |
+| `FORGE_REPO` | `repo.name` (tunnel.sh only) |
+
+### 3. Start the server
+
+```bash
+forge-webhook
+```
+
+The server listens on `0.0.0.0:<port>` and exposes:
+
+- `POST /webhook` — receives GitHub events
+- `GET /health` — health check
+
+### 4. Start the tunnel
+
+```bash
+./tunnel.sh
+```
+
+The script tries `gh webhook forward` first, then falls back to `ngrok`.
+
+**With `gh webhook forward`**: The tunnel configures the webhook automatically — no manual GitHub setup needed. Requires `repo.name` to be set in config.toml (or `FORGE_REPO` env var).
+
+**With `ngrok`**: Copy the public URL from ngrok's output and configure the webhook manually (see below).
+
+### 5. (ngrok only) Configure the GitHub repo webhook
+
+1. Go to your repo → **Settings** → **Webhooks** → **Add webhook**
+2. **Payload URL**: `<ngrok-url>/webhook`
+3. **Content type**: `application/json`
+4. **Secret**: The value of `webhook.secret` from your config
+5. **Events**: Select individual events:
+   - Issues
+   - Pull requests
+   - Issue comments
+   - Pull request reviews
+6. Save
+
+## Quick start (both server + tunnel)
+
+```bash
+./dev.sh
+```
+
+Starts the webhook server and tunnel in parallel. Press `Ctrl+C` to stop both.

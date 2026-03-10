@@ -7,3 +7,4 @@ agent-kernel/logs/*
 .claude
 *.egg-info/
 __pycache__/
+apps/webhook-monitor/config.toml
