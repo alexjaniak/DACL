@@ -344,9 +344,21 @@ def cmd_list(args):
         print("No active jobs")
         return
 
+    stagger_enabled = state.get("stagger", False)
+
     for job_id, info in jobs.items():
         mode = "agentic" if info.get("agentic") else "text"
-        print(f"  {job_id:<20} {info['cron_expr']:<20} {mode:<10} \"{info['prompt']}\"")
+        cron_col = info["cron_expr"]
+
+        if stagger_enabled:
+            offset = info.get("stagger_offset", 0)
+            if offset > 0:
+                cron_col += f" (+{offset}s)"
+            else:
+                cron_col += " (stagger: base)"
+
+        print(f"  {job_id:<20} {cron_col:<30} {mode:<10} \"{info['prompt']}\"")
+
 
 
 def cmd_status(args):
