@@ -18,7 +18,11 @@ CLAUDE="${CLAUDE_BIN:-claude}"
 
 # ── Innies proxy routing (optional) ──────────────────────────
 if [[ "${USE_INNIES:-false}" == "true" ]]; then
-  CLAUDE_CMD=(innies claude --)
+  if [[ -n "${INNIES_TOKEN:-}" ]]; then
+    CLAUDE_CMD=(innies claude --token "$INNIES_TOKEN" --)
+  else
+    CLAUDE_CMD=(innies claude --)
+  fi
 else
   CLAUDE_CMD=("$CLAUDE")
 fi
@@ -118,8 +122,16 @@ if [[ -n "$WORKSPACE_ID" ]]; then
 
   # Acquire lock
   echo $$ > "$LOCKFILE"
-  trap 'rm -f "$LOCKFILE"' EXIT
 fi
+
+# ── run boundary markers (used by logs/view.sh to group output) ──
+# Emit early so ALL output (including errors) is captured between delimiters.
+echo "=== RUN $(date -u +%Y-%m-%dT%H:%M:%SZ) ==="
+cleanup() {
+  echo "=== END RUN ==="
+  rm -f "${LOCKFILE:-}"
+}
+trap cleanup EXIT
 
 # ── preflight: skip idle worker runs ─────────────────────────
 IS_WORKER=false
@@ -141,9 +153,7 @@ if [[ "$IS_WORKER" == true ]]; then
   AVAILABLE=$(gh "${GH_ARGS[@]}" 2>/dev/null || echo "error")
 
   if [[ "$AVAILABLE" == "0" ]]; then
-    echo "=== RUN $(date -u +%Y-%m-%dT%H:%M:%SZ) ==="
     echo "No issues with status:ready-for-work + role:worker — skipping run"
-    echo "=== END RUN ==="
     exit 0
   fi
   # If gh fails (network error, etc.), proceed with the run rather than skipping
@@ -156,8 +166,11 @@ if [[ "${USE_INNIES:-false}" == "true" ]]; then
     echo "Install with: npm install -g innies" >&2
     exit 1
   fi
-  if ! innies doctor &>/dev/null; then
-    echo "Error: innies doctor failed. Run 'innies doctor' to diagnose." >&2
+  # Verify innies can reach the proxy (ignore unrelated checks like codex_binary)
+  INNIES_OUT="$(innies doctor 2>&1 || true)"
+  if ! echo "$INNIES_OUT" | grep -q "^OK.*claude_binary"; then
+    echo "Error: innies claude check failed. Run 'innies doctor' to diagnose." >&2
+    echo "$INNIES_OUT" >&2
     exit 1
   fi
 fi
@@ -218,11 +231,6 @@ if agent in state.get('jobs', {}):
   fi
 fi
 
-# ── run boundary marker (used by logs/view.sh to group output) ──
-echo "=== RUN $(date -u +%Y-%m-%dT%H:%M:%SZ) ==="
-
 rc=0
 "${CLAUDE_CMD[@]}" "${CLAUDE_ARGS[@]}" "$PROMPT" || rc=$?
-
-echo "=== END RUN ==="
 exit "$rc"
