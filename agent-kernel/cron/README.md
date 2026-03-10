@@ -67,18 +67,7 @@ If the state file gets deleted or out of sync, just run `apply` — it reconverg
 
 ## Logs
 
-Each job logs to `agent-kernel/logs/<id>.log` (persistent, gitignored). View with:
-
-```bash
-# Show last 50 lines for a specific job
-./agent-kernel/cron/manage.py logs <id>
-
-# Follow live output
-./agent-kernel/cron/manage.py logs <id> -f
-
-# Show last N lines
-./agent-kernel/cron/manage.py logs <id> -n 100
-```
+Each job logs to `agent-kernel/logs/<id>.log` (persistent, gitignored).
 
 ### Pretty log viewer
 
