@@ -348,13 +348,19 @@ def cmd_list(args):
 
     for job_id, info in jobs.items():
         mode = "agentic" if info.get("agentic") else "text"
-        cron_col = info["cron_expr"]
         offset = info.get("stagger_offset", 0)
-        if stagger_enabled:
-            if offset > 0:
-                cron_col += f" (+{offset}s)"
+        if stagger_enabled and offset > 0:
+            cron_expr, sleep_secs = apply_offset_to_interval(info["interval"], offset)
+            mins, secs = divmod(offset, 60)
+            if sleep_secs > 0:
+                offset_str = f"+{mins}m{secs}s" if mins else f"+{secs}s"
+                cron_col = f"{cron_expr} (stagger: {offset_str}, sleep: {sleep_secs}s)"
             else:
-                cron_col += " (stagger: base)"
+                cron_col = f"{cron_expr} (+{offset}s)"
+        elif stagger_enabled:
+            cron_col = f"{info['cron_expr']} (stagger: base)"
+        else:
+            cron_col = info["cron_expr"]
         print(f"  {job_id:<20} {cron_col:<30} {mode:<10} \"{info['prompt']}\"")
 
 
