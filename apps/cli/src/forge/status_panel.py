@@ -10,9 +10,10 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from textual.app import ComposeResult
+from textual.containers import VerticalScroll
 from textual.reactive import reactive
 from textual.widget import Widget
-from textual.widgets import Static
+from textual.widgets import ProgressBar, Static
 
 
 def _find_repo_root() -> Path:
@@ -118,6 +119,7 @@ def _load_agents(repo_root: Path) -> list[dict]:
         job_state = state.get(agent_id, {})
         last_run_iso = job_state.get("last_run")
 
+        progress = 0.0
         if last_run_iso:
             try:
                 last_dt = datetime.fromisoformat(last_run_iso)
@@ -126,6 +128,8 @@ def _load_agents(repo_root: Path) -> list[dict]:
                 if secs:
                     next_dt = last_dt + timedelta(seconds=secs)
                     until = _format_delta(next_dt - now)
+                    elapsed = (now - last_dt).total_seconds()
+                    progress = min(elapsed / secs, 1.0)
                 else:
                     until = "—"
             except (ValueError, TypeError):
@@ -137,6 +141,13 @@ def _load_agents(repo_root: Path) -> list[dict]:
 
         running = _is_agent_running(repo_root, agent_id, repo)
 
+        if running:
+            agent_state = "running"
+        elif until == "overdue":
+            agent_state = "overdue"
+        else:
+            agent_state = "idle"
+
         agents.append({
             "id": agent_id,
             "role": role,
@@ -145,9 +156,44 @@ def _load_agents(repo_root: Path) -> list[dict]:
             "since": since,
             "until": until,
             "running": running,
+            "progress": progress,
+            "state": agent_state,
         })
 
     return agents
+
+
+class _AgentCard(Widget):
+    """A single agent's status card with progress bar."""
+
+    DEFAULT_CSS = ""
+
+    def __init__(self, agent: dict, **kwargs: object) -> None:
+        super().__init__(**kwargs)
+        self._agent = agent
+
+    def compose(self) -> ComposeResult:
+        a = self._agent
+        state_markup = {
+            "running": "[bold green]● RUNNING[/bold green]",
+            "overdue": "[bold red]● OVERDUE[/bold red]",
+            "idle": "[dim]○ idle[/dim]",
+        }
+        indicator = state_markup.get(a["state"], "[dim]○ idle[/dim]")
+        yield Static(
+            f"{indicator}  [bold]{a['id']}[/bold]  ({a['role']})\n"
+            f"  repo: {a['repo']}  interval: {a['interval']}\n"
+            f"  last run: {a['since']} ago  next: {a['until']}",
+            classes="agent-info",
+        )
+        pct = int(a["progress"] * 100)
+        yield Static(
+            f"  {a['until']}  {pct}%",
+            classes="agent-countdown",
+        )
+        bar = ProgressBar(total=100, show_eta=False, show_percentage=False, classes="agent-progress")
+        bar.advance(pct)
+        yield bar
 
 
 class StatusPanel(Widget):
@@ -157,12 +203,12 @@ class StatusPanel(Widget):
 
     def compose(self) -> ComposeResult:
         yield Static("Agent Status", id="status-header")
-        yield Static("Loading...", id="status-content")
+        yield VerticalScroll(id="status-agents")
 
     def on_mount(self) -> None:
         self._repo_root = _find_repo_root()
         self._refresh_display()
-        self.set_interval(5, self._tick)
+        self.set_interval(1, self._tick)
 
     def _tick(self) -> None:
         self.tick_count += 1
@@ -172,17 +218,12 @@ class StatusPanel(Widget):
 
     def _refresh_display(self) -> None:
         agents = _load_agents(self._repo_root)
-        content = self.query_one("#status-content", Static)
+        container = self.query_one("#status-agents", VerticalScroll)
+        container.remove_children()
+
         if not agents:
-            content.update("No agents configured.")
+            container.mount(Static("No agents configured.", classes="agent-info"))
             return
 
-        lines: list[str] = []
         for a in agents:
-            status = "  [bold green]\\[RUNNING][/bold green]" if a["running"] else ""
-            lines.append(
-                f"[bold]{a['id']}[/bold]  ({a['role']}){status}\n"
-                f"  repo: {a['repo']}  interval: {a['interval']}\n"
-                f"  last run: {a['since']} ago  next: {a['until']}"
-            )
-        content.update("\n\n".join(lines))
+            container.mount(_AgentCard(a, classes="agent-card"))

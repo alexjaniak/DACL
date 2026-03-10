@@ -7,6 +7,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 from datetime import datetime, timedelta, timezone
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -364,13 +365,16 @@ def cmd_list(args):
         print(f"  {job_id:<20} {cron_col:<30} {mode:<10} \"{info['prompt']}\"")
 
 
-def cmd_status(args):
-    """Print a human-readable table of agent timing (last run, next run, countdown)."""
+def print_status_table():
+    """Print a human-readable table of agent timing (last run, next run, countdown).
+
+    Returns True if there are jobs to display, False otherwise.
+    """
     state = load_state()
     jobs = state["jobs"]
     if not jobs:
         print("No active jobs")
-        return
+        return False
 
     now = datetime.now(timezone.utc)
     print(f"  {'AGENT':<20} {'INTERVAL':<10} {'LAST RUN':<22} {'NEXT RUN':<22} {'COUNTDOWN'}")
@@ -403,6 +407,24 @@ def cmd_status(args):
             countdown = "—"
 
         print(f"  {job_id:<20} {interval:<10} {last_str:<22} {next_str:<22} {countdown}")
+
+    return True
+
+
+def cmd_status(args):
+    """Print agent timing table, optionally refreshing every second with --watch."""
+    if not getattr(args, "watch", False):
+        print_status_table()
+        return
+
+    try:
+        while True:
+            sys.stdout.write("\033[2J\033[H")
+            sys.stdout.flush()
+            print_status_table()
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print()
 
 
 def cmd_run(args):
@@ -472,7 +494,8 @@ def main():
     p_rm.add_argument("id", help="Job identifier")
 
     sub.add_parser("list", help="List active cron jobs")
-    sub.add_parser("status", help="Show agent timing: last run, next run, countdown")
+    p_status = sub.add_parser("status", help="Show agent timing: last run, next run, countdown")
+    p_status.add_argument("--watch", "-w", action="store_true", help="Continuously refresh the status table every 1 second")
 
     p_run = sub.add_parser("run", help="Run a job once immediately")
     p_run.add_argument("id", help="Job identifier from cron-jobs.json")
