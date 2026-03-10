@@ -33,7 +33,7 @@ def _matches_rule(event: dict, rule: dict) -> bool:
 
 
 def _is_agent_running(repo_dir: str, workspace_id: str) -> bool:
-    lockfile = Path(repo_dir) / ".worktrees" / workspace_id / ".agent.lock"
+    lockfile = Path(repo_dir) / ".repos" / workspace_id / ".agent.lock"
     if not lockfile.exists():
         return False
 
