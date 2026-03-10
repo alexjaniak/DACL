@@ -61,6 +61,32 @@ ChatPane {
     text-style: italic;
 }
 
+.thinking-block {
+    height: auto;
+    margin-bottom: 1;
+    padding: 0 1;
+    color: #808090;
+    text-style: italic;
+}
+
+.tool-call-block {
+    height: auto;
+    margin-bottom: 1;
+    padding: 0 1;
+    color: #808090;
+}
+
+.tool-call-block > CollapsibleTitle {
+    color: #b090e0;
+    text-style: bold;
+}
+
+.tool-input {
+    height: auto;
+    padding: 0 1;
+    color: #606070;
+}
+
 StatusPanel {
     width: 1fr;
     height: 1fr;
