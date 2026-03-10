@@ -16,16 +16,40 @@ cd apps/webhook-monitor
 pip install -e .
 ```
 
-### 2. Set environment variables
+### 2. Configure
+
+Copy the example config and fill in your values:
 
 ```bash
-export FORGE_WEBHOOK_SECRET="<your-secret>"    # Required
-export FORGE_WEBHOOK_PORT=8471                  # Optional, default 8471
-export FORGE_EVENTS_FILE="./events.jsonl"       # Optional, default ./events.jsonl
-export FORGE_REPO="owner/repo"                  # Required for gh webhook forward
+cp config.example.toml config.toml
 ```
 
-Generate a secret with: `openssl rand -hex 32`
+Edit `config.toml`:
+
+```toml
+[webhook]
+secret = "your-secret-here"   # Required — generate with: openssl rand -hex 32
+port = 8471
+events_file = "./events.jsonl"
+
+[trigger]
+rules_file = "./trigger-rules.json"
+
+[repo]
+name = "owner/repo"           # Required for gh webhook forward
+dir = "/path/to/repo"         # Absolute path to repo root
+```
+
+Environment variables still override config file values for CI/deploy:
+
+| Env var | Overrides |
+|---------|-----------|
+| `FORGE_WEBHOOK_SECRET` | `webhook.secret` |
+| `FORGE_WEBHOOK_PORT` | `webhook.port` |
+| `FORGE_EVENTS_FILE` | `webhook.events_file` |
+| `FORGE_TRIGGER_RULES` | `trigger.rules_file` |
+| `FORGE_REPO_DIR` | `repo.dir` |
+| `FORGE_REPO` | `repo.name` (tunnel.sh only) |
 
 ### 3. Start the server
 
@@ -33,7 +57,7 @@ Generate a secret with: `openssl rand -hex 32`
 forge-webhook
 ```
 
-The server listens on `0.0.0.0:$FORGE_WEBHOOK_PORT` and exposes:
+The server listens on `0.0.0.0:<port>` and exposes:
 
 - `POST /webhook` — receives GitHub events
 - `GET /health` — health check
@@ -46,7 +70,7 @@ The server listens on `0.0.0.0:$FORGE_WEBHOOK_PORT` and exposes:
 
 The script tries `gh webhook forward` first, then falls back to `ngrok`.
 
-**With `gh webhook forward`**: The tunnel configures the webhook automatically — no manual GitHub setup needed. Requires `FORGE_REPO` to be set.
+**With `gh webhook forward`**: The tunnel configures the webhook automatically — no manual GitHub setup needed. Requires `repo.name` to be set in config.toml (or `FORGE_REPO` env var).
 
 **With `ngrok`**: Copy the public URL from ngrok's output and configure the webhook manually (see below).
 
@@ -55,7 +79,7 @@ The script tries `gh webhook forward` first, then falls back to `ngrok`.
 1. Go to your repo → **Settings** → **Webhooks** → **Add webhook**
 2. **Payload URL**: `<ngrok-url>/webhook`
 3. **Content type**: `application/json`
-4. **Secret**: The value of `FORGE_WEBHOOK_SECRET`
+4. **Secret**: The value of `webhook.secret` from your config
 5. **Events**: Select individual events:
    - Issues
    - Pull requests
