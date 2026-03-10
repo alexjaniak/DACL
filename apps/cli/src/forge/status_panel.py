@@ -62,6 +62,28 @@ def _format_delta(delta: timedelta) -> str:
     return f"{secs}s"
 
 
+def _is_agent_running(repo_root: Path, agent_id: str, repo: str) -> bool:
+    """Check if an agent is currently running by inspecting its lock file.
+
+    Returns True only if the lock file exists and the PID inside is alive.
+    """
+    if repo and repo.startswith("github.com/"):
+        worktree_base = repo_root / ".repos" / repo
+    else:
+        worktree_base = repo_root
+
+    lockfile = worktree_base / ".worktrees" / agent_id / ".agent.lock"
+    if not lockfile.exists():
+        return False
+
+    try:
+        pid = int(lockfile.read_text().strip())
+        os.kill(pid, 0)
+        return True
+    except (ValueError, OSError):
+        return False
+
+
 def _load_agents(repo_root: Path) -> list[dict]:
     """Load agent info from cron-jobs.json merged with cron-state.json."""
     cron_dir = repo_root / "agent-kernel" / "cron"
@@ -113,6 +135,8 @@ def _load_agents(repo_root: Path) -> list[dict]:
             since = "no data"
             until = "—"
 
+        running = _is_agent_running(repo_root, agent_id, repo)
+
         agents.append({
             "id": agent_id,
             "role": role,
@@ -120,6 +144,7 @@ def _load_agents(repo_root: Path) -> list[dict]:
             "interval": interval,
             "since": since,
             "until": until,
+            "running": running,
         })
 
     return agents
@@ -154,8 +179,9 @@ class StatusPanel(Widget):
 
         lines: list[str] = []
         for a in agents:
+            status = "  [bold green]\\[RUNNING][/bold green]" if a["running"] else ""
             lines.append(
-                f"[bold]{a['id']}[/bold]  ({a['role']})\n"
+                f"[bold]{a['id']}[/bold]  ({a['role']}){status}\n"
                 f"  repo: {a['repo']}  interval: {a['interval']}\n"
                 f"  last run: {a['since']} ago  next: {a['until']}"
             )
