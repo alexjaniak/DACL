@@ -70,7 +70,7 @@ export async function getAgents(): Promise<Agent[]> {
         agentic: Boolean(job.agentic),
         workspace: Boolean(job.workspace),
         contexts,
-        repo: str(job.repo, 'DACL'),
+        repo: str(job.repo, 'Forge'),
         lastRun,
         nextRun,
       };

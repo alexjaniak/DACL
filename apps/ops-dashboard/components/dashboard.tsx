@@ -74,7 +74,7 @@ export function Dashboard({ initialAgents }: { initialAgents: Agent[] }) {
       {/* Header */}
       <header className="space-y-3">
         <div className="flex items-center justify-between">
-          <p className="text-sm tracking-[0.16em] text-muted-foreground uppercase">DACL</p>
+          <p className="text-sm tracking-[0.16em] text-muted-foreground uppercase">FORGE</p>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span
               className={`inline-block h-1.5 w-1.5 rounded-full transition-colors duration-300 ${

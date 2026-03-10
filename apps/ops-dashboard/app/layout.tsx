@@ -8,8 +8,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'DACL Ops',
-  description: 'DACL operations dashboard',
+  title: 'Forge Ops',
+  description: 'Forge operations dashboard',
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
