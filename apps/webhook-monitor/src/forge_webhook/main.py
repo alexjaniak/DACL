@@ -7,10 +7,12 @@ from fastapi import FastAPI, Header, HTTPException, Request
 from .config import get_config
 from .normalize import normalize_event
 from .storage import append_event
+from .trigger import evaluate_triggers, load_rules
 
 app = FastAPI(title="Forge Webhook Monitor")
 
 _config: dict | None = None
+_trigger_rules: list[dict] | None = None
 
 
 def _get_config() -> dict:
@@ -18,6 +20,15 @@ def _get_config() -> dict:
     if _config is None:
         _config = get_config()
     return _config
+
+
+def _get_trigger_rules() -> list[dict]:
+    global _trigger_rules
+    if _trigger_rules is None:
+        config = _get_config()
+        rules_file = config.get("trigger_rules_file", "")
+        _trigger_rules = load_rules(rules_file) if rules_file else []
+    return _trigger_rules
 
 
 def _verify_signature(payload: bytes, signature: str | None, secret: str) -> None:
@@ -56,6 +67,12 @@ async def webhook(
         return {"status": "ignored", "event": x_github_event}
 
     append_event(config["events_file"], event)
+
+    rules = _get_trigger_rules()
+    repo_dir = config.get("repo_dir", "")
+    if rules and repo_dir:
+        evaluate_triggers(event, rules, repo_dir)
+
     return {"status": "accepted", "event_type": event["event_type"]}
 
 

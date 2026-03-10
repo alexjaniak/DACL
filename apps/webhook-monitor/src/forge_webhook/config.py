@@ -12,4 +12,6 @@ def get_config() -> dict:
         "secret": secret,
         "port": int(os.environ.get("FORGE_WEBHOOK_PORT", "8471")),
         "events_file": os.environ.get("FORGE_EVENTS_FILE", "./events.jsonl"),
+        "trigger_rules_file": os.environ.get("FORGE_TRIGGER_RULES", ""),
+        "repo_dir": os.environ.get("FORGE_REPO_DIR", ""),
     }
