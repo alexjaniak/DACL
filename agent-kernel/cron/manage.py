@@ -7,12 +7,30 @@ import os
 import re
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 KERNEL_DIR = os.path.dirname(SCRIPT_DIR)
 REPO_DIR = os.path.dirname(KERNEL_DIR)
 JOBS_FILE = os.path.join(SCRIPT_DIR, "cron-jobs.json")
+# cron-state.json format (auto-generated, gitignored):
+# {
+#   "jobs": {
+#     "<agent-id>": {
+#       "interval": "5m",          # scheduling interval (Nm or Nh)
+#       "cron_expr": "*/5 * * * *",# resolved cron expression
+#       "prompt": "...",           # agent prompt
+#       "agentic": true,           # tool use enabled
+#       "workspace": true,         # git worktree isolation
+#       "contexts": [...],         # context file paths
+#       "repo": "",                # target repo (empty = self)
+#       "installed_at": "ISO8601", # when job was added/updated
+#       "last_run": "ISO8601"      # updated by run.sh at start of each run
+#     }
+#   },
+#   "last_applied": "ISO8601"      # when apply was last run
+# }
+# next_run is computed dynamically as last_run + interval.
 STATE_FILE = os.path.join(SCRIPT_DIR, "cron-state.json")
 LOGS_DIR = os.path.join(KERNEL_DIR, "logs")
 TAG_PREFIX = "# Forge:agent-kernel"
@@ -75,6 +93,28 @@ def save_state(state):
     with open(STATE_FILE, "w") as f:
         json.dump(state, f, indent=2)
         f.write("\n")
+
+
+def interval_to_seconds(interval):
+    """Convert an interval string like '5m' or '1h' to seconds."""
+    m = re.fullmatch(r"(\d+)m", interval)
+    if m:
+        return int(m.group(1)) * 60
+    m = re.fullmatch(r"(\d+)h", interval)
+    if m:
+        return int(m.group(1)) * 3600
+    return 0
+
+
+def compute_next_run(last_run_iso, interval):
+    """Compute next run timestamp from last_run + interval."""
+    if not last_run_iso:
+        return None
+    last_run = datetime.fromisoformat(last_run_iso)
+    secs = interval_to_seconds(interval)
+    if secs == 0:
+        return None
+    return (last_run + timedelta(seconds=secs)).isoformat()
 
 
 def now_iso():
@@ -239,6 +279,47 @@ def cmd_list(args):
         print(f"  {job_id:<20} {info['cron_expr']:<20} {mode:<10} \"{info['prompt']}\"")
 
 
+def cmd_status(args):
+    """Print a human-readable table of agent timing (last run, next run, countdown)."""
+    state = load_state()
+    jobs = state["jobs"]
+    if not jobs:
+        print("No active jobs")
+        return
+
+    now = datetime.now(timezone.utc)
+    print(f"  {'AGENT':<20} {'INTERVAL':<10} {'LAST RUN':<22} {'NEXT RUN':<22} {'COUNTDOWN'}")
+    print(f"  {'─' * 20} {'─' * 10} {'─' * 22} {'─' * 22} {'─' * 15}")
+
+    for job_id, info in sorted(jobs.items()):
+        interval = info.get("interval", "?")
+        last_run = info.get("last_run")
+        next_run = compute_next_run(last_run, interval) if last_run else None
+
+        last_str = last_run[:19].replace("T", " ") if last_run else "never"
+        next_str = next_run[:19].replace("T", " ") if next_run else "—"
+
+        if next_run:
+            next_dt = datetime.fromisoformat(next_run)
+            delta = next_dt - now
+            total_secs = int(delta.total_seconds())
+            if total_secs <= 0:
+                countdown = "overdue"
+            else:
+                mins, secs = divmod(total_secs, 60)
+                hrs, mins = divmod(mins, 60)
+                if hrs:
+                    countdown = f"{hrs}h {mins}m {secs}s"
+                elif mins:
+                    countdown = f"{mins}m {secs}s"
+                else:
+                    countdown = f"{secs}s"
+        else:
+            countdown = "—"
+
+        print(f"  {job_id:<20} {interval:<10} {last_str:<22} {next_str:<22} {countdown}")
+
+
 def cmd_run(args):
     if not os.path.exists(JOBS_FILE):
         print(f"Error: {JOBS_FILE} not found", file=sys.stderr)
@@ -306,6 +387,7 @@ def main():
     p_rm.add_argument("id", help="Job identifier")
 
     sub.add_parser("list", help="List active cron jobs")
+    sub.add_parser("status", help="Show agent timing: last run, next run, countdown")
 
     p_run = sub.add_parser("run", help="Run a job once immediately")
     p_run.add_argument("id", help="Job identifier from cron-jobs.json")
@@ -318,6 +400,7 @@ def main():
         "add": cmd_add,
         "remove": cmd_remove,
         "list": cmd_list,
+        "status": cmd_status,
         "run": cmd_run,
         "clear": cmd_clear,
     }

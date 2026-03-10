@@ -5,3 +5,5 @@ agent-kernel/cron/cron-state.json
 agent-kernel/logs/*
 !agent-kernel/logs/view.sh
 .claude
+*.egg-info/
+__pycache__/

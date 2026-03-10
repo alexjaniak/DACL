@@ -1,0 +1,18 @@
+[project]
+name = "forge-cli"
+version = "0.1.0"
+description = "Forge CLI command center"
+requires-python = ">=3.11"
+dependencies = [
+    "textual>=3.0.0",
+]
+
+[project.scripts]
+forge = "forge.app:main"
+
+[build-system]
+requires = ["setuptools>=75.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
