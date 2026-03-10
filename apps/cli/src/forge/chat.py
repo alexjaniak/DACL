@@ -2,17 +2,37 @@ from __future__ import annotations
 
 from textual.app import ComposeResult
 from textual.containers import VerticalScroll
-from textual.widgets import Input, Static
+from textual.widgets import Input, Markdown, Static
 from textual.widget import Widget
 
 from forge.llm import LLMClient
 
 
-class ChatMessage(Static):
-    """A single message in the chat history."""
+class UserMessage(Static):
+    """A user message in the chat history."""
 
-    def __init__(self, sender: str, text: str) -> None:
-        super().__init__(f"[bold]{sender}:[/bold] {text}")
+    DEFAULT_CSS = ""
+
+    def __init__(self, text: str) -> None:
+        super().__init__(f"> {text}", classes="user-message")
+
+
+class AssistantMessage(Markdown):
+    """An assistant message rendered as markdown."""
+
+    DEFAULT_CSS = ""
+
+    def __init__(self, text: str = "") -> None:
+        super().__init__(text, classes="assistant-message")
+
+
+class SystemMessage(Static):
+    """A system/error message."""
+
+    DEFAULT_CSS = ""
+
+    def __init__(self, text: str) -> None:
+        super().__init__(text, classes="system-message")
 
 
 class ChatPane(Widget):
@@ -29,12 +49,12 @@ class ChatPane(Widget):
 
     def compose(self) -> ComposeResult:
         yield VerticalScroll(id="chat-history")
-        yield Input(placeholder="Type a message...", id="chat-input")
+        yield Input(placeholder="> Type a message...", id="chat-input")
 
     def on_mount(self) -> None:
         if self._llm_error:
             history = self.query_one("#chat-history", VerticalScroll)
-            history.mount(ChatMessage("System", self._llm_error))
+            history.mount(SystemMessage(self._llm_error))
 
     async def on_input_submitted(self, event: Input.Submitted) -> None:
         text = event.value.strip()
@@ -42,23 +62,23 @@ class ChatPane(Widget):
             return
         event.input.clear()
         history = self.query_one("#chat-history", VerticalScroll)
-        history.mount(ChatMessage("You", text))
+        history.mount(UserMessage(text))
         history.scroll_end(animate=False)
 
         if self._llm is None:
-            history.mount(ChatMessage("System", self._llm_error or "LLM not available."))
+            history.mount(SystemMessage(self._llm_error or "LLM not available."))
             history.scroll_end(animate=False)
             return
 
-        response_widget = ChatMessage("Forge", "")
+        response_widget = AssistantMessage()
         history.mount(response_widget)
         history.scroll_end(animate=False)
 
-        collected = []
+        collected: list[str] = []
         async for chunk in self._llm.stream_response(text):
             collected.append(chunk)
-            response_widget.update(f"[bold]Forge:[/bold] {''.join(collected)}")
+            response_widget.update("".join(collected))
             history.scroll_end(animate=False)
 
         if not collected:
-            response_widget.update("[bold]Forge:[/bold] (no response)")
+            response_widget.update("*(no response)*")
