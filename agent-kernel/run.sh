@@ -63,7 +63,7 @@ fi
 
 # ── resolve target repo ──────────────────────────────────────
 # When --repo is provided, the worktree is created under the target repo
-# instead of DACL's own repo. Context files still resolve from DACL's REPO_DIR.
+# instead of Forge's own repo. Context files still resolve from Forge's REPO_DIR.
 WORK_REPO_DIR="$REPO_DIR"
 
 if [[ -n "$TARGET_REPO" ]]; then
@@ -71,7 +71,7 @@ if [[ -n "$TARGET_REPO" ]]; then
     # Absolute local path — use directly
     WORK_REPO_DIR="$TARGET_REPO"
   elif [[ "$TARGET_REPO" == github.com/* ]]; then
-    # GitHub URL — clone into .repos/ under DACL root
+    # GitHub URL — clone into .repos/ under Forge root
     LOCAL_CLONE="$REPO_DIR/.repos/$TARGET_REPO"
     if [[ -d "$LOCAL_CLONE/.git" ]]; then
       git -C "$LOCAL_CLONE" pull --ff-only 2>/dev/null || true
