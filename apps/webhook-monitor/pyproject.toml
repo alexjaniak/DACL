@@ -1,0 +1,19 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.backends"
+
+[project]
+name = "forge-webhook"
+version = "0.1.0"
+description = "GitHub webhook receiver for Forge event monitoring"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.34",
+]
+
+[project.scripts]
+forge-webhook = "forge_webhook.main:run"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/forge_webhook"]
