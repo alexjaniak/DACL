@@ -26,6 +26,7 @@ StatusPanel {
     width: 1fr;
     height: 1fr;
     padding: 1;
+    overflow-y: auto;
 }
 
 #status-header {
@@ -36,4 +37,5 @@ StatusPanel {
 
 #status-content {
     height: auto;
+    padding: 0 1;
 }
