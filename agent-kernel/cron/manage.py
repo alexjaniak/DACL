@@ -239,25 +239,6 @@ def cmd_list(args):
         print(f"  {job_id:<20} {info['cron_expr']:<20} {mode:<10} \"{info['prompt']}\"")
 
 
-def cmd_logs(args):
-    state = load_state()
-    job_id = args.id
-    if job_id not in state["jobs"]:
-        print(f"No active job with id '{job_id}'", file=sys.stderr)
-        sys.exit(1)
-
-    log_path = os.path.join(LOGS_DIR, f"{job_id}.log")
-    if not os.path.exists(log_path):
-        print(f"No log file found at {log_path}")
-        return
-
-    n = str(args.lines)
-    if args.follow:
-        os.execvp("tail", ["tail", "-f", "-n", n, log_path])
-    else:
-        os.execvp("tail", ["tail", "-n", n, log_path])
-
-
 def cmd_run(args):
     if not os.path.exists(JOBS_FILE):
         print(f"Error: {JOBS_FILE} not found", file=sys.stderr)
@@ -326,11 +307,6 @@ def main():
 
     sub.add_parser("list", help="List active cron jobs")
 
-    p_logs = sub.add_parser("logs", help="Tail logs for a specific job")
-    p_logs.add_argument("id", help="Job identifier")
-    p_logs.add_argument("-f", "--follow", action="store_true", help="Follow log output")
-    p_logs.add_argument("-n", "--lines", type=int, default=50, help="Number of lines (default: 50)")
-
     p_run = sub.add_parser("run", help="Run a job once immediately")
     p_run.add_argument("id", help="Job identifier from cron-jobs.json")
 
@@ -342,7 +318,6 @@ def main():
         "add": cmd_add,
         "remove": cmd_remove,
         "list": cmd_list,
-        "logs": cmd_logs,
         "run": cmd_run,
         "clear": cmd_clear,
     }
