@@ -79,6 +79,8 @@ When all fix issues spawned from `@ADMIN` feedback are `status:done` and their P
 
 ## Code review and merge
 
+When reviewing code, follow the review protocol defined in `REVIEWER.md`.
+
 You are the reviewer for all child PRs (PRs targeting feature branches, not `main`). You own the full review-merge cycle for child PRs. The human admin only reviews parent PRs that target `main`.
 
 When a worker moves an issue to `status:needs-review`:
@@ -103,6 +105,7 @@ After merging a child PR:
 ## Stuck detection
 
 - Check for issues that haven't progressed: assigned but no PR, PRs with failing checks, issues stuck in `status:in-progress` for multiple cycles.
+- Check open PRs for merge conflicts. If a PR has conflicts, create a fix issue with `status:ready-for-work` and `role:worker` to rebase and resolve them.
 - Unblock stuck issues: reassign, simplify scope, add clarifying comments, or close and reopen with a fresh approach.
 
 ## Freshness

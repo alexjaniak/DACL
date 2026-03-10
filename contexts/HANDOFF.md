@@ -25,10 +25,6 @@ When you complete a task, post a structured handoff comment on the GitHub issue.
 **Discoveries:**
 - <bugs found elsewhere, architectural issues, unexpected dependencies, useful context for future tasks>
 - (or: none)
-
-**Feedback:**
-- <suggestions for the planner — scope was too broad, acceptance criteria unclear, missing context, etc.>
-- (or: none)
 ```
 
 ## Rules
