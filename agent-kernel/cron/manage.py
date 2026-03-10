@@ -121,6 +121,64 @@ def now_iso():
     return datetime.now(timezone.utc).isoformat()
 
 
+def compute_stagger_offsets(jobs):
+    """Group jobs by interval and compute per-job offsets in seconds.
+
+    Returns dict: {job_id: offset_seconds}.
+    """
+    from collections import defaultdict
+    groups = defaultdict(list)
+    for job in jobs:
+        groups[job["interval"]].append(job["id"])
+
+    offsets = {}
+    for interval, job_ids in groups.items():
+        total_secs = interval_to_seconds(interval)
+        group_size = len(job_ids)
+        for i, job_id in enumerate(sorted(job_ids)):
+            offsets[job_id] = (i * total_secs) // group_size
+    return offsets
+
+
+def apply_offset_to_interval(interval, offset_seconds):
+    """Apply a stagger offset to an interval, returning (cron_expr, sleep_seconds).
+
+    For minute intervals (Nm): shifts the minute field and adds sub-minute sleep.
+    For hour intervals (Nh): shifts the minute field within the hour.
+    """
+    minute_offset = offset_seconds // 60
+    sleep_seconds = offset_seconds % 60
+
+    m = re.fullmatch(r"(\d+)m", interval)
+    if m:
+        step = int(m.group(1))
+        if minute_offset == 0:
+            cron_expr = f"*/{step} * * * *"
+        else:
+            cron_expr = f"{minute_offset}/{step} * * * *"
+        return cron_expr, sleep_seconds
+
+    m = re.fullmatch(r"(\d+)h", interval)
+    if m:
+        step = int(m.group(1))
+        cron_expr = f"{minute_offset} */{step} * * *"
+        return cron_expr, sleep_seconds
+
+    raise ValueError(f"Invalid interval '{interval}'")
+
+
+def format_offset(offset_seconds):
+    """Format an offset in seconds as a human-readable string (e.g. '1m40s', '40s')."""
+    if offset_seconds == 0:
+        return "0s"
+    mins, secs = divmod(offset_seconds, 60)
+    if mins and secs:
+        return f"{mins}m{secs}s"
+    elif mins:
+        return f"{mins}m"
+    return f"{secs}s"
+
+
 # ── crontab manipulation ──────────────────────────────────────
 
 def remove_job_from_crontab(crontab, job_id):
@@ -274,9 +332,30 @@ def cmd_list(args):
         print("No active jobs")
         return
 
+    # Read cron-jobs.json to determine stagger config
+    stagger = False
+    stagger_offsets = {}
+    if os.path.exists(JOBS_FILE):
+        with open(JOBS_FILE) as f:
+            config = json.load(f)
+        stagger = config.get("stagger", False)
+        if stagger:
+            enabled_jobs = [j for j in config.get("jobs", []) if j.get("enabled", True)]
+            stagger_offsets = compute_stagger_offsets(enabled_jobs)
+
     for job_id, info in jobs.items():
         mode = "agentic" if info.get("agentic") else "text"
-        print(f"  {job_id:<20} {info['cron_expr']:<20} {mode:<10} \"{info['prompt']}\"")
+        offset = stagger_offsets.get(job_id, 0)
+        if stagger and offset > 0:
+            cron_expr, sleep_secs = apply_offset_to_interval(info["interval"], offset)
+            offset_str = f" (stagger: +{format_offset(offset)})"
+            if sleep_secs > 0:
+                offset_str = f" (stagger: +{format_offset(offset)}, sleep: {sleep_secs}s)"
+            effective_expr = cron_expr
+        else:
+            effective_expr = info["cron_expr"]
+            offset_str = ""
+        print(f"  {job_id:<20} {effective_expr:<20} {mode:<10} {info['interval']}{offset_str}  \"{info['prompt']}\"")
 
 
 def cmd_status(args):
