@@ -107,10 +107,40 @@ StatusPanel {
     margin-bottom: 1;
 }
 
-#status-content {
+#status-agents {
+    height: 1fr;
+    padding: 0;
+}
+
+.agent-card {
     height: auto;
+    margin-bottom: 1;
     padding: 0 1;
+}
+
+.agent-info {
+    height: auto;
     color: #808090;
+}
+
+.agent-countdown {
+    height: auto;
+    color: #b090e0;
+    margin-top: 0;
+}
+
+.agent-progress {
+    height: 1;
+    margin: 0 1;
+}
+
+.agent-progress Bar {
+    color: #6c3fc5;
+    background: #3a3a5c;
+}
+
+.agent-progress PercentageStatus {
+    display: none;
 }
 
 /* Log Panel */
