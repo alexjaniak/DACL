@@ -3,12 +3,6 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-# Validate required env vars
-if [ -z "${FORGE_WEBHOOK_SECRET:-}" ]; then
-    echo "Error: FORGE_WEBHOOK_SECRET must be set" >&2
-    exit 1
-fi
-
 cleanup() {
     echo "Shutting down..."
     kill 0 2>/dev/null
