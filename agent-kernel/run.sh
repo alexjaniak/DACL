@@ -114,6 +114,34 @@ if [[ -n "$WORKSPACE_ID" ]]; then
   trap 'rm -f "$LOCKFILE"' EXIT
 fi
 
+# ── preflight: skip idle worker runs ─────────────────────────
+IS_WORKER=false
+for ctx in "${CONTEXTS[@]}"; do
+  if [[ "$ctx" == *WORKER.md ]]; then
+    IS_WORKER=true
+    break
+  fi
+done
+
+if [[ "$IS_WORKER" == true ]]; then
+  GH_ARGS=(issue list --label "status:ready-for-work" --label "role:worker" --json number --jq 'length')
+
+  if [[ "$TARGET_REPO" == github.com/* ]]; then
+    GH_REPO="${TARGET_REPO#github.com/}"
+    GH_ARGS+=(--repo "$GH_REPO")
+  fi
+
+  AVAILABLE=$(gh "${GH_ARGS[@]}" 2>/dev/null || echo "error")
+
+  if [[ "$AVAILABLE" == "0" ]]; then
+    echo "=== RUN $(date -u +%Y-%m-%dT%H:%M:%SZ) ==="
+    echo "No issues with status:ready-for-work + role:worker — skipping run"
+    echo "=== END RUN ==="
+    exit 0
+  fi
+  # If gh fails (network error, etc.), proceed with the run rather than skipping
+fi
+
 # ── assemble system prompt from context files ─────────────────
 SYSTEM_PROMPT=""
 
