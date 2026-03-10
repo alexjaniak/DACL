@@ -23,11 +23,8 @@ Cron jobs drive recurring agent runs. See [`agent-kernel/cron/README.md`](agent-
 
 ```
 agent-kernel/   Core runtime (run.sh, cron scheduling, context assembly)
-apps/
-  ops-dashboard/ Next.js operations dashboard
 contexts/       Shared agent context files (roles, constraints, protocols)
 ```
 
 - **[agent-kernel](agent-kernel/README.md)** — invoke Claude CLI with context files, run unattended via cron
-- **[ops-dashboard](apps/ops-dashboard/README.md)** — live dashboard for monitoring agents, cron jobs, and runlogs
 - **[contexts](contexts/)** — modular `.md` files that shape agent behavior (identity, constraints, planner/worker roles, handoff protocol, labels, workspace rules)
