@@ -176,6 +176,28 @@ if [[ -n "$WORKSPACE_ID" ]]; then
   cd "$WORKTREE_DIR"
 fi
 
+# ── update last_run in cron-state.json ────────────────────────
+# Records the current UTC timestamp so the CLI status command can show
+# when each agent last ran and compute countdown to next run.
+if [[ -n "$WORKSPACE_ID" ]]; then
+  STATE_JSON="$KERNEL_DIR/cron/cron-state.json"
+  if [[ -f "$STATE_JSON" ]]; then
+    python3 -c "
+import json, sys
+from datetime import datetime, timezone
+f = sys.argv[1]
+agent = sys.argv[2]
+with open(f) as fh:
+    state = json.load(fh)
+if agent in state.get('jobs', {}):
+    state['jobs'][agent]['last_run'] = datetime.now(timezone.utc).isoformat()
+    with open(f, 'w') as fh:
+        json.dump(state, fh, indent=2)
+        fh.write('\n')
+" "$STATE_JSON" "$WORKSPACE_ID" 2>/dev/null || true
+  fi
+fi
+
 # ── run boundary marker (used by logs/view.sh to group output) ──
 echo "=== RUN $(date -u +%Y-%m-%dT%H:%M:%SZ) ==="
 
