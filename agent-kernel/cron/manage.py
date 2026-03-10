@@ -117,6 +117,23 @@ def compute_next_run(last_run_iso, interval):
     return (last_run + timedelta(seconds=secs)).isoformat()
 
 
+# Color urgency thresholds (seconds)
+URGENCY_YELLOW_THRESHOLD = 60
+URGENCY_RED_THRESHOLD = 10
+
+
+def colorize_countdown(text, total_secs):
+    """Wrap countdown text in ANSI color codes based on urgency."""
+    reset = "\033[0m"
+    if total_secs <= 0:
+        return f"\033[1;31m{text}{reset}"
+    if total_secs < URGENCY_RED_THRESHOLD:
+        return f"\033[1;31m{text}{reset}"
+    if total_secs <= URGENCY_YELLOW_THRESHOLD:
+        return f"\033[33m{text}{reset}"
+    return f"\033[32m{text}{reset}"
+
+
 def now_iso():
     return datetime.now(timezone.utc).isoformat()
 
@@ -399,6 +416,7 @@ def cmd_status(args):
                     countdown = f"{mins}m {secs}s"
                 else:
                     countdown = f"{secs}s"
+            countdown = colorize_countdown(countdown, total_secs)
         else:
             countdown = "—"
 

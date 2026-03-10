@@ -14,6 +14,21 @@ from textual.reactive import reactive
 from textual.widget import Widget
 from textual.widgets import Static
 
+# Color urgency thresholds (seconds)
+URGENCY_YELLOW_THRESHOLD = 60
+URGENCY_RED_THRESHOLD = 10
+
+
+def _color_countdown_rich(text: str, remaining_seconds: int) -> str:
+    """Wrap countdown text in Rich color markup based on urgency."""
+    if remaining_seconds <= 0:
+        return f"[bold red]{text}[/bold red]"
+    if remaining_seconds < URGENCY_RED_THRESHOLD:
+        return f"[bold red]{text}[/bold red]"
+    if remaining_seconds <= URGENCY_YELLOW_THRESHOLD:
+        return f"[yellow]{text}[/yellow]"
+    return f"[green]{text}[/green]"
+
 
 def _find_repo_root() -> Path:
     """Locate the repository root via env var or git."""
@@ -118,6 +133,7 @@ def _load_agents(repo_root: Path) -> list[dict]:
         job_state = state.get(agent_id, {})
         last_run_iso = job_state.get("last_run")
 
+        remaining_seconds = 0
         if last_run_iso:
             try:
                 last_dt = datetime.fromisoformat(last_run_iso)
@@ -125,6 +141,7 @@ def _load_agents(repo_root: Path) -> list[dict]:
                 secs = _interval_seconds(interval)
                 if secs:
                     next_dt = last_dt + timedelta(seconds=secs)
+                    remaining_seconds = int((next_dt - now).total_seconds())
                     until = _format_delta(next_dt - now)
                 else:
                     until = "—"
@@ -144,6 +161,7 @@ def _load_agents(repo_root: Path) -> list[dict]:
             "interval": interval,
             "since": since,
             "until": until,
+            "remaining_seconds": remaining_seconds,
             "running": running,
         })
 
@@ -180,9 +198,10 @@ class StatusPanel(Widget):
         lines: list[str] = []
         for a in agents:
             status = "  [bold green]\\[RUNNING][/bold green]" if a["running"] else ""
+            colored_until = _color_countdown_rich(a['until'], a['remaining_seconds'])
             lines.append(
                 f"[bold]{a['id']}[/bold]  ({a['role']}){status}\n"
                 f"  repo: {a['repo']}  interval: {a['interval']}\n"
-                f"  last run: {a['since']} ago  next: {a['until']}"
+                f"  last run: {a['since']} ago  next: {colored_until}"
             )
         content.update("\n\n".join(lines))
