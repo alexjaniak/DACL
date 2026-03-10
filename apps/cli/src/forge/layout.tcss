@@ -1,0 +1,39 @@
+#main {
+    height: 1fr;
+}
+
+ChatPane {
+    width: 3fr;
+    height: 1fr;
+    border-right: solid $accent;
+}
+
+#chat-history {
+    height: 1fr;
+    padding: 1;
+}
+
+#chat-input {
+    dock: bottom;
+}
+
+ChatMessage {
+    height: auto;
+    margin-bottom: 1;
+}
+
+StatusPanel {
+    width: 1fr;
+    height: 1fr;
+    padding: 1;
+}
+
+#status-header {
+    height: auto;
+    text-style: bold;
+    margin-bottom: 1;
+}
+
+#status-content {
+    height: auto;
+}
