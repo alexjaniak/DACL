@@ -207,6 +207,7 @@ class StatusPanel(Widget):
 
     def on_mount(self) -> None:
         self._repo_root = _find_repo_root()
+        self._last_agents: list[dict] | None = None
         self._refresh_display()
         self.set_interval(1, self._tick)
 
@@ -218,6 +219,11 @@ class StatusPanel(Widget):
 
     def _refresh_display(self) -> None:
         agents = _load_agents(self._repo_root)
+
+        if agents == self._last_agents:
+            return
+
+        self._last_agents = agents
         container = self.query_one("#status-agents", VerticalScroll)
         container.remove_children()
 
