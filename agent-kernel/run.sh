@@ -115,7 +115,7 @@ if [[ -n "$WORKSPACE_ID" ]]; then
     if kill -0 "$OLD_PID" 2>/dev/null; then
       SYSTEM_LOG="$KERNEL_DIR/logs/system.log"
       mkdir -p "$(dirname "$SYSTEM_LOG")"
-      echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] $WORKSPACE_ID: skipped (pid $OLD_PID still running)" >> "$SYSTEM_LOG"
+      echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] $WORKSPACE_ID: skipped" >> "$SYSTEM_LOG"
       exit 0
     fi
   fi
@@ -231,6 +231,23 @@ if agent in state.get('jobs', {}):
   fi
 fi
 
+# ── system log helpers ────────────────────────────────────────
+SYSTEM_LOG="$KERNEL_DIR/logs/system.log"
+mkdir -p "$(dirname "$SYSTEM_LOG")"
+
+_syslog() {
+  echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] ${WORKSPACE_ID:-unknown}: $1" >> "$SYSTEM_LOG"
+}
+
+_syslog "started"
+
 rc=0
 "${CLAUDE_CMD[@]}" "${CLAUDE_ARGS[@]}" "$PROMPT" || rc=$?
+
+if [[ "$rc" -eq 0 ]]; then
+  _syslog "completed"
+else
+  _syslog "completed (exit $rc)"
+fi
+
 exit "$rc"

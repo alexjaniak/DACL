@@ -16,6 +16,49 @@ from textual.widget import Widget
 from textual.widgets import ProgressBar, Static
 
 
+def _load_recent_activity(repo_root: Path, limit: int = 5) -> list[dict]:
+    """Parse the most recent events from agent-kernel/logs/system.log."""
+    log_path = repo_root / "agent-kernel" / "logs" / "system.log"
+    if not log_path.exists():
+        return []
+
+    lines = log_path.read_text().splitlines()
+    events: list[dict] = []
+    for line in reversed(lines):
+        if len(events) >= limit:
+            break
+        # Format: [2026-03-10T12:34:56Z] agent-id: event-type
+        if not line.startswith("["):
+            continue
+        bracket_end = line.find("]")
+        if bracket_end < 0:
+            continue
+        timestamp = line[1:bracket_end]
+        rest = line[bracket_end + 2:]  # skip "] "
+        colon_idx = rest.find(": ")
+        if colon_idx < 0:
+            continue
+        agent_id = rest[:colon_idx]
+        event_type = rest[colon_idx + 2:].strip()
+        # Normalize event type
+        if event_type.startswith("completed"):
+            event_type = "completed"
+        events.append({
+            "timestamp": timestamp,
+            "agent_id": agent_id,
+            "event": event_type,
+        })
+
+    return events
+
+
+_EVENT_SYMBOLS = {
+    "started": "[bold cyan]● started[/bold cyan]",
+    "completed": "[bold green]✓ completed[/bold green]",
+    "skipped": "[dim]⊘ skipped[/dim]",
+}
+
+
 def _find_repo_root() -> Path:
     """Locate the repository root via env var or git."""
     env_root = os.environ.get("FORGE_REPO_ROOT")
@@ -191,6 +234,8 @@ class StatusPanel(Widget):
     def compose(self) -> ComposeResult:
         yield Static("Agent Status", id="status-header")
         yield VerticalScroll(id="status-agents")
+        yield Static("Recent Activity", id="activity-header")
+        yield Static("No recent activity", id="activity-feed")
 
     def on_mount(self) -> None:
         self._repo_root = _find_repo_root()
@@ -210,7 +255,21 @@ class StatusPanel(Widget):
 
         if not agents:
             container.mount(Static("No agents configured.", classes="agent-info"))
-            return
+        else:
+            for a in agents:
+                container.mount(_AgentCard(a, classes="agent-card"))
 
-        for a in agents:
-            container.mount(_AgentCard(a, classes="agent-card"))
+        # Update activity feed
+        events = _load_recent_activity(self._repo_root)
+        feed = self.query_one("#activity-feed", Static)
+        if not events:
+            feed.update("No recent activity")
+        else:
+            lines = []
+            for ev in events:
+                # Show HH:MM:SS from ISO timestamp
+                ts = ev["timestamp"]
+                time_part = ts[11:19] if len(ts) >= 19 else ts
+                symbol = _EVENT_SYMBOLS.get(ev["event"], f"? {ev['event']}")
+                lines.append(f"  {time_part}  {ev['agent_id']}  {symbol}")
+            feed.update("\n".join(lines))

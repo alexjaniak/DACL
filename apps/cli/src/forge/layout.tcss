@@ -143,6 +143,24 @@ StatusPanel {
     display: none;
 }
 
+/* Activity Feed */
+
+#activity-header {
+    height: auto;
+    text-style: bold;
+    color: #6c3fc5;
+    margin-top: 1;
+    border-top: solid #3a3a5c;
+    padding-top: 1;
+}
+
+#activity-feed {
+    height: auto;
+    color: #808090;
+    padding: 0 0;
+    margin-top: 0;
+}
+
 /* Log Panel */
 
 LogPanel {
