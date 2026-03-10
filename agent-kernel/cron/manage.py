@@ -48,6 +48,36 @@ def parse_interval(interval):
     raise ValueError(f"Invalid interval '{interval}': must be Nm or Nh (e.g. 5m, 1h)")
 
 
+def staggered_cron(interval, index, group_size):
+    """Compute a staggered cron expression and optional sleep prefix.
+
+    Returns (cron_expr, sleep_seconds) where sleep_seconds is 0 when no
+    sub-minute staggering is needed.
+    """
+    total_secs = interval_to_seconds(interval)
+    offset_secs = (index * total_secs) // group_size
+
+    offset_mins = offset_secs // 60
+    remaining_secs = offset_secs % 60
+
+    m = re.fullmatch(r"(\d+)m", interval)
+    if m:
+        step = int(m.group(1))
+        if offset_mins == 0:
+            cron_expr = f"*/{step} * * * *"
+        else:
+            minutes = list(range(offset_mins, 60, step))
+            cron_expr = f"{','.join(str(x) for x in minutes)} * * * *"
+        return cron_expr, remaining_secs
+
+    m = re.fullmatch(r"(\d+)h", interval)
+    if m:
+        step = int(m.group(1))
+        return f"{offset_mins} */{step} * * *", remaining_secs
+
+    raise ValueError(f"Invalid interval '{interval}'")
+
+
 def build_cron_command(job_id, prompt, agentic, contexts=None, workspace=False, repo=None):
     cmd = f"mkdir -p {LOGS_DIR} && cd {REPO_DIR} && ./agent-kernel/run.sh"
     if agentic:
@@ -191,12 +221,39 @@ def cmd_apply(args):
         del state["jobs"][job_id]
         print(f"  - Removed: {job_id}")
 
+    stagger_enabled = config.get("stagger", False)
+
+    # Pre-compute stagger offsets: group jobs by interval
+    stagger_info = {}  # job_id -> (cron_expr, sleep_seconds)
+    if stagger_enabled:
+        by_interval = {}
+        for job_id, job in desired.items():
+            by_interval.setdefault(job["interval"], []).append(job_id)
+        for interval, ids in by_interval.items():
+            ids.sort()  # deterministic ordering
+            for i, jid in enumerate(ids):
+                stagger_info[jid] = staggered_cron(interval, i, len(ids))
+
+    # When stagger is enabled/disabled, unchanged jobs may need cron expr updates
+    for job_id in list(no_change):
+        expected_expr = stagger_info[job_id][0] if job_id in stagger_info else parse_interval(desired[job_id]["interval"])
+        if actual[job_id].get("cron_expr") != expected_expr:
+            to_update.add(job_id)
+            no_change.discard(job_id)
+
     for job_id in to_add | to_update:
         job = desired[job_id]
-        cron_expr = parse_interval(job["interval"])
         contexts = job.get("contexts", [])
         repo = job.get("repo", "")
         command = build_cron_command(job_id, job["prompt"], job.get("agentic", False), contexts, job.get("workspace", False), repo or None)
+
+        if job_id in stagger_info:
+            cron_expr, sleep_secs = stagger_info[job_id]
+            if sleep_secs > 0:
+                command = f"sleep {sleep_secs} && {command}"
+        else:
+            cron_expr = parse_interval(job["interval"])
+
         crontab = add_job_to_crontab(crontab, job_id, cron_expr, command)
         state["jobs"][job_id] = {
             "interval": job["interval"],

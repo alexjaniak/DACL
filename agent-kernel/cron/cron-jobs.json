@@ -1,4 +1,5 @@
 {
+  "stagger": false,
   "jobs": [
     {
       "id": "planner-01",
