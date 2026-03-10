@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import asyncio
+from functools import partial
+from typing import Iterator
+
 from textual.app import ComposeResult
 from textual.containers import VerticalScroll
 from textual.widgets import Input, Markdown, Static
@@ -75,7 +79,22 @@ class ChatPane(Widget):
         history.scroll_end(animate=False)
 
         collected: list[str] = []
-        async for chunk in self._llm.stream_response(text):
+
+        def _run_stream(llm: LLMClient, message: str) -> Iterator[str]:
+            return llm.stream_response(message)
+
+        loop = asyncio.get_running_loop()
+        stream = await loop.run_in_executor(
+            None, partial(_run_stream, self._llm, text)
+        )
+
+        def _next_chunk(it: Iterator[str]) -> str | None:
+            return next(it, None)
+
+        while True:
+            chunk = await loop.run_in_executor(None, _next_chunk, stream)
+            if chunk is None:
+                break
             collected.append(chunk)
             response_widget.update("".join(collected))
             history.scroll_end(animate=False)
