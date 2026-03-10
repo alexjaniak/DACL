@@ -116,6 +116,7 @@ class LLMClient:
         cmd = [
             "claude",
             "--output-format", "stream-json",
+            "--verbose",
             "--dangerously-skip-permissions",
         ]
 
