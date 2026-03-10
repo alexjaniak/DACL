@@ -131,7 +131,7 @@ class StatusPanel(Widget):
     tick_count = reactive(0)
 
     def compose(self) -> ComposeResult:
-        yield Static("[bold]Agent Status[/bold]", id="status-header")
+        yield Static("Agent Status", id="status-header")
         yield Static("Loading...", id="status-content")
 
     def on_mount(self) -> None:
