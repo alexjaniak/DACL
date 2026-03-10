@@ -18,10 +18,14 @@ Screen {
     height: 1fr;
 }
 
-ChatPane {
+#left-col {
     width: 3fr;
     height: 1fr;
     border-right: solid #3a3a5c;
+}
+
+ChatPane {
+    height: 1fr;
 }
 
 #chat-history {
@@ -106,5 +110,43 @@ StatusPanel {
 #status-content {
     height: auto;
     padding: 0 1;
+    color: #808090;
+}
+
+/* Log Panel */
+
+LogPanel {
+    height: 1fr;
+    max-height: 50%;
+    border-top: solid #3a3a5c;
+    background: #16162a;
+}
+
+LogPanel TabbedContent {
+    height: 1fr;
+}
+
+LogPanel ContentSwitcher {
+    height: 1fr;
+}
+
+LogPanel TabPane {
+    height: 1fr;
+    padding: 0;
+}
+
+_LogView {
+    height: 1fr;
+}
+
+_LogView VerticalScroll {
+    height: 1fr;
+    background: #1a1a2e;
+    padding: 0 1;
+}
+
+#log-empty {
+    height: auto;
+    padding: 1;
     color: #808090;
 }
