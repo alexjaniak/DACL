@@ -141,6 +141,13 @@ def _load_agents(repo_root: Path) -> list[dict]:
 
         running = _is_agent_running(repo_root, agent_id, repo)
 
+        if running:
+            agent_state = "running"
+        elif until == "overdue":
+            agent_state = "overdue"
+        else:
+            agent_state = "idle"
+
         agents.append({
             "id": agent_id,
             "role": role,
@@ -150,6 +157,7 @@ def _load_agents(repo_root: Path) -> list[dict]:
             "until": until,
             "running": running,
             "progress": progress,
+            "state": agent_state,
         })
 
     return agents
@@ -166,9 +174,14 @@ class _AgentCard(Widget):
 
     def compose(self) -> ComposeResult:
         a = self._agent
-        status = "  [bold green]\\[RUNNING][/bold green]" if a["running"] else ""
+        state_markup = {
+            "running": "[bold green]● RUNNING[/bold green]",
+            "overdue": "[bold red]● OVERDUE[/bold red]",
+            "idle": "[dim]○ idle[/dim]",
+        }
+        indicator = state_markup.get(a["state"], "[dim]○ idle[/dim]")
         yield Static(
-            f"[bold]{a['id']}[/bold]  ({a['role']}){status}\n"
+            f"{indicator}  [bold]{a['id']}[/bold]  ({a['role']})\n"
             f"  repo: {a['repo']}  interval: {a['interval']}\n"
             f"  last run: {a['since']} ago  next: {a['until']}",
             classes="agent-info",
