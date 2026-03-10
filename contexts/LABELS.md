@@ -31,13 +31,6 @@ GitHub labels are how agents coordinate without direct communication. Labels are
 | `type:fix` | Bug fix or corrective follow-up |
 | `type:review` | Review or feedback task |
 
-## Scope
-
-| Label | Meaning |
-|-------|---------|
-| `scope:parent` | Epic or parent issue that has subtasks |
-| `scope:child` | Child issue / subtask of a parent issue |
-
 ## Rules
 
 - Every issue must have exactly one `status:` label at all times.
