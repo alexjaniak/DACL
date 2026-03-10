@@ -16,6 +16,13 @@ if [[ -f "$KERNEL_DIR/.env" ]]; then
 fi
 CLAUDE="${CLAUDE_BIN:-claude}"
 
+# ── Innies proxy routing (optional) ─────────────────────────
+if [[ "${USE_INNIES:-false}" == "true" ]]; then
+  CLAUDE_CMD=(innies claude --)
+else
+  CLAUDE_CMD=("$CLAUDE")
+fi
+
 # ── parse flags ────────────────────────────────────────────────
 AGENTIC=false
 PROMPT=""
@@ -202,7 +209,7 @@ fi
 echo "=== RUN $(date -u +%Y-%m-%dT%H:%M:%SZ) ==="
 
 rc=0
-"$CLAUDE" "${CLAUDE_ARGS[@]}" "$PROMPT" || rc=$?
+"${CLAUDE_CMD[@]}" "${CLAUDE_ARGS[@]}" "$PROMPT" || rc=$?
 
 echo "=== END RUN ==="
 exit "$rc"
