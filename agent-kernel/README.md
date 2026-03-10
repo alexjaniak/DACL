@@ -65,6 +65,40 @@ Cron jobs can also specify contexts in `cron-jobs.json`:
 }
 ```
 
+## Innies Proxy (Optional)
+
+[Innies](https://github.com/shirtlessfounder/innies/tree/main/docs/onboarding) is a CLI proxy that routes `claude` calls through a central API with buyer-key authentication, useful for teams sharing a single billing account.
+
+### Install
+
+```bash
+npm install -g innies
+innies login --token in_live_...
+```
+
+### Configure
+
+Set `USE_INNIES=true` in your `.env` file:
+
+```bash
+# In agent-kernel/.env
+USE_INNIES=true
+```
+
+See `.env.example` for the full template.
+
+### Behavior
+
+When `USE_INNIES=true`, all agent `claude` invocations route through `innies claude --` instead of calling `claude` directly. No other changes are needed — `run.sh` handles the proxy transparently.
+
+### Verify
+
+```bash
+innies doctor
+```
+
+This checks connectivity and confirms your token is valid.
+
 ## How it works
 
 1. `--context <path>` flags assemble a system prompt from context files (paths relative to repo root)
