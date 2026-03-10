@@ -15,7 +15,7 @@ REPO_DIR = os.path.dirname(KERNEL_DIR)
 JOBS_FILE = os.path.join(SCRIPT_DIR, "cron-jobs.json")
 STATE_FILE = os.path.join(SCRIPT_DIR, "cron-state.json")
 LOGS_DIR = os.path.join(KERNEL_DIR, "logs")
-TAG_PREFIX = "# DACL:agent-kernel"
+TAG_PREFIX = "# Forge:agent-kernel"
 
 
 # ── helpers ────────────────────────────────────────────────────

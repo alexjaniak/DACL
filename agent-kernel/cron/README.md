@@ -37,7 +37,7 @@ Source of truth for desired cron state. Checked into git.
 | `interval` | string | required | `Nm` (minutes) or `Nh` (hours). |
 | `prompt` | string | required | Prompt passed to `run.sh`. |
 | `agentic` | bool | `false` | Enable tool use (`--agentic`). |
-| `repo` | string | `""` | Target repo (e.g. `"github.com/owner/repo"`). When omitted, the agent targets the DACL repo itself. |
+| `repo` | string | `""` | Target repo (e.g. `"github.com/owner/repo"`). When omitted, the agent targets the Forge repo itself. |
 | `contexts` | string[] | `[]` | List of context file paths relative to repo root, each passed as `--context` to `run.sh`. |
 | `workspace` | bool | `false` | Run the agent in an isolated git worktree (`--workspace <id>`). |
 | `enabled` | bool | `true` | Set `false` to remove from crontab without deleting config. |
