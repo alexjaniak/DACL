@@ -6,13 +6,10 @@ Autonomous agent orchestration. Planner and worker agents run in isolated git wo
 
 ```
 agent-kernel/    One-shot Claude CLI wrapper, cron-friendly
-apps/
-  ops-dashboard/ Next.js operations dashboard
 contexts/        Reusable context library for agent instructions
 ```
 
 - **[agent-kernel](agent-kernel/README.md)** — invoke Claude CLI with context files, run unattended via cron
-- **[ops-dashboard](apps/ops-dashboard/README.md)** — live dashboard for monitoring agents, cron jobs, and runlogs
 - **[contexts](contexts/)** — modular `.md` files that shape agent behavior (identity, constraints, planner/worker roles, handoff protocol, labels, workspace rules)
 
 ## How it works
