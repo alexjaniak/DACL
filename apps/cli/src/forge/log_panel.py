@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 from pathlib import Path
 
@@ -16,6 +17,29 @@ from textual.widgets import Static, TabbedContent, TabPane
 POLL_INTERVAL = 2
 MAX_LINES = 500
 RUN_SEPARATOR = "─" * 40
+
+# Color palette matching agent-kernel/logs/view.sh
+_AGENT_COLORS = [
+    "blue",
+    "green",
+    "yellow",
+    "magenta",
+    "cyan",
+    "red1",
+    "green1",
+    "yellow1",
+    "blue1",
+    "magenta1",
+]
+
+_RUN_RE = re.compile(r"^=== RUN (.+) ===$")
+
+
+def _color_for_agent(agent_id: str) -> str:
+    h = 0
+    for ch in agent_id:
+        h = (h + ord(ch)) % len(_AGENT_COLORS)
+    return _AGENT_COLORS[h]
 
 
 def _find_repo_root() -> Path:
@@ -65,6 +89,139 @@ def _format_log_content(raw: str) -> str:
         else:
             formatted.append(line)
     return "\n".join(formatted)
+
+
+class _AllLogsView(Widget):
+    """Scrollable view interleaving logs from all agents, color-coded."""
+
+    tick_count = reactive(0)
+
+    def __init__(self, agent_ids: list[str], logs_dir: Path, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self._agent_ids = agent_ids
+        self._logs_dir = logs_dir
+        self._last_sizes: dict[str, int] = {aid: 0 for aid in agent_ids}
+        self._auto_scroll = True
+
+    def compose(self) -> ComposeResult:
+        yield VerticalScroll(
+            Static("Waiting for logs...", id="log-text-all"),
+            id="log-scroll-all",
+        )
+
+    def on_mount(self) -> None:
+        self._refresh_log()
+        self.set_interval(POLL_INTERVAL, self._tick)
+
+    def _tick(self) -> None:
+        self.tick_count += 1
+
+    def watch_tick_count(self) -> None:
+        self._refresh_log()
+
+    def _refresh_log(self) -> None:
+        any_changed = False
+        for aid in self._agent_ids:
+            path = self._logs_dir / f"{aid}.log"
+            if not path.exists():
+                continue
+            try:
+                size = path.stat().st_size
+            except OSError:
+                continue
+            if size != self._last_sizes.get(aid, 0):
+                any_changed = True
+                self._last_sizes[aid] = size
+
+        if not any_changed:
+            return
+
+        # Collect timestamped run blocks and loose lines per agent
+        entries: list[tuple[str, str, list[str]]] = []  # (sort_key, agent_id, lines)
+        for aid in self._agent_ids:
+            path = self._logs_dir / f"{aid}.log"
+            if not path.exists():
+                continue
+            try:
+                raw = path.read_text(errors="replace")
+            except OSError:
+                continue
+            self._parse_entries(aid, raw, entries)
+
+        entries.sort(key=lambda e: e[0])
+
+        formatted: list[str] = []
+        for _, aid, lines in entries:
+            color = _color_for_agent(aid)
+            tag = f"[bold {color}]\\[{aid}][/bold {color}]"
+            for line in lines:
+                stripped = line.strip()
+                if stripped.startswith("=== RUN ") or stripped.startswith("=== END RUN"):
+                    formatted.append(
+                        f"{tag} [bold cyan]{RUN_SEPARATOR}[/bold cyan]"
+                    )
+                    formatted.append(f"{tag} [bold cyan]{stripped}[/bold cyan]")
+                    formatted.append(
+                        f"{tag} [bold cyan]{RUN_SEPARATOR}[/bold cyan]"
+                    )
+                else:
+                    formatted.append(f"{tag} {line}")
+
+        if len(formatted) > MAX_LINES:
+            formatted = formatted[-MAX_LINES:]
+
+        text_widget = self.query_one("#log-text-all", Static)
+        text_widget.update("\n".join(formatted))
+
+        if self._auto_scroll:
+            scroll = self.query_one("#log-scroll-all", VerticalScroll)
+            scroll.scroll_end(animate=False)
+
+    @staticmethod
+    def _parse_entries(
+        agent_id: str,
+        raw: str,
+        out: list[tuple[str, str, list[str]]],
+    ) -> None:
+        lines = raw.splitlines()
+        block: list[str] = []
+        block_key = ""
+        loose: list[str] = []
+
+        for line in lines:
+            m = _RUN_RE.match(line.strip())
+            if m:
+                if loose:
+                    out.append(("", agent_id, loose))
+                    loose = []
+                if block:
+                    out.append((block_key, agent_id, block))
+                block = [line]
+                block_key = m.group(1)
+                continue
+            if line.strip() == "=== END RUN ===":
+                block.append(line)
+                out.append((block_key, agent_id, block))
+                block = []
+                block_key = ""
+                continue
+            if block:
+                block.append(line)
+            else:
+                loose.append(line)
+
+        if block:
+            out.append((block_key, agent_id, block))
+        if loose:
+            out.append(("", agent_id, loose))
+
+    def on_vertical_scroll_scroll_up(self) -> None:
+        self._auto_scroll = False
+
+    def on_vertical_scroll_scroll_down(self) -> None:
+        scroll = self.query_one("#log-scroll-all", VerticalScroll)
+        if scroll.scroll_offset.y >= scroll.max_scroll_y:
+            self._auto_scroll = True
 
 
 class _LogView(Widget):
@@ -146,6 +303,8 @@ class LogPanel(Widget):
             return
 
         with TabbedContent():
+            with TabPane("All", id="tab-all"):
+                yield _AllLogsView(agent_ids, logs_dir)
             for agent_id in agent_ids:
                 log_path = logs_dir / f"{agent_id}.log"
                 with TabPane(agent_id, id=f"tab-{agent_id}"):
