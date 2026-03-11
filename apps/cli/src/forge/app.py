@@ -18,6 +18,7 @@ class ForgeApp(App):
     BINDINGS = [
         Binding("l", "toggle_logs", "Toggle Logs"),
         Binding("e", "toggle_events", "Toggle Events"),
+        Binding("s", "toggle_status", "Toggle Status"),
         Binding("a", "add_agent", "Add Agent"),
         Binding("d", "remove_agent", "Remove Agent"),
     ]
@@ -38,6 +39,10 @@ class ForgeApp(App):
     def action_toggle_events(self) -> None:
         event_panel = self.query_one(EventFeedPanel)
         event_panel.display = not event_panel.display
+
+    def action_toggle_status(self) -> None:
+        status_panel = self.query_one(StatusPanel)
+        status_panel.display = not status_panel.display
 
     def action_add_agent(self) -> None:
         self.push_screen(AddAgentScreen())
