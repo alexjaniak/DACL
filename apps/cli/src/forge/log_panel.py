@@ -17,6 +17,11 @@ POLL_INTERVAL = 2
 MAX_LINES = 500
 RUN_SEPARATOR = "─" * 40
 
+# How many bytes to read from the end of a file when opening it for the first
+# time. 64 KiB is enough to capture ~500 lines of typical log output without
+# reading a multi-MB file in its entirety.
+_TAIL_SEED_BYTES = 64 * 1024
+
 
 def _find_repo_root() -> Path:
     env_root = os.environ.get("FORGE_REPO_ROOT")
@@ -50,12 +55,9 @@ def _load_agent_ids(repo_root: Path) -> list[str]:
         return []
 
 
-def _format_log_content(raw: str) -> str:
+def _format_lines(lines: list[str]) -> list[str]:
     """Apply visual separators for run markers."""
-    lines = raw.splitlines()
-    if len(lines) > MAX_LINES:
-        lines = lines[-MAX_LINES:]
-    formatted = []
+    formatted: list[str] = []
     for line in lines:
         stripped = line.strip()
         if stripped.startswith("=== RUN ") or stripped.startswith("=== END RUN"):
@@ -64,11 +66,15 @@ def _format_log_content(raw: str) -> str:
             formatted.append(f"[bold cyan]{RUN_SEPARATOR}[/bold cyan]")
         else:
             formatted.append(line)
-    return "\n".join(formatted)
+    return formatted
 
 
 class _LogView(Widget):
-    """Scrollable log view for a single agent."""
+    """Scrollable log view for a single agent.
+
+    Uses incremental tail-based reading: only new bytes appended since the
+    last poll are read, keeping I/O constant regardless of file size.
+    """
 
     tick_count = reactive(0)
 
@@ -78,6 +84,8 @@ class _LogView(Widget):
         self._log_path = log_path
         self._last_size = 0
         self._auto_scroll = True
+        # Ring buffer of the most recent formatted lines.
+        self._lines: list[str] = []
 
     def compose(self) -> ComposeResult:
         yield VerticalScroll(
@@ -106,20 +114,58 @@ class _LogView(Widget):
 
         if size == self._last_size:
             return
-        self._last_size = size
+
+        if size < self._last_size:
+            # File was truncated / rotated — reset and re-seed.
+            self._last_size = 0
+            self._lines = []
 
         try:
-            raw = self._log_path.read_text(errors="replace")
+            new_lines = self._read_new_bytes(size)
         except OSError:
             return
 
-        content = _format_log_content(raw)
+        if not new_lines:
+            return
+
+        self._last_size = size
+
+        formatted = _format_lines(new_lines)
+        self._lines.extend(formatted)
+        # Keep only the tail.
+        if len(self._lines) > MAX_LINES:
+            self._lines = self._lines[-MAX_LINES:]
+
         text_widget = self.query_one(f"#log-text-{self._agent_id}", Static)
-        text_widget.update(content)
+        text_widget.update("\n".join(self._lines))
 
         if self._auto_scroll:
             scroll = self.query_one(f"#log-scroll-{self._agent_id}", VerticalScroll)
             scroll.scroll_end(animate=False)
+
+    def _read_new_bytes(self, current_size: int) -> list[str]:
+        """Read only the bytes that were appended since the last poll."""
+        with open(self._log_path, "rb") as f:
+            if self._last_size == 0:
+                # First read — seed from the tail of the file.
+                start = max(0, current_size - _TAIL_SEED_BYTES)
+                f.seek(start)
+                chunk = f.read()
+                text = chunk.decode("utf-8", errors="replace")
+                # If we seeked into the middle of the file, drop the first
+                # (likely partial) line.
+                if start > 0:
+                    first_nl = text.find("\n")
+                    if first_nl != -1:
+                        text = text[first_nl + 1 :]
+                return text.splitlines()
+            else:
+                f.seek(self._last_size)
+                chunk = f.read()
+                if not chunk:
+                    return []
+                text = chunk.decode("utf-8", errors="replace")
+                return text.splitlines()
 
     def on_vertical_scroll_scroll_up(self) -> None:
         self._auto_scroll = False
