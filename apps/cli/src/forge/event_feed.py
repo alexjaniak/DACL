@@ -56,9 +56,9 @@ def _format_event_line(event: dict) -> str:
 
     num_str = f"#{number}" if number else "—"
 
-    # Truncate summary to keep lines compact
-    if len(summary) > 50:
-        summary = summary[:47] + "..."
+    # Truncate summary to keep lines readable
+    if len(summary) > 80:
+        summary = summary[:77] + "..."
 
     return (
         f"{time_str}  "
