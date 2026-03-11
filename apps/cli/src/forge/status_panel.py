@@ -10,6 +10,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from textual.app import ComposeResult
+from textual.css.query import NoMatches
 from textual.containers import VerticalScroll
 from textual.reactive import reactive
 from textual.widget import Widget
@@ -206,7 +207,11 @@ class _AgentCard(Widget):
     def update_data(self, agent: dict) -> None:
         """Update card contents in-place without remounting."""
         self._agent = agent
-        self.query_one(".agent-info", Static).update(_info_text(agent))
+        try:
+            info = self.query_one(".agent-info", Static)
+        except NoMatches:
+            return
+        info.update(_info_text(agent))
         pct = int(agent["progress"] * 100)
         self.query_one(".agent-countdown", Static).update(
             f"  {agent['until']}  {pct}%"

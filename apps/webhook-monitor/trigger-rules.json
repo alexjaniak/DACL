@@ -1,18 +1,3 @@
 {
-  "rules": [
-    {
-      "event_type": "issue.labeled",
-      "match": { "labels_contain": "status:ready-for-work" },
-      "action": "run_agent",
-      "agent": "worker-01",
-      "context": "contexts/WORKER.md"
-    },
-    {
-      "event_type": "issue.labeled",
-      "match": { "labels_contain": "status:ready-for-planning" },
-      "action": "run_agent",
-      "agent": "planner-01",
-      "context": "contexts/PLANNER.md"
-    }
-  ]
+  "rules": []
 }
