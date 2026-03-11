@@ -3,9 +3,10 @@ from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
 from textual.widgets import Static
 
+from forge.confirm_remove_screen import ConfirmRemoveScreen
 from forge.event_feed import EventFeedPanel
 from forge.log_panel import LogPanel
-from forge.status_panel import StatusPanel
+from forge.status_panel import StatusPanel, _AgentCard
 
 
 class ForgeApp(App):
@@ -16,6 +17,7 @@ class ForgeApp(App):
     BINDINGS = [
         Binding("l", "toggle_logs", "Toggle Logs"),
         Binding("e", "toggle_events", "Toggle Events"),
+        Binding("d", "remove_agent", "Remove Agent"),
     ]
 
     def compose(self) -> ComposeResult:
@@ -37,6 +39,13 @@ class ForgeApp(App):
     def action_toggle_events(self) -> None:
         event_panel = self.query_one(EventFeedPanel)
         event_panel.display = not event_panel.display
+
+    def action_remove_agent(self) -> None:
+        focused = self.focused
+        if not isinstance(focused, _AgentCard):
+            self.notify("Focus an agent card first (Tab to navigate)", severity="warning")
+            return
+        self.push_screen(ConfirmRemoveScreen(focused.agent_id))
 
 
 def main() -> None:
