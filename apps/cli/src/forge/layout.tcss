@@ -84,7 +84,6 @@ StatusPanel {
 
 LogPanel {
     height: 1fr;
-    max-height: 50%;
     border-top: solid #3a3a5c;
     background: #16162a;
 }
