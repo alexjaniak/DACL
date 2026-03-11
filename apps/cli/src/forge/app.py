@@ -25,10 +25,10 @@ class ForgeApp(App):
     BINDINGS = [
         Binding("l", "toggle_logs", "Toggle Logs"),
         Binding("e", "toggle_events", "Toggle Events"),
-        Binding("left", "resize_left", "Shrink Left", show=False),
-        Binding("right", "resize_right", "Grow Left", show=False),
-        Binding("up", "resize_event_shrink", "Shrink Events", show=False),
-        Binding("down", "resize_event_grow", "Grow Events", show=False),
+        Binding("ctrl+left", "resize_left", "Shrink Left", show=False),
+        Binding("ctrl+right", "resize_right", "Grow Left", show=False),
+        Binding("ctrl+up", "resize_event_shrink", "Shrink Events", show=False),
+        Binding("ctrl+down", "resize_event_grow", "Grow Events", show=False),
     ]
 
     def __init__(self) -> None:
