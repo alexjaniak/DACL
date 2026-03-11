@@ -121,8 +121,8 @@ _LogView VerticalScroll {
 /* Event Feed Panel */
 
 EventFeedPanel {
-    height: auto;
-    max-height: 40%;
+    height: 12;
+    min-height: 8;
     border: round #3a3a5c;
     background: #16162a;
     padding: 1;
@@ -138,5 +138,6 @@ EventFeedPanel {
 
 #event-content {
     height: auto;
+    min-height: 1;
     color: #e0e0e0;
 }

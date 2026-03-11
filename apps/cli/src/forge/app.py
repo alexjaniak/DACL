@@ -25,7 +25,7 @@ class ForgeApp(App):
                 yield LogPanel()
             with Vertical(id="right-col"):
                 yield StatusPanel()
-                yield EventFeedPanel()
+        yield EventFeedPanel()
 
     def on_mount(self) -> None:
         self.query_one(LogPanel).display = False
