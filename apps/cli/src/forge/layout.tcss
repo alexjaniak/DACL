@@ -85,7 +85,7 @@ StatusPanel {
 LogPanel {
     height: 1fr;
     border-top: solid #30363d;
-    background: #161b22;
+    background: #16162a;
 }
 
 LogPanel TabbedContent {
