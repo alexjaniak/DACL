@@ -55,6 +55,10 @@ StatusPanel {
     padding: 0 1;
 }
 
+.agent-card:focus {
+    border: solid #6c3fc5;
+}
+
 .agent-info {
     height: auto;
     color: #8b949e;
@@ -139,4 +143,10 @@ EventFeedPanel {
     height: auto;
     min-height: 1;
     color: #e6edf3;
+}
+
+/* Add Agent Modal */
+
+AddAgentScreen {
+    background: rgba(0, 0, 0, 0.7);
 }

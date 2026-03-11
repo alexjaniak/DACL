@@ -186,10 +186,12 @@ class _AgentCard(Widget):
     """A single agent's status card with progress bar."""
 
     DEFAULT_CSS = ""
+    can_focus = True
 
     def __init__(self, agent: dict, **kwargs: object) -> None:
         super().__init__(**kwargs)
         self._agent = agent
+        self.agent_id = agent["id"]
 
     def compose(self) -> ComposeResult:
         a = self._agent
