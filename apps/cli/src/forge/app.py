@@ -3,6 +3,7 @@ from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
 from textual.widgets import Static
 
+from forge.add_agent_dialog import AddAgentScreen
 from forge.confirm_remove_screen import ConfirmRemoveScreen
 from forge.event_feed import EventFeedPanel
 from forge.log_panel import LogPanel
@@ -18,6 +19,7 @@ class ForgeApp(App):
         Binding("l", "toggle_logs", "Toggle Logs"),
         Binding("e", "toggle_events", "Toggle Events"),
         Binding("d", "remove_agent", "Remove Agent"),
+        Binding("a", "add_agent", "Add Agent"),
     ]
 
     def compose(self) -> ComposeResult:
@@ -39,6 +41,9 @@ class ForgeApp(App):
     def action_toggle_events(self) -> None:
         event_panel = self.query_one(EventFeedPanel)
         event_panel.display = not event_panel.display
+
+    def action_add_agent(self) -> None:
+        self.push_screen(AddAgentScreen())
 
     def action_remove_agent(self) -> None:
         focused = self.focused
