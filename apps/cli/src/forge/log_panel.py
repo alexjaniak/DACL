@@ -20,9 +20,7 @@ MAX_LINES = 500
 _RUN_START_RE = re.compile(r"^=== RUN (\d{4}-\d{2}-\d{2}T(\d{2}:\d{2}:\d{2})Z?) ===$")
 _RUN_END_RE = re.compile(r"^=== END RUN ===$")
 
-CARD_WIDTH = 60
-CARD_BORDER_COLOR = "#6272a4"
-CARD_HEADER_COLOR = "bold cyan"
+_SEPARATOR = "─────────────────────────"
 
 # How many bytes to read from the end of a file when opening it for the first
 # time. 64 KiB is enough to capture ~500 lines of typical log output without
@@ -86,36 +84,34 @@ def _load_agent_ids(repo_root: Path) -> list[str]:
 
 
 def _format_lines(lines: list[str]) -> list[str]:
-    """Format run blocks as card-style Rich markup."""
+    """Format run blocks to match view.sh output style.
+
+    Run blocks are delimited by ``=== RUN <timestamp> ===`` /
+    ``=== END RUN ===`` markers.  They are rendered as a dim
+    timestamp-separator header followed by 2-space-indented content.
+    Lines outside run blocks are indented 2 spaces with no header.
+    """
     formatted: list[str] = []
     i = 0
-    bc = CARD_BORDER_COLOR
-    hc = CARD_HEADER_COLOR
     while i < len(lines):
         stripped = lines[i].strip()
         m = _RUN_START_RE.match(stripped)
         if m:
             time_str = m.group(2)
-            # Collect body lines until END RUN or EOF
-            body_lines: list[str] = []
+            formatted.append(f"[dim]{time_str} {_SEPARATOR}[/dim]")
             i += 1
             while i < len(lines):
                 end_stripped = lines[i].strip()
                 if _RUN_END_RE.match(end_stripped):
                     i += 1
                     break
-                body_lines.append(lines[i])
+                if not lines[i].strip():
+                    i += 1
+                    continue
+                formatted.append(f"  {lines[i]}")
                 i += 1
-            # Build card
-            header = f" {time_str} "
-            top = f"[{bc}]╭{'─' * 2}{f'[/{bc}][{hc}]{header}[/{hc}][{bc}]'}{'─' * max(1, CARD_WIDTH - 4 - len(header))}╮[/{bc}]"
-            formatted.append(top)
-            for body_line in body_lines:
-                formatted.append(f"[{bc}]│[/{bc}]  {body_line}")
-            bottom = f"[{bc}]╰{'─' * (CARD_WIDTH - 2)}╯[/{bc}]"
-            formatted.append(bottom)
         else:
-            formatted.append(lines[i])
+            formatted.append(f"  {lines[i]}")
             i += 1
     return formatted
 
@@ -183,12 +179,9 @@ class _AllLogsView(Widget):
         for _, aid, lines in entries:
             color = _color_for_agent(aid)
             tag = f"[bold {color}]\\[{aid}][/bold {color}]"
-            for line in lines:
-                stripped = line.strip()
-                if stripped.startswith("=== RUN ") or stripped.startswith("=== END RUN"):
-                    formatted.append(f"{tag} [bold cyan]{stripped}[/bold cyan]")
-                else:
-                    formatted.append(f"{tag} {line}")
+            agent_formatted = _format_lines(lines)
+            for line in agent_formatted:
+                formatted.append(f"{tag} {line}")
 
         if len(formatted) > MAX_LINES:
             formatted = formatted[-MAX_LINES:]
