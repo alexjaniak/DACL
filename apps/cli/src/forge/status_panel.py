@@ -163,6 +163,25 @@ def _load_agents(repo_root: Path) -> list[dict]:
     return agents
 
 
+def _structural_key(agent: dict) -> tuple:
+    """Return the fields that define card identity (not timer values)."""
+    return (agent["id"], agent["role"], agent["repo"], agent["interval"])
+
+
+def _info_text(a: dict) -> str:
+    state_markup = {
+        "running": "[bold green]● RUNNING[/bold green]",
+        "overdue": "[bold red]● OVERDUE[/bold red]",
+        "idle": "[dim]○ idle[/dim]",
+    }
+    indicator = state_markup.get(a["state"], "[dim]○ idle[/dim]")
+    return (
+        f"{indicator}  [bold]{a['id']}[/bold]  ({a['role']})\n"
+        f"  repo: {a['repo']}  interval: {a['interval']}\n"
+        f"  last run: {a['since']} ago  next: {a['until']}"
+    )
+
+
 class _AgentCard(Widget):
     """A single agent's status card with progress bar."""
 
@@ -174,18 +193,7 @@ class _AgentCard(Widget):
 
     def compose(self) -> ComposeResult:
         a = self._agent
-        state_markup = {
-            "running": "[bold green]● RUNNING[/bold green]",
-            "overdue": "[bold red]● OVERDUE[/bold red]",
-            "idle": "[dim]○ idle[/dim]",
-        }
-        indicator = state_markup.get(a["state"], "[dim]○ idle[/dim]")
-        yield Static(
-            f"{indicator}  [bold]{a['id']}[/bold]  ({a['role']})\n"
-            f"  repo: {a['repo']}  interval: {a['interval']}\n"
-            f"  last run: {a['since']} ago  next: {a['until']}",
-            classes="agent-info",
-        )
+        yield Static(_info_text(a), classes="agent-info")
         pct = int(a["progress"] * 100)
         yield Static(
             f"  {a['until']}  {pct}%",
@@ -194,6 +202,17 @@ class _AgentCard(Widget):
         bar = ProgressBar(total=100, show_eta=False, show_percentage=False, classes="agent-progress")
         bar.advance(pct)
         yield bar
+
+    def update_data(self, agent: dict) -> None:
+        """Update card contents in-place without remounting."""
+        self._agent = agent
+        self.query_one(".agent-info", Static).update(_info_text(agent))
+        pct = int(agent["progress"] * 100)
+        self.query_one(".agent-countdown", Static).update(
+            f"  {agent['until']}  {pct}%"
+        )
+        bar = self.query_one(ProgressBar)
+        bar.update(total=100, progress=pct)
 
 
 class StatusPanel(Widget):
@@ -207,6 +226,7 @@ class StatusPanel(Widget):
 
     def on_mount(self) -> None:
         self._repo_root = _find_repo_root()
+        self._last_structural_keys: list[tuple] = []
         self._refresh_display()
         self.set_interval(1, self._tick)
 
@@ -219,6 +239,16 @@ class StatusPanel(Widget):
     def _refresh_display(self) -> None:
         agents = _load_agents(self._repo_root)
         container = self.query_one("#status-agents", VerticalScroll)
+
+        current_keys = [_structural_key(a) for a in agents]
+
+        if current_keys == self._last_structural_keys and agents:
+            cards = container.query(_AgentCard)
+            for card, agent in zip(cards, agents):
+                card.update_data(agent)
+            return
+
+        self._last_structural_keys = current_keys
         container.remove_children()
 
         if not agents:
