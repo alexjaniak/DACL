@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import json
-import os
 import re
 import subprocess
-from pathlib import Path
+import sys
 
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -14,21 +13,7 @@ from textual.containers import Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, Checkbox, Input, Static, TextArea
 
-
-def _find_repo_root() -> Path:
-    env_root = os.environ.get("FORGE_REPO_ROOT")
-    if env_root:
-        return Path(env_root)
-    try:
-        result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        return Path(result.stdout.strip())
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        return Path.cwd()
+from forge.status_panel import _find_repo_root
 
 
 class AddAgentScreen(ModalScreen[bool]):
@@ -154,7 +139,7 @@ class AddAgentScreen(ModalScreen[bool]):
         repo_root = _find_repo_root()
         manage_py = repo_root / "agent-kernel" / "cron" / "manage.py"
 
-        cmd = ["python3", str(manage_py), "add", agent_id, interval, prompt]
+        cmd = [sys.executable, str(manage_py), "add", agent_id, interval, prompt]
         if agentic:
             cmd.append("--agentic")
         if workspace:
@@ -177,7 +162,7 @@ class AddAgentScreen(ModalScreen[bool]):
                 self._show_error(f"Failed: {err}")
                 return
         except FileNotFoundError:
-            self._show_error("Could not find python3 or manage.py.")
+            self._show_error("Could not find Python executable or manage.py.")
             return
 
         # Also add to cron-jobs.json so StatusPanel picks it up
