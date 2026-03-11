@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 
 from textual.app import ComposeResult
+from textual.containers import VerticalScroll
 from textual.reactive import reactive
 from textual.widget import Widget
 from textual.widgets import Static
@@ -39,7 +40,8 @@ def _color_for_action(raw_action: str) -> str:
     return EVENT_TYPE_COLORS.get(raw_action, "white")
 
 
-def _format_event_line(event: dict) -> str:
+def _format_event(event: dict) -> str:
+    """Format an event as a multi-line block with detailed info."""
     ts = event.get("timestamp", "")
     try:
         dt = datetime.fromisoformat(ts)
@@ -52,21 +54,33 @@ def _format_event_line(event: dict) -> str:
     actor = event.get("actor", "?")
     summary = event.get("summary", "")
     raw_action = event.get("raw_action", "")
+    labels = event.get("labels", [])
     color = _color_for_action(raw_action)
 
     num_str = f"#{number}" if number else "—"
 
-    # Truncate summary to keep lines readable
-    if len(summary) > 80:
-        summary = summary[:77] + "..."
-
-    return (
-        f"{time_str}  "
-        f"[{color}]{event_type:<16}[/{color}]  "
-        f"{num_str:<6}  "
-        f"{actor:<14}  "
-        f"{summary}"
+    # Line 1: timestamp, colored event type, issue/PR number
+    line1 = (
+        f"[dim]{time_str}[/dim]  "
+        f"[{color} bold]{event_type}[/{color} bold]  "
+        f"[cyan]{num_str}[/cyan]"
     )
+
+    # Line 2: actor and summary
+    if len(summary) > 100:
+        summary = summary[:97] + "..."
+    line2 = f"  [dim]@{actor}[/dim]  {summary}"
+
+    lines = [line1, line2]
+
+    # Line 3 (optional): labels
+    if labels:
+        label_str = ", ".join(labels[:5])
+        if len(labels) > 5:
+            label_str += f" +{len(labels) - 5}"
+        lines.append(f"  [yellow dim]labels: {label_str}[/yellow dim]")
+
+    return "\n".join(lines)
 
 
 def _load_events(path: Path) -> list[dict]:
@@ -94,7 +108,8 @@ class EventFeedPanel(Widget):
 
     def compose(self) -> ComposeResult:
         yield Static("Event Feed", id="event-header")
-        yield Static("No events yet", id="event-content")
+        with VerticalScroll(id="event-scroll"):
+            yield Static("No events yet", id="event-content")
 
     def on_mount(self) -> None:
         self._events_path = _get_events_path()
@@ -111,8 +126,10 @@ class EventFeedPanel(Widget):
     def _refresh_display(self) -> None:
         events = _load_events(self._events_path)
 
+        content = self.query_one("#event-content", Static)
+
         if not events:
-            self.query_one("#event-content", Static).update("No events yet")
+            content.update("No events yet")
             self._last_count = 0
             return
 
@@ -120,6 +137,7 @@ class EventFeedPanel(Widget):
         recent = events[-MAX_DISPLAY_EVENTS:]
         recent.reverse()
 
-        lines = [_format_event_line(e) for e in recent]
-        self.query_one("#event-content", Static).update("\n".join(lines))
+        # Join events with blank-line separator for readability
+        blocks = [_format_event(e) for e in recent]
+        content.update("\n\n".join(blocks))
         self._last_count = len(events)
