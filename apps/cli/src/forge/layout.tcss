@@ -56,7 +56,8 @@ StatusPanel {
 }
 
 .agent-card:focus {
-    border: solid #6c3fc5;
+    border: solid #1f6feb;
+    background: #161b22;
 }
 
 .agent-info {
