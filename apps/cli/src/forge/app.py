@@ -27,9 +27,6 @@ class ForgeApp(App):
                 yield StatusPanel()
         yield EventFeedPanel()
 
-    def on_mount(self) -> None:
-        self.query_one(LogPanel).display = False
-
     def action_toggle_logs(self) -> None:
         log_panel = self.query_one(LogPanel)
         log_panel.display = not log_panel.display
