@@ -1,14 +1,14 @@
-/* Forge CLI — Dark theme with Claude Code-inspired styling */
+/* Forge CLI — Dark theme with modern blue-teal styling */
 
 Screen {
-    background: #1a1a2e;
-    color: #e0e0e0;
+    background: #0d1117;
+    color: #e6edf3;
 }
 
 #header-bar {
     dock: top;
     height: 1;
-    background: #6c3fc5;
+    background: #1f6feb;
     color: #ffffff;
     text-style: bold;
     padding: 0 1;
@@ -21,7 +21,7 @@ Screen {
 #left-col {
     width: 3fr;
     height: 1fr;
-    border-right: solid #3a3a5c;
+    border-right: solid #30363d;
 }
 
 #right-col {
@@ -33,14 +33,14 @@ StatusPanel {
     height: 1fr;
     padding: 1;
     overflow-y: auto;
-    border: round #3a3a5c;
-    background: #16162a;
+    border: round #30363d;
+    background: #161b22;
 }
 
 #status-header {
     height: auto;
     text-style: bold;
-    color: #6c3fc5;
+    color: #58a6ff;
     margin-bottom: 1;
 }
 
@@ -57,12 +57,12 @@ StatusPanel {
 
 .agent-info {
     height: auto;
-    color: #808090;
+    color: #8b949e;
 }
 
 .agent-countdown {
     height: auto;
-    color: #b090e0;
+    color: #79c0ff;
     margin-top: 0;
 }
 
@@ -72,8 +72,8 @@ StatusPanel {
 }
 
 .agent-progress Bar {
-    color: #6c3fc5;
-    background: #3a3a5c;
+    color: #1f6feb;
+    background: #30363d;
 }
 
 .agent-progress PercentageStatus {
@@ -84,8 +84,8 @@ StatusPanel {
 
 LogPanel {
     height: 1fr;
-    border-top: solid #3a3a5c;
-    background: #16162a;
+    border-top: solid #30363d;
+    background: #161b22;
 }
 
 LogPanel TabbedContent {
@@ -107,14 +107,14 @@ _LogView {
 
 _LogView VerticalScroll {
     height: 1fr;
-    background: #1a1a2e;
+    background: #0d1117;
     padding: 0 1;
 }
 
 #log-empty {
     height: auto;
     padding: 1;
-    color: #808090;
+    color: #8b949e;
 }
 
 /* Event Feed Panel */
@@ -122,8 +122,8 @@ _LogView VerticalScroll {
 EventFeedPanel {
     height: 12;
     min-height: 8;
-    border: round #3a3a5c;
-    background: #16162a;
+    border: round #30363d;
+    background: #161b22;
     padding: 1;
     overflow-y: auto;
 }
@@ -131,12 +131,12 @@ EventFeedPanel {
 #event-header {
     height: auto;
     text-style: bold;
-    color: #6c3fc5;
+    color: #58a6ff;
     margin-bottom: 1;
 }
 
 #event-content {
     height: auto;
     min-height: 1;
-    color: #e0e0e0;
+    color: #e6edf3;
 }
