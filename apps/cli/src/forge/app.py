@@ -1,7 +1,7 @@
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
-from textual.widgets import Static
+from textual.widgets import Footer, Static
 
 from forge.event_feed import EventFeedPanel
 from forge.log_panel import LogPanel
@@ -16,6 +16,7 @@ class ForgeApp(App):
     BINDINGS = [
         Binding("l", "toggle_logs", "Toggle Logs"),
         Binding("e", "toggle_events", "Toggle Events"),
+        Binding("a", "toggle_agents", "Toggle Agents"),
     ]
 
     def compose(self) -> ComposeResult:
@@ -26,6 +27,7 @@ class ForgeApp(App):
             with Vertical(id="right-col"):
                 yield StatusPanel()
                 yield EventFeedPanel()
+        yield Footer()
 
     def on_mount(self) -> None:
         self.query_one(LogPanel).display = False
@@ -37,6 +39,10 @@ class ForgeApp(App):
     def action_toggle_events(self) -> None:
         event_panel = self.query_one(EventFeedPanel)
         event_panel.display = not event_panel.display
+
+    def action_toggle_agents(self) -> None:
+        status_panel = self.query_one(StatusPanel)
+        status_panel.display = not status_panel.display
 
 
 def main() -> None:
