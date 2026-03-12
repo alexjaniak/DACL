@@ -133,6 +133,9 @@ cleanup() {
 }
 trap cleanup EXIT
 
+# ── runtime selection (default: claude) ──────────────────────
+AGENT_RUNTIME="${AGENT_RUNTIME:-claude}"
+
 # ── preflight: skip idle worker runs ─────────────────────────
 IS_WORKER=false
 for ctx in "${CONTEXTS[@]}"; do
@@ -159,6 +162,14 @@ if [[ "$IS_WORKER" == true ]]; then
   # If gh fails (network error, etc.), proceed with the run rather than skipping
 fi
 
+# ── preflight: Codex binary (direct mode) ────────────────────
+if [[ "$AGENT_RUNTIME" == "codex" ]] && [[ "${USE_INNIES:-false}" != "true" ]]; then
+  if ! command -v codex &>/dev/null; then
+    echo "[preflight] codex binary not found. Install: npm install -g @openai/codex" >&2
+    exit 1
+  fi
+fi
+
 # ── preflight: Innies proxy connectivity ─────────────────────
 if [[ "${USE_INNIES:-false}" == "true" ]]; then
   if ! command -v innies &>/dev/null; then
@@ -166,11 +177,37 @@ if [[ "${USE_INNIES:-false}" == "true" ]]; then
     echo "Install with: npm install -g innies" >&2
     exit 1
   fi
-  # Verify innies can reach the proxy (ignore unrelated checks like codex_binary)
+
   INNIES_OUT="$(innies doctor 2>&1 || true)"
-  if ! echo "$INNIES_OUT" | grep -q "^OK.*claude_binary"; then
-    echo "Error: innies claude check failed. Run 'innies doctor' to diagnose." >&2
-    echo "$INNIES_OUT" >&2
+
+  if [[ "$AGENT_RUNTIME" == "codex" ]]; then
+    if ! echo "$INNIES_OUT" | grep -q "codex_binary.*ok"; then
+      echo "[preflight] innies doctor: codex_binary check failed" >&2
+      echo "$INNIES_OUT" >&2
+      exit 1
+    fi
+  else
+    if ! echo "$INNIES_OUT" | grep -q "^OK.*claude_binary"; then
+      echo "Error: innies claude check failed. Run 'innies doctor' to diagnose." >&2
+      echo "$INNIES_OUT" >&2
+      exit 1
+    fi
+  fi
+fi
+
+# ── preflight: Codex config.toml (Innies mode) ──────────────
+if [[ "$AGENT_RUNTIME" == "codex" ]] && [[ "${USE_INNIES:-false}" == "true" ]]; then
+  CODEX_CONFIG="$HOME/.codex/config.toml"
+  if [[ ! -f "$CODEX_CONFIG" ]]; then
+    echo "[preflight] Missing $CODEX_CONFIG — required for Innies Codex" >&2
+    echo "Create it with:" >&2
+    echo '  model_provider = "innies"' >&2
+    echo '  [model_providers.innies]' >&2
+    echo '  base_url = "https://api.innies.computer/v1/proxy/v1"' >&2
+    exit 1
+  fi
+  if ! grep -q 'model_provider.*=.*"innies"' "$CODEX_CONFIG"; then
+    echo "[preflight] $CODEX_CONFIG does not set model_provider to innies" >&2
     exit 1
   fi
 fi
