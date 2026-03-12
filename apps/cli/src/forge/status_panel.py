@@ -256,6 +256,12 @@ class StatusPanel(Widget):
             return
 
         self._last_structural_keys = current_keys
+
+        focused_agent_id: str | None = None
+        focused = self.app.focused
+        if isinstance(focused, _AgentCard):
+            focused_agent_id = focused.agent_id
+
         container.remove_children()
 
         if not agents:
@@ -264,3 +270,9 @@ class StatusPanel(Widget):
 
         for a in agents:
             container.mount(_AgentCard(a, classes="agent-card"))
+
+        if focused_agent_id is not None:
+            for card in container.query(_AgentCard):
+                if card.agent_id == focused_agent_id:
+                    card.focus()
+                    return
