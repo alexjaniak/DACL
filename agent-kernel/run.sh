@@ -172,6 +172,37 @@ if [[ "$IS_WORKER" == true ]]; then
   # If gh fails (network error, etc.), proceed with the run rather than skipping
 fi
 
+# ── preflight: skip idle planner runs ────────────────────────
+IS_PLANNER=false
+for ctx in "${CONTEXTS[@]}"; do
+  if [[ "$ctx" == *PLANNER.md ]]; then
+    IS_PLANNER=true
+    break
+  fi
+done
+
+if [[ "$IS_PLANNER" == true ]]; then
+  GH_ARGS=(issue list --label "role:planner" --state open --json number --jq 'length')
+
+  if [[ "$TARGET_REPO" == github.com/* ]]; then
+    GH_REPO="${TARGET_REPO#github.com/}"
+    GH_ARGS+=(--repo "$GH_REPO")
+  fi
+
+  AVAILABLE=$(gh "${GH_ARGS[@]}" 2>/dev/null || echo "error")
+
+  if [[ "$AVAILABLE" == "0" ]]; then
+    echo "No open issues with role:planner — skipping run"
+    if [[ -n "${WORKSPACE_ID:-}" ]]; then
+      SYSTEM_LOG="$KERNEL_DIR/logs/system.log"
+      mkdir -p "$(dirname "$SYSTEM_LOG")"
+      echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] $WORKSPACE_ID: skipped (no role:planner issues)" >> "$SYSTEM_LOG"
+    fi
+    exit 0
+  fi
+  # If gh fails (network error, etc.), proceed with the run rather than skipping
+fi
+
 # ── preflight: Innies proxy connectivity ─────────────────────
 if [[ "${USE_INNIES:-false}" == "true" ]]; then
   if ! command -v innies &>/dev/null; then
