@@ -16,17 +16,6 @@ if [[ -f "$KERNEL_DIR/.env" ]]; then
 fi
 CLAUDE="${CLAUDE_BIN:-claude}"
 
-# ── Innies proxy routing (optional) ──────────────────────────
-if [[ "${USE_INNIES:-false}" == "true" ]]; then
-  if [[ -n "${INNIES_TOKEN:-}" ]]; then
-    CLAUDE_CMD=(innies claude --token "$INNIES_TOKEN" --)
-  else
-    CLAUDE_CMD=(innies claude --)
-  fi
-else
-  CLAUDE_CMD=("$CLAUDE")
-fi
-
 # ── parse flags ────────────────────────────────────────────────
 AGENTIC=false
 PROMPT=""
@@ -136,6 +125,29 @@ trap cleanup EXIT
 # ── runtime selection (default: claude) ──────────────────────
 AGENT_RUNTIME="${AGENT_RUNTIME:-claude}"
 
+# ── runtime command routing ──────────────────────────────────
+if [[ "$AGENT_RUNTIME" == "codex" ]]; then
+  if [[ "${USE_INNIES:-false}" == "true" ]]; then
+    if [[ -n "${INNIES_TOKEN:-}" ]]; then
+      RUNTIME_CMD=(innies codex --token "$INNIES_TOKEN" --)
+    else
+      RUNTIME_CMD=(innies codex --)
+    fi
+  else
+    RUNTIME_CMD=(codex)
+  fi
+else
+  if [[ "${USE_INNIES:-false}" == "true" ]]; then
+    if [[ -n "${INNIES_TOKEN:-}" ]]; then
+      RUNTIME_CMD=(innies claude --token "$INNIES_TOKEN" --)
+    else
+      RUNTIME_CMD=(innies claude --)
+    fi
+  else
+    RUNTIME_CMD=("$CLAUDE")
+  fi
+fi
+
 # ── preflight: skip idle worker runs ─────────────────────────
 IS_WORKER=false
 for ctx in "${CONTEXTS[@]}"; do
@@ -229,17 +241,25 @@ if [[ -n "$WORKSPACE_ID" ]]; then
   SYSTEM_PROMPT="AGENT_ID: $WORKSPACE_ID"$'\n\n'"$SYSTEM_PROMPT"
 fi
 
-# ── build claude args ─────────────────────────────────────────
-CLAUDE_ARGS=()
+# ── build runtime args ────────────────────────────────────────
+RUNTIME_ARGS=()
 
-if [[ "$AGENTIC" == false ]]; then
-  CLAUDE_ARGS+=(--print)          # text-only, no tools
-fi
-
-CLAUDE_ARGS+=(--dangerously-skip-permissions)
-
-if [[ -n "$SYSTEM_PROMPT" ]]; then
-  CLAUDE_ARGS+=(--append-system-prompt "$SYSTEM_PROMPT")
+if [[ "$AGENT_RUNTIME" == "codex" ]]; then
+  if [[ "$AGENTIC" == false ]]; then
+    RUNTIME_ARGS+=(--quiet)
+  fi
+  RUNTIME_ARGS+=(--full-auto)
+  if [[ -n "$SYSTEM_PROMPT" ]]; then
+    RUNTIME_ARGS+=(--instructions "$SYSTEM_PROMPT")
+  fi
+else
+  if [[ "$AGENTIC" == false ]]; then
+    RUNTIME_ARGS+=(--print)          # text-only, no tools
+  fi
+  RUNTIME_ARGS+=(--dangerously-skip-permissions)
+  if [[ -n "$SYSTEM_PROMPT" ]]; then
+    RUNTIME_ARGS+=(--append-system-prompt "$SYSTEM_PROMPT")
+  fi
 fi
 
 if [[ -n "$WORKSPACE_ID" ]]; then
@@ -269,5 +289,5 @@ if agent in state.get('jobs', {}):
 fi
 
 rc=0
-"${CLAUDE_CMD[@]}" "${CLAUDE_ARGS[@]}" "$PROMPT" || rc=$?
+"${RUNTIME_CMD[@]}" "${RUNTIME_ARGS[@]}" "$PROMPT" || rc=$?
 exit "$rc"
