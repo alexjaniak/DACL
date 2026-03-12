@@ -192,7 +192,14 @@ class _AgentCard(Widget):
     def __init__(self, agent: dict, **kwargs: object) -> None:
         super().__init__(**kwargs)
         self._agent = agent
-        self.agent_id = agent["id"]
+
+    @property
+    def agent_id(self) -> str:
+        return self._agent["id"]
+
+    @property
+    def agent_data(self) -> dict:
+        return self._agent
 
     def compose(self) -> ComposeResult:
         a = self._agent
