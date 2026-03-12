@@ -49,6 +49,23 @@ def parse_interval(interval):
     raise ValueError(f"Invalid interval '{interval}': must be Nm or Nh (e.g. 5m, 1h)")
 
 
+VALID_RUNTIMES = {"claude", "codex"}
+MODEL_RE = re.compile(r'^[a-zA-Z0-9_./-]+$')
+
+
+def validate_runtime(runtime):
+    if runtime not in VALID_RUNTIMES:
+        print(f"Error: unknown runtime '{runtime}'. Valid: {', '.join(sorted(VALID_RUNTIMES))}", file=sys.stderr)
+        sys.exit(1)
+
+
+def validate_model(model):
+    if model and not MODEL_RE.match(model):
+        print(f"Error: invalid model '{model}'", file=sys.stderr)
+        sys.exit(1)
+
+
+
 def build_cron_command(job_id, prompt, agentic, contexts=None, workspace=False, repo=None, runtime=None, model=None):
     runtime = runtime or "claude"
     env_prefix = f"AGENT_RUNTIME={runtime} " if runtime != "claude" else ""
@@ -60,7 +77,7 @@ def build_cron_command(job_id, prompt, agentic, contexts=None, workspace=False, 
     if repo:
         cmd += f" --repo {repo}"
     if model:
-        cmd += f" --model {model}"
+        cmd += f" --model '{model}'"
     for ctx in (contexts or []):
         cmd += f" --context {ctx}"
     cmd += f' "{prompt}" >> {LOGS_DIR}/{job_id}.log 2>&1'
@@ -262,6 +279,8 @@ def cmd_apply(args):
         repo = job.get("repo", "")
         runtime = job.get("runtime", "claude")
         model = job.get("model", "")
+        validate_runtime(runtime)
+        validate_model(model)
         command = build_cron_command(job_id, job["prompt"], job.get("agentic", False), contexts, job.get("workspace", False), repo or None, runtime, model or None)
 
         offset = stagger_offsets.get(job_id, 0)
@@ -305,11 +324,14 @@ def cmd_add(args):
         print(f"Error: invalid id '{args.id}' (use alphanumeric, dashes, underscores)", file=sys.stderr)
         sys.exit(1)
 
+    runtime = args.runtime or "claude"
+    model = args.model or ""
+    validate_runtime(runtime)
+    validate_model(model)
+
     cron_expr = parse_interval(args.interval)
     contexts = args.context or []
     repo = args.repo or ""
-    runtime = args.runtime or "claude"
-    model = args.model or ""
     command = build_cron_command(args.id, args.prompt, args.agentic, contexts, args.workspace, repo or None, runtime, model or None)
 
     crontab = read_crontab()
