@@ -1,165 +1,142 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-interface GitHubEvent {
-  action?: string;
-  issue?: { title: string; number: number; html_url: string };
-  pull_request?: { title: string; number: number; html_url: string };
-  comment?: { body: string; user: { login: string } };
-  sender?: { login: string; avatar_url: string };
-  repository?: { full_name: string };
-  [key: string]: unknown;
+interface NormalizedEvent {
+  timestamp: string;
+  event_type: string;
+  repo: string;
+  number: number;
+  actor: string;
+  summary: string;
+  raw_action: string;
+  labels: string[];
 }
 
-interface EventsResponse {
-  events: GitHubEvent[];
-  offset: number;
-  total: number;
-}
+const MAX_DISPLAY = 50;
 
-function getEventType(event: GitHubEvent): "issue" | "pr" | "comment" | "other" {
-  if (event.comment) return "comment";
-  if (event.pull_request) return "pr";
-  if (event.issue) return "issue";
-  return "other";
-}
-
-function getAccentClass(type: "issue" | "pr" | "comment" | "other"): string {
-  switch (type) {
-    case "issue":
-      return "bg-accent-green";
-    case "pr":
-      return "bg-accent-blue";
-    case "comment":
-      return "bg-accent-yellow";
+function actionColor(action: string): string {
+  switch (action) {
+    case "opened":
+    case "created":
+      return "bg-accent-green text-background";
+    case "closed":
+    case "deleted":
+      return "bg-accent-red text-background";
+    case "merged":
+      return "bg-accent-magenta text-background";
+    case "labeled":
+    case "unlabeled":
+      return "bg-accent-yellow text-background";
+    case "commented":
+    case "submitted":
+      return "bg-accent-blue text-background";
     default:
-      return "bg-accent-cyan";
+      return "bg-muted-foreground text-background";
   }
 }
 
-function getSummary(event: GitHubEvent): string {
-  const sender = event.sender?.login ?? "unknown";
-  const action = event.action ?? "triggered";
-
-  if (event.comment) {
-    const target = event.issue
-      ? `#${event.issue.number}`
-      : event.pull_request
-        ? `#${event.pull_request.number}`
-        : "unknown";
-    return `${sender} commented on ${target}`;
-  }
-  if (event.pull_request) {
-    return `${sender} ${action} PR #${event.pull_request.number}`;
-  }
-  if (event.issue) {
-    return `${sender} ${action} #${event.issue.number}`;
-  }
-  return `${sender} ${action} event`;
+function formatTime(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
 }
 
-function getBodyPreview(event: GitHubEvent): string | null {
-  if (!event.comment?.body) return null;
-  const body = event.comment.body.replace(/\n/g, " ").trim();
-  return body.length > 80 ? body.slice(0, 77) + "..." : body;
+function truncate(s: string, max: number): string {
+  return s.length > max ? s.slice(0, max) + "…" : s;
 }
 
-function getTimestamp(event: GitHubEvent): string | null {
-  const raw =
-    (event.comment as Record<string, unknown>)?.created_at ??
-    (event.issue as Record<string, unknown>)?.updated_at ??
-    (event.pull_request as Record<string, unknown>)?.updated_at;
-  if (typeof raw !== "string") return null;
-  const date = new Date(raw);
-  if (isNaN(date.getTime())) return null;
-  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (seconds < 60) return `${seconds}s ago`;
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-}
-
-function EventCard({ event }: { event: GitHubEvent }) {
-  const type = getEventType(event);
-  const accent = getAccentClass(type);
-  const summary = getSummary(event);
-  const preview = getBodyPreview(event);
-  const timestamp = getTimestamp(event);
-
+function EventCard({ event }: { event: NormalizedEvent }) {
   return (
-    <div className="bg-background rounded p-2 flex gap-2 items-start">
-      <div className={`w-1 shrink-0 self-stretch rounded-full ${accent}`} />
-      <div className="min-w-0 flex-1">
-        <div className="flex items-baseline justify-between gap-2">
-          <p className="text-text-bright text-sm truncate">{summary}</p>
-          {timestamp && (
-            <span className="text-muted-foreground text-xs font-mono shrink-0">
-              {timestamp}
-            </span>
-          )}
-        </div>
-        {preview && (
-          <p className="text-text text-xs mt-0.5 truncate">{preview}</p>
+    <div className="rounded-md bg-surface p-2 border border-border">
+      <div className="flex items-center gap-2 mb-1 flex-wrap">
+        <span className="text-xs font-mono text-muted-foreground">
+          {formatTime(event.timestamp)}
+        </span>
+        <span
+          className={`text-xs font-medium px-1.5 py-0.5 rounded ${actionColor(event.raw_action)}`}
+        >
+          {event.raw_action}
+        </span>
+        {event.number > 0 && (
+          <span className="text-xs font-mono text-accent-blue">
+            #{event.number}
+          </span>
         )}
+        <span className="text-xs text-muted-foreground">{event.actor}</span>
       </div>
+      <p className="text-sm text-text ml-0.5 mb-1">
+        {truncate(event.summary, 100)}
+      </p>
+      {event.labels.length > 0 && (
+        <div className="flex flex-wrap gap-1 ml-0.5">
+          {event.labels.map((label) => (
+            <span
+              key={label}
+              className="text-xs px-1.5 py-0.5 rounded bg-surface-hover text-text"
+            >
+              {label}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
 export function EventsPanel() {
-  const [events, setEvents] = useState<GitHubEvent[]>([]);
-  const [nextOffset, setNextOffset] = useState(0);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const [events, setEvents] = useState<NormalizedEvent[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const totalRef = useRef(0);
+  const mountedRef = useRef(true);
 
-  const fetchEvents = useCallback(async (offset: number, append: boolean) => {
-    setLoading(true);
+  const fetchEvents = useCallback(async () => {
     try {
-      const res = await fetch(`/api/events?offset=${offset}`);
-      if (!res.ok) return;
-      const data: EventsResponse = await res.json();
-      setEvents((prev) => (append ? [...prev, ...data.events] : data.events));
-      setNextOffset(data.offset);
-      setTotal(data.total);
-    } finally {
-      setLoading(false);
+      const res = await fetch(`/api/events?offset=0`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (mountedRef.current) {
+        const fetched: NormalizedEvent[] = data.events ?? [];
+        setEvents(fetched.slice(0, MAX_DISPLAY));
+        totalRef.current = data.total ?? 0;
+        setError(null);
+      }
+    } catch (err) {
+      if (mountedRef.current) {
+        setError(err instanceof Error ? err.message : "Failed to fetch events");
+      }
     }
   }, []);
 
-  // Initial fetch + polling
   useEffect(() => {
-    fetchEvents(0, false);
-    const interval = setInterval(() => fetchEvents(0, false), 10_000);
-    return () => clearInterval(interval);
+    mountedRef.current = true;
+    fetchEvents();
+    const id = setInterval(fetchEvents, 3000);
+    return () => {
+      mountedRef.current = false;
+      clearInterval(id);
+    };
   }, [fetchEvents]);
 
-  const hasMore = nextOffset < total;
-
   return (
-    <div className="h-full bg-surface p-4 overflow-y-auto flex flex-col">
-      <h2 className="text-text-bright font-semibold text-sm uppercase tracking-wide mb-4">
+    <div className="bg-surface p-3 overflow-y-auto flex flex-col">
+      <h2 className="text-text-bright font-semibold text-sm uppercase tracking-wide mb-3">
         Events
       </h2>
-      {events.length === 0 && !loading ? (
-        <p className="text-muted-foreground text-sm">No events yet</p>
+
+      {error && <p className="text-accent-red text-xs mb-2">{error}</p>}
+
+      {events.length === 0 && !error ? (
+        <p className="text-muted-foreground text-sm">No events yet.</p>
       ) : (
-        <div className="flex flex-col gap-1 flex-1 min-h-0">
+        <div className="flex flex-col gap-2">
           {events.map((event, i) => (
-            <EventCard key={`${i}-${nextOffset}`} event={event} />
+            <EventCard key={`${event.timestamp}-${i}`} event={event} />
           ))}
-          {hasMore && (
-            <button
-              onClick={() => fetchEvents(nextOffset, true)}
-              disabled={loading}
-              className="text-sm text-accent-blue hover:text-text-bright mt-2 self-center disabled:opacity-50"
-            >
-              {loading ? "Loading..." : "Load more"}
-            </button>
-          )}
         </div>
       )}
     </div>
