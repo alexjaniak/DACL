@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
 
 interface Agent {
   id: string;
@@ -93,6 +92,7 @@ function AgentCard({
   const [feedback, setFeedback] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [tick, setTick] = useState(0);
+  const confirmTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Live countdown ticker — updates every second
   useEffect(() => {
@@ -104,6 +104,13 @@ function AgentCard({
   // Suppress unused var lint — tick drives re-render for countdown
   void tick;
 
+  // Clean up confirm timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (confirmTimeoutRef.current) clearTimeout(confirmTimeoutRef.current);
+    };
+  }, []);
+
   const handleForceRun = () => {
     onForceRun(agent.id);
     setFeedback("Started");
@@ -113,21 +120,35 @@ function AgentCard({
   const handleDelete = () => {
     if (!confirming) {
       setConfirming(true);
-      setTimeout(() => setConfirming(false), 3000);
+      confirmTimeoutRef.current = setTimeout(() => setConfirming(false), 3000);
       return;
     }
+    if (confirmTimeoutRef.current) clearTimeout(confirmTimeoutRef.current);
     onDelete(agent.id);
     setConfirming(false);
   };
+
+  const isStarted = feedback === "Started";
 
   return (
     <div className="rounded-md bg-surface p-2 border border-border hover:bg-surface-hover transition-colors">
       <div className="flex items-center gap-2 mb-1">
         <StatusDot running={agent.running} overdue={agent.overdue} />
-        <span className="font-mono text-base text-text-bright truncate flex-1">
+        <span className="font-mono text-base text-text-bright truncate flex-1 min-w-0">
           {agent.id}
         </span>
         <RoleBadge role={agent.role} />
+        <button
+          className={`flex-shrink-0 size-5 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+            confirming
+              ? "bg-accent-red text-background"
+              : "bg-surface-hover text-muted-foreground hover:bg-accent-red hover:text-background"
+          }`}
+          onClick={handleDelete}
+          title={confirming ? "Click again to confirm delete" : "Delete agent"}
+        >
+          {confirming ? "?" : "\u2212"}
+        </button>
       </div>
 
       <div className="flex items-center gap-3 text-sm text-text font-mono ml-4 mb-2">
@@ -144,27 +165,17 @@ function AgentCard({
         )}
       </div>
 
-      <div className="flex items-center gap-1 ml-4">
-        <Button
-          variant="ghost"
-          size="xs"
-          className="text-accent-green hover:text-accent-green"
+      <div className="flex justify-end mr-1">
+        <button
+          className={`text-xs font-mono rounded px-2 py-0.5 border transition-colors ${
+            isStarted
+              ? "text-accent-green bg-accent-green/10 border-accent-green/20"
+              : "text-accent-green bg-surface-hover hover:bg-accent-green/20 border-border"
+          }`}
           onClick={handleForceRun}
         >
-          {feedback ?? "Run"}
-        </Button>
-        <Button
-          variant="ghost"
-          size="xs"
-          className={
-            confirming
-              ? "text-accent-red hover:text-accent-red"
-              : "text-text hover:text-accent-red"
-          }
-          onClick={handleDelete}
-        >
-          {confirming ? "Confirm?" : "Delete"}
-        </Button>
+          {feedback ?? "\u25B6 Run"}
+        </button>
       </div>
     </div>
   );
