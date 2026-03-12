@@ -8,7 +8,7 @@ const inter = Inter({
 });
 
 const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-geist-mono",
+  variable: "--font-jetbrains-mono",
   subsets: ["latin"],
 });
 
