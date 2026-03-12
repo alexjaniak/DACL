@@ -74,7 +74,7 @@ function RoleBadge({ role }: { role: "planner" | "worker" }) {
   const color = role === "planner" ? "text-accent-magenta" : "text-accent-blue";
   return (
     <span
-      className={`${color} text-xs font-medium uppercase tracking-wide`}
+      className={`${color} text-sm font-medium uppercase tracking-wide`}
     >
       {role}
     </span>
@@ -124,13 +124,13 @@ function AgentCard({
     <div className="rounded-md bg-surface p-2 border border-border hover:bg-surface-hover transition-colors">
       <div className="flex items-center gap-2 mb-1">
         <StatusDot running={agent.running} overdue={agent.overdue} />
-        <span className="font-mono text-sm text-text-bright truncate flex-1">
+        <span className="font-mono text-base text-text-bright truncate flex-1">
           {agent.id}
         </span>
         <RoleBadge role={agent.role} />
       </div>
 
-      <div className="flex items-center gap-3 text-xs text-text font-mono ml-4 mb-2">
+      <div className="flex items-center gap-3 text-sm text-text font-mono ml-4 mb-2">
         <span title="Interval">{agent.interval}</span>
         {agent.lastRun && (
           <span title={`Last run: ${agent.lastRun}`}>
@@ -222,12 +222,12 @@ export function AgentPanel() {
 
   return (
     <div className="h-full bg-surface p-3 overflow-y-auto flex flex-col">
-      <h2 className="text-text-bright font-semibold text-sm uppercase tracking-wide mb-3">
+      <h2 className="text-text-bright font-semibold text-base uppercase tracking-wide mb-3">
         Agents
       </h2>
 
       {error && (
-        <p className="text-accent-red text-xs mb-2">{error}</p>
+        <p className="text-accent-red text-sm mb-2">{error}</p>
       )}
 
       {agents.length === 0 && !error ? (
