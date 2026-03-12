@@ -231,6 +231,13 @@ if agent in state.get('jobs', {}):
   fi
 fi
 
+MAX_RUNTIME="${MAX_RUNTIME:-1200}"  # 20 minutes default
+
 rc=0
-"${CLAUDE_CMD[@]}" "${CLAUDE_ARGS[@]}" "$PROMPT" || rc=$?
+timeout "$MAX_RUNTIME" "${CLAUDE_CMD[@]}" "${CLAUDE_ARGS[@]}" "$PROMPT" || rc=$?
+
+if [[ "$rc" -eq 124 ]]; then
+  echo "Run killed: exceeded ${MAX_RUNTIME}s timeout"
+fi
+
 exit "$rc"
