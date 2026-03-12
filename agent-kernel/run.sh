@@ -77,6 +77,19 @@ fi
 # instead of Forge's own repo. Context files still resolve from Forge's REPO_DIR.
 WORK_REPO_DIR="$REPO_DIR"
 
+# Self-targeting: derive GitHub path from origin remote so worktrees
+# land under .repos/ just like external repos.
+if [[ -z "$TARGET_REPO" ]]; then
+  ORIGIN_URL="$(git -C "$REPO_DIR" remote get-url origin 2>/dev/null || true)"
+  if [[ -n "$ORIGIN_URL" ]]; then
+    # Normalize SSH (git@github.com:owner/repo.git) or HTTPS (https://github.com/owner/repo.git)
+    GITHUB_PATH="$(echo "$ORIGIN_URL" | sed -E 's#^(git@|https://)##; s#:#/#; s#\.git$##')"
+    if [[ "$GITHUB_PATH" == github.com/* ]]; then
+      TARGET_REPO="$GITHUB_PATH"
+    fi
+  fi
+fi
+
 if [[ -n "$TARGET_REPO" ]]; then
   if [[ "$TARGET_REPO" == /* ]]; then
     # Absolute local path — use directly
