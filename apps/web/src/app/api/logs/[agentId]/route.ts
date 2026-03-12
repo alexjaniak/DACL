@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { agentLogPath, logsDir } from "@/lib/paths";
 
-const SAFE_ID_RE = /^[a-zA-Z0-9_-]+$/;
+const SAFE_ID_RE = /^[a-z][a-z0-9-]{0,63}$/;
 const SEED_READ_BYTES = 64 * 1024; // 64KB
 
 export async function GET(
