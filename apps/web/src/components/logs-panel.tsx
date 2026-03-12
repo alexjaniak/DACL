@@ -242,7 +242,7 @@ function LogCard({
       <div className="flex items-center gap-2 mb-2">
         {showAgent && (
           <span
-            className="text-xs font-semibold px-2 py-0.5 rounded"
+            className="text-sm font-semibold px-2 py-0.5 rounded"
             style={{
               backgroundColor: agentColor + "20",
               color: agentColor,
@@ -251,11 +251,11 @@ function LogCard({
             {block.agentId}
           </span>
         )}
-        <span className="text-xs text-muted-foreground">
+        <span className="text-sm text-muted-foreground">
           {block.displayTime}
         </span>
       </div>
-      <pre className="text-text text-sm font-mono whitespace-pre-wrap break-words leading-relaxed">
+      <pre className="text-text text-base font-mono whitespace-pre-wrap break-words leading-relaxed">
         {block.content}
       </pre>
     </div>

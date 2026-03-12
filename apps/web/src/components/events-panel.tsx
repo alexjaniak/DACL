@@ -54,22 +54,22 @@ function EventCard({ event }: { event: NormalizedEvent }) {
   return (
     <div className="rounded-md bg-surface p-2 border border-border">
       <div className="flex items-center gap-2 mb-1 flex-wrap">
-        <span className="text-xs font-mono text-muted-foreground">
+        <span className="text-sm font-mono text-muted-foreground">
           {formatTime(event.timestamp)}
         </span>
         <span
-          className={`text-xs font-medium px-1.5 py-0.5 rounded ${actionColor(event.raw_action)}`}
+          className={`text-sm font-medium px-1.5 py-0.5 rounded ${actionColor(event.raw_action)}`}
         >
           {event.raw_action}
         </span>
         {event.number > 0 && (
-          <span className="text-xs font-mono text-accent-blue">
+          <span className="text-sm font-mono text-accent-blue">
             #{event.number}
           </span>
         )}
-        <span className="text-xs text-muted-foreground">{event.actor}</span>
+        <span className="text-sm text-muted-foreground">{event.actor}</span>
       </div>
-      <p className="text-sm text-text ml-0.5 mb-1">
+      <p className="text-base text-text ml-0.5 mb-1">
         {truncate(event.summary, 100)}
       </p>
       {event.labels.length > 0 && (
@@ -77,7 +77,7 @@ function EventCard({ event }: { event: NormalizedEvent }) {
           {event.labels.map((label) => (
             <span
               key={label}
-              className="text-xs px-1.5 py-0.5 rounded bg-surface-hover text-text"
+              className="text-sm px-1.5 py-0.5 rounded bg-surface-hover text-text"
             >
               {label}
             </span>
@@ -124,11 +124,11 @@ export function EventsPanel() {
 
   return (
     <div className="bg-surface p-3 overflow-y-auto flex flex-col">
-      <h2 className="text-text-bright font-semibold text-sm uppercase tracking-wide mb-3">
+      <h2 className="text-text-bright font-semibold text-base uppercase tracking-wide mb-3">
         Events
       </h2>
 
-      {error && <p className="text-accent-red text-xs mb-2">{error}</p>}
+      {error && <p className="text-accent-red text-sm mb-2">{error}</p>}
 
       {events.length === 0 && !error ? (
         <p className="text-muted-foreground text-sm">No events yet.</p>
