@@ -1,5 +1,7 @@
 import json
 import logging
+import os
+import re
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
@@ -33,19 +35,36 @@ def _matches_rule(event: dict, rule: dict) -> bool:
 
 
 def _is_agent_running(repo_dir: str, workspace_id: str) -> bool:
-    lockfile = Path(repo_dir) / ".repos" / workspace_id / ".agent.lock"
+    repo_root = Path(repo_dir)
+
+    # Derive GitHub path from origin remote (same logic as run.sh)
+    try:
+        origin_url = subprocess.run(
+            ["git", "-C", str(repo_root), "remote", "get-url", "origin"],
+            capture_output=True, text=True, check=True,
+        ).stdout.strip()
+    except subprocess.CalledProcessError:
+        # Fallback: check root .worktrees/ (legacy path)
+        lockfile = repo_root / ".worktrees" / workspace_id / ".agent.lock"
+        return _check_lockfile(lockfile)
+
+    # Normalize SSH/HTTPS URL to github.com/owner/repo
+    github_path = re.sub(r'^(git@|https://)', '', origin_url)
+    github_path = github_path.replace(':', '/', 1)
+    github_path = re.sub(r'\.git$', '', github_path)
+
+    lockfile = repo_root / ".repos" / github_path / ".worktrees" / workspace_id / ".agent.lock"
+    return _check_lockfile(lockfile)
+
+
+def _check_lockfile(lockfile: Path) -> bool:
     if not lockfile.exists():
         return False
-
     try:
         pid = int(lockfile.read_text().strip())
     except (ValueError, OSError):
         return False
-
     try:
-        import signal
-        import os
-
         os.kill(pid, 0)
         return True
     except ProcessLookupError:

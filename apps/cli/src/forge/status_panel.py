@@ -64,6 +64,29 @@ def _format_delta(delta: timedelta) -> str:
     return f"{secs}s"
 
 
+def _github_path_from_remote(repo_root: Path) -> str | None:
+    """Derive a github.com/<owner>/<repo> path from the git remote origin URL."""
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(repo_root), "remote", "get-url", "origin"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        url = result.stdout.strip()
+        # Handle SSH: git@github.com:owner/repo.git
+        m = re.match(r"git@github\.com:(.+?)(?:\.git)?$", url)
+        if m:
+            return f"github.com/{m.group(1)}"
+        # Handle HTTPS: https://github.com/owner/repo.git
+        m = re.match(r"https://github\.com/(.+?)(?:\.git)?$", url)
+        if m:
+            return f"github.com/{m.group(1)}"
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        pass
+    return None
+
+
 def _is_agent_running(repo_root: Path, agent_id: str, repo: str) -> bool:
     """Check if an agent is currently running by inspecting its lock file.
 
@@ -72,7 +95,11 @@ def _is_agent_running(repo_root: Path, agent_id: str, repo: str) -> bool:
     if repo and repo.startswith("github.com/"):
         worktree_base = repo_root / ".repos" / repo
     else:
-        worktree_base = repo_root
+        github_path = _github_path_from_remote(repo_root)
+        if github_path:
+            worktree_base = repo_root / ".repos" / github_path
+        else:
+            worktree_base = repo_root
 
     lockfile = worktree_base / ".worktrees" / agent_id / ".agent.lock"
     if not lockfile.exists():
