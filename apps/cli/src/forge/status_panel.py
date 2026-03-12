@@ -255,6 +255,12 @@ class StatusPanel(Widget):
                 card.update_data(agent)
             return
 
+        # Save focused agent ID before destroying cards
+        focused_agent_id: str | None = None
+        focused = self.app.focused
+        if isinstance(focused, _AgentCard):
+            focused_agent_id = focused.agent_id
+
         self._last_structural_keys = current_keys
         container.remove_children()
 
@@ -264,3 +270,14 @@ class StatusPanel(Widget):
 
         for a in agents:
             container.mount(_AgentCard(a, classes="agent-card"))
+
+        # Restore focus to the same agent, or nearest card if removed
+        if focused_agent_id is not None:
+            cards = container.query(_AgentCard)
+            for card in cards:
+                if card.agent_id == focused_agent_id:
+                    card.focus()
+                    return
+            # Agent was removed — focus first card if any exist
+            if cards:
+                cards[0].focus()
