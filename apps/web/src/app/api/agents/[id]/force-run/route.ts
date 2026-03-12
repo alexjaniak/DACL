@@ -4,13 +4,12 @@ import path from "path";
 import { spawn } from "child_process";
 import {
   cronJobsPath,
-  cronStatePath,
   runShPath,
   getForgeRoot,
   agentLogPath,
 } from "@/lib/paths";
 
-const SAFE_ID_RE = /^[a-zA-Z0-9_-]+$/;
+const SAFE_ID_RE = /^[a-z][a-z0-9-]{0,63}$/;
 
 interface CronJob {
   id: string;
@@ -71,23 +70,6 @@ export async function POST(
   });
   child.unref();
   fs.closeSync(logFd);
-
-  // Update cron-state.json with current timestamp
-  try {
-    let state: { jobs: Record<string, Record<string, unknown>> } = { jobs: {} };
-    try {
-      const raw = fs.readFileSync(cronStatePath(), "utf-8");
-      state = JSON.parse(raw);
-    } catch {
-      // no existing state
-    }
-    if (!state.jobs) state.jobs = {};
-    if (!state.jobs[id]) state.jobs[id] = {};
-    state.jobs[id].last_run = new Date().toISOString();
-    fs.writeFileSync(cronStatePath(), JSON.stringify(state, null, 2) + "\n");
-  } catch {
-    // non-critical
-  }
 
   return NextResponse.json({ status: "started" });
 }

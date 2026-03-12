@@ -3,7 +3,7 @@ import { spawnSync } from "child_process";
 import fs from "fs";
 import { managePyPath, cronJobsPath, getForgeRoot } from "@/lib/paths";
 
-const SAFE_ID_RE = /^[a-zA-Z0-9_-]+$/;
+const SAFE_ID_RE = /^[a-z][a-z0-9-]{0,63}$/;
 
 interface CronJob {
   id: string;
