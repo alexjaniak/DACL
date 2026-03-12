@@ -1,5 +1,6 @@
 import json
 import subprocess
+from datetime import datetime, timezone
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
@@ -104,6 +105,20 @@ class ForgeApp(App):
                 cwd=str(repo_root),
                 start_new_session=True,
             )
+
+        state_path = repo_root / "agent-kernel" / "cron" / "cron-state.json"
+        now_iso = datetime.now(timezone.utc).isoformat()
+        state: dict = {}
+        if state_path.exists():
+            try:
+                with open(state_path) as f:
+                    state = json.load(f)
+            except (json.JSONDecodeError, KeyError):
+                pass
+        state.setdefault("jobs", {}).setdefault(agent_id, {})["last_run"] = now_iso
+        with open(state_path, "w") as f:
+            json.dump(state, f, indent=2)
+            f.write("\n")
 
         self.notify(f"Force-run started for {agent_id}")
 
