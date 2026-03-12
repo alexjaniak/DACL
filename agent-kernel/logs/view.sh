@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Pretty log viewer for agent-kernel logs.
+# NOTE: The primary interface is now `forge logs`. This script is kept for direct use.
 # Usage:
 #   ./view.sh              — tail all agent logs interleaved
 #   ./view.sh worker-01    — tail a specific agent's log

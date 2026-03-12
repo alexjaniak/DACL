@@ -1,5 +1,7 @@
 # agent-kernel/cron
 
+> **Note:** The primary interface is now `forge cron`. See the [Forge CLI section](../../README.md#forge-cli) in the root README.
+
 Declarative cron management for agent-kernel. Python 3, no dependencies.
 
 ## Quick start
