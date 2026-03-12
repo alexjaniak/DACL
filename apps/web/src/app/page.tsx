@@ -1,4 +1,5 @@
 import { AgentPanel } from "@/components/agent-panel";
+import { LogsPanel } from "@/components/logs-panel";
 
 export default function Home() {
   return (
@@ -7,13 +8,8 @@ export default function Home() {
       <AgentPanel />
 
       {/* Logs Panel — top right */}
-      <div className="bg-background p-4 overflow-y-auto">
-        <h2 className="text-text-bright font-semibold text-sm uppercase tracking-wide mb-4">
-          Logs
-        </h2>
-        <p className="text-muted-foreground text-sm">
-          Log output will appear here.
-        </p>
+      <div className="bg-background overflow-hidden">
+        <LogsPanel />
       </div>
 
       {/* Events Panel — bottom right */}
