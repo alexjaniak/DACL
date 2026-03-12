@@ -48,6 +48,21 @@ export function parseLogBlocks(
       }
       currentTimestamp = match[1];
       currentLines = [];
+    } else if (line === '=== END RUN ===') {
+      if (currentTimestamp && currentLines.length > 0) {
+        const content = currentLines.join("\n").trim();
+        if (content) {
+          blocks.push({
+            agentId,
+            timestamp: currentTimestamp,
+            displayTime: formatTime(currentTimestamp),
+            content,
+            key: `${agentId}-${currentTimestamp}`,
+          });
+        }
+      }
+      currentTimestamp = null;
+      currentLines = [];
     } else if (currentTimestamp) {
       currentLines.push(line);
     }
