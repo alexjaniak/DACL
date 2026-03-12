@@ -147,20 +147,30 @@ export function ResizableLayout({
       {/* Sidebar */}
       {collapsed.sidebar ? (
         <div
-          className="bg-surface flex items-center justify-center shrink-0 cursor-pointer hover:bg-surface-hover transition-colors"
-          style={{ width: 32 }}
+          className="bg-surface flex items-center justify-center shrink-0 cursor-pointer hover:bg-surface-hover transition-colors gap-1"
+          style={{ width: 36 }}
           onClick={() => setCollapsed((prev) => ({ ...prev, sidebar: false }))}
         >
           <span className="text-muted-foreground text-xs uppercase tracking-widest [writing-mode:vertical-lr]">
-            Agents
+            ▶ Agents
           </span>
         </div>
       ) : (
         <div
-          className="overflow-hidden shrink-0"
+          className="overflow-hidden shrink-0 flex flex-col"
           style={{ width: sidebarWidth }}
         >
-          {sidebar}
+          <div className="flex items-center justify-between px-3 pt-3 pb-1 shrink-0">
+            <h2 className="text-text-bright font-semibold text-sm uppercase tracking-wide">Agents</h2>
+            <button
+              className="text-muted-foreground hover:text-text-bright text-sm px-1"
+              onClick={() => setCollapsed((prev) => ({ ...prev, sidebar: true }))}
+              title="Collapse sidebar"
+            >
+              ◀
+            </button>
+          </div>
+          <div className="flex-1 overflow-hidden">{sidebar}</div>
         </div>
       )}
 
@@ -196,7 +206,7 @@ export function ResizableLayout({
             onClick={() => setCollapsed((prev) => ({ ...prev, bottom: false }))}
           >
             <span className="text-muted-foreground text-xs uppercase tracking-wide">
-              Events
+              ▲ Events
             </span>
           </div>
         ) : (
@@ -211,10 +221,20 @@ export function ResizableLayout({
         {/* Bottom right (Events) */}
         {!collapsed.bottom && (
           <div
-            className="overflow-hidden"
+            className="overflow-hidden flex flex-col min-h-0"
             style={{ flex: `0 0 calc(${(1 - sizes.topRightRatio) * 100}% - ${HANDLE_SIZE / 2}px)` }}
           >
-            {bottomRight}
+            <div className="flex items-center justify-between px-3 pt-2 pb-1 shrink-0 bg-surface">
+              <h2 className="text-text-bright font-semibold text-sm uppercase tracking-wide">Events</h2>
+              <button
+                className="text-muted-foreground hover:text-text-bright text-sm px-1"
+                onClick={() => setCollapsed((prev) => ({ ...prev, bottom: true }))}
+                title="Collapse events"
+              >
+                ▼
+              </button>
+            </div>
+            <div className="flex-1 overflow-hidden min-h-0">{bottomRight}</div>
           </div>
         )}
       </div>
