@@ -221,7 +221,7 @@ export function AgentPanel() {
   };
 
   return (
-    <div className="row-span-2 bg-surface p-3 overflow-y-auto flex flex-col">
+    <div className="h-full bg-surface p-3 overflow-y-auto flex flex-col">
       <h2 className="text-text-bright font-semibold text-sm uppercase tracking-wide mb-3">
         Agents
       </h2>
