@@ -1,5 +1,7 @@
 # Forge Webhook Monitor
 
+> **Note:** The primary interface is now `forge wh`. See the [Forge CLI section](../../README.md#forge-cli) in the root README.
+
 Receives GitHub webhook events and stores them as normalized JSONL for the Forge event system.
 
 ## Prerequisites
@@ -54,8 +56,10 @@ Environment variables still override config file values for CI/deploy:
 ### 3. Start the server
 
 ```bash
-forge-webhook
+forge wh
 ```
+
+> `forge-webhook` still works but is deprecated.
 
 The server listens on `0.0.0.0:<port>` and exposes:
 
