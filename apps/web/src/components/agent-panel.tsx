@@ -221,10 +221,7 @@ export function AgentPanel() {
   };
 
   return (
-    <div className="h-full bg-surface p-3 overflow-y-auto flex flex-col">
-      <h2 className="text-text-bright font-semibold text-base uppercase tracking-wide mb-3">
-        Agents
-      </h2>
+    <div className="h-full bg-surface px-3 pb-3 overflow-y-auto flex flex-col">
 
       {error && (
         <p className="text-accent-red text-sm mb-2">{error}</p>

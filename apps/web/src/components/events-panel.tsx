@@ -123,17 +123,13 @@ export function EventsPanel() {
   }, [fetchEvents]);
 
   return (
-    <div className="bg-surface p-3 overflow-y-auto flex flex-col">
-      <h2 className="text-text-bright font-semibold text-base uppercase tracking-wide mb-3">
-        Events
-      </h2>
-
-      {error && <p className="text-accent-red text-sm mb-2">{error}</p>}
+    <div className="bg-surface px-3 pb-3 flex flex-col h-full min-h-0">
+      {error && <p className="text-accent-red text-xs mb-2 shrink-0">{error}</p>}
 
       {events.length === 0 && !error ? (
         <p className="text-muted-foreground text-sm">No events yet.</p>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 flex-1 overflow-y-auto min-h-0">
           {events.map((event, i) => (
             <EventCard key={`${event.timestamp}-${i}`} event={event} />
           ))}
