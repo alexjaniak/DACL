@@ -50,7 +50,6 @@ class ForgeApp(App):
         yield EventFeedPanel()
 
     def on_mount(self) -> None:
-        self.query_one(LogPanel).display = False
         self._apply_column_sizes()
         self._apply_event_height()
 
