@@ -22,9 +22,11 @@ PROMPT=""
 CONTEXTS=()
 WORKSPACE_ID=""
 TARGET_REPO=""
+MODEL=""
 NEXT_IS_CONTEXT=false
 NEXT_IS_WORKSPACE=false
 NEXT_IS_REPO=false
+NEXT_IS_MODEL=false
 
 for arg in "$@"; do
   if [[ "$NEXT_IS_CONTEXT" == true ]]; then
@@ -42,11 +44,17 @@ for arg in "$@"; do
     NEXT_IS_REPO=false
     continue
   fi
+  if [[ "$NEXT_IS_MODEL" == true ]]; then
+    MODEL="$arg"
+    NEXT_IS_MODEL=false
+    continue
+  fi
   case "$arg" in
     --agentic)    AGENTIC=true ;;
     --context)    NEXT_IS_CONTEXT=true ;;
     --workspace)  NEXT_IS_WORKSPACE=true ;;
     --repo)       NEXT_IS_REPO=true ;;
+    --model)      NEXT_IS_MODEL=true ;;
     *)            PROMPT="$arg" ;;
   esac
 done
@@ -57,7 +65,7 @@ if [[ -z "$PROMPT" ]] && [[ ! -t 0 ]]; then
 fi
 
 if [[ -z "$PROMPT" ]]; then
-  echo "Usage: $0 [--agentic] [--workspace <id>] [--repo <path-or-url>] [--context <path> ...] \"<prompt>\"" >&2
+  echo "Usage: $0 [--agentic] [--workspace <id>] [--repo <path-or-url>] [--model <model>] [--context <path> ...] \"<prompt>\"" >&2
   exit 1
 fi
 
@@ -260,6 +268,10 @@ else
   if [[ -n "$SYSTEM_PROMPT" ]]; then
     RUNTIME_ARGS+=(--append-system-prompt "$SYSTEM_PROMPT")
   fi
+fi
+
+if [[ -n "$MODEL" ]]; then
+  RUNTIME_ARGS+=(--model "$MODEL")
 fi
 
 if [[ -n "$WORKSPACE_ID" ]]; then
