@@ -8,3 +8,4 @@ agent-kernel/logs/*
 *.egg-info/
 __pycache__/
 apps/webhook-monitor/config.toml
+.worktrees

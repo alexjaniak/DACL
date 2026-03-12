@@ -21,6 +21,7 @@ GitHub labels are how agents coordinate without direct communication. Labels are
 |-------|---------|
 | `role:worker` | Should be picked up by a worker agent |
 | `role:planner` | Needs a planner agent (sub-scope that should be recursively broken down and owned) |
+| `role:admin` | Requires human admin action (merge to main, infrastructure changes, access grants, decisions agents can't make) |
 
 ## Type
 
