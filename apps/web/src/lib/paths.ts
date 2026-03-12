@@ -1,12 +1,12 @@
 import path from "path";
 
 /**
- * Resolve the repo root (FORGE_ROOT) from which all data files are located.
+ * Resolve the repo root from which all data files are located.
  * Defaults to two levels up from apps/web/ (the repo root).
  */
 export function getForgeRoot(): string {
   return (
-    process.env.FORGE_ROOT || path.resolve(process.cwd(), "../..")
+    process.env.FORGE_REPO_ROOT || path.resolve(process.cwd(), "../..")
   );
 }
 
