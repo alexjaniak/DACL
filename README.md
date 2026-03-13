@@ -1,42 +1,49 @@
-# DACL
+# Forge
 
-Autonomous agent orchestration. Planner and worker agents run in isolated git worktrees, coordinating via GitHub issues.
+Autonomous agent orchestration platform. Worker, planner, and super agents coordinate via GitHub issues, running in isolated git worktrees.
 
-## Repo structure
+## Architecture
 
-```
-agent-kernel/    One-shot Claude CLI wrapper, cron-friendly
-contexts/        Reusable context library for agent instructions
-```
+**Agent roles:**
+- **Worker** — picks up `role:worker` issues, implements changes, opens PRs
+- **Planner** — scopes epics into subtasks, reviews worker PRs, merges to feature branches
+- **Super** — cross-epic review, final quality gate before admin merge
 
-- **[agent-kernel](agent-kernel/README.md)** — invoke Claude CLI with context files, run unattended via cron
-- **[contexts](contexts/)** — modular `.md` files that shape agent behavior (identity, constraints, planner/worker roles, handoff protocol, labels, workspace rules)
+**Coordination model:** GitHub issues and labels serve as shared state. Each issue carries a `status:` label (lifecycle) and a `role:` label (who acts next). Agents transition labels as work flows through the system.
 
-## How it works
-
-Agents are stateless one-shot CLI invocations. Each run:
-
-1. `agent-kernel/run.sh` assembles a system prompt from selected context files
-2. Invokes `claude` CLI in either text-only (`--print`) or agentic mode
-3. Optionally runs inside an isolated git worktree (`--workspace`)
-
-Cron jobs drive recurring agent runs. See [`agent-kernel/cron/README.md`](agent-kernel/cron/README.md).
+**Worktree isolation:** Each agent runs in its own git worktree, preventing file conflicts between concurrent agents.
 
 ## Forge CLI
 
-Unified command-line interface for agent orchestration.
+Unified command-line interface for managing agents.
 
-```
-forge add worker              # add a new worker agent
-forge add planner             # add a new planner agent
-forge remove <id>             # remove an agent
-forge cron apply              # sync crontab
-forge cron status --watch     # live agent timing
-forge logs -f                 # follow all logs
-forge wh                      # start webhook monitor
-```
+| Command | Description |
+|---------|-------------|
+| `forge add <role>` | Add an agent from a template (worker, planner, super) |
+| `forge remove <id>` | Remove an agent |
+| `forge clear` | Reset all staged agents |
+| `forge list` | Show all agents (staged, active, unstaged) |
+| `forge status` | Alias for `forge list` |
+| `forge cron apply` | Sync staged agent config to live crontab |
+| `forge logs` | View agent logs (`-f` to follow) |
+| `forge wh` | Start webhook monitor with auto-tunnel |
 
 Install: `pip install -e apps/forge-cli`
+
+## Project structure
+
+```
+agent-kernel/    Core runtime — run.sh entry point, cron scheduling
+apps/            Applications (forge-cli, web dashboard)
+contexts/        Reusable context files that define agent behavior and protocols
+templates/       Agent configuration templates (worker.json, planner.json, super.json)
+```
+
+- **[agent-kernel](agent-kernel/README.md)** — one-shot Claude CLI wrapper with context assembly, worktree management, and cron-friendly execution
+- **[apps/forge-cli](apps/forge-cli/)** — `forge` CLI for agent lifecycle and orchestration
+- **[apps/web](apps/web/)** — Next.js web dashboard for monitoring agents and events
+- **[contexts](contexts/)** — modular `.md` files shaping agent identity, roles, constraints, handoff protocol, labels, and workspace rules
+- **[templates](templates/)** — JSON templates defining agent interval, prompt, contexts, and flags
 
 ## Getting started
 
