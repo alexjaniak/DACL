@@ -516,4 +516,9 @@ def main():
 
 
 if __name__ == "__main__":
+    print(
+        "WARNING: Direct invocation of manage.py is deprecated. "
+        "Use 'forge cron <subcommand>' instead.",
+        file=sys.stderr,
+    )
     main()

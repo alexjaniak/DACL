@@ -82,7 +82,16 @@ async def health():
 
 
 def run():
+    import os
+    import sys
+
     import uvicorn
+
+    if not os.environ.get("_FORGE_WH_INVOKED"):
+        print(
+            "WARNING: 'forge-webhook' is deprecated. Use 'forge wh' instead.",
+            file=sys.stderr,
+        )
 
     config = _get_config()
     uvicorn.run(
