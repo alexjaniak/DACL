@@ -54,10 +54,10 @@ export function LogsPanel() {
         } else {
           merged.sort(
             (a, b) =>
-              new Date(b.endTimestamp ?? b.timestamp).getTime() -
-              new Date(a.endTimestamp ?? a.timestamp).getTime()
+              new Date(a.endTimestamp ?? a.timestamp).getTime() -
+              new Date(b.endTimestamp ?? b.timestamp).getTime()
           );
-          return merged.slice(0, MAX_BLOCKS);
+          return merged.slice(-MAX_BLOCKS);
         }
       });
     },
