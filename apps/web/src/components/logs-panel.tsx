@@ -67,10 +67,10 @@ export function LogsPanel() {
           const merged = [...prev, ...fresh];
           merged.sort(
             (a, b) =>
-              new Date(b.timestamp).getTime() -
-              new Date(a.timestamp).getTime()
+              new Date(a.timestamp).getTime() -
+              new Date(b.timestamp).getTime()
           );
-          return merged.slice(0, MAX_BLOCKS);
+          return merged.slice(-MAX_BLOCKS);
         });
       }
     } else {
@@ -119,20 +119,20 @@ export function LogsPanel() {
   const handleScroll = useCallback(() => {
     const el = containerRef.current;
     if (!el) return;
-    // Container scrolls; top = 0 means at newest (top)
-    if (el.scrollTop < prevScrollTop.current && el.scrollTop > 10) {
+    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 20;
+    if (!atBottom && el.scrollTop < prevScrollTop.current) {
       setAutoScroll(false);
     }
-    if (el.scrollTop <= 5) {
+    if (atBottom) {
       setAutoScroll(true);
     }
     prevScrollTop.current = el.scrollTop;
   }, []);
 
-  // Scroll to top when new blocks arrive and autoScroll is on
+  // Scroll to bottom when new blocks arrive and autoScroll is on
   useEffect(() => {
     if (autoScroll && containerRef.current) {
-      containerRef.current.scrollTop = 0;
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
     }
   }, [blocks, autoScroll]);
 
