@@ -233,9 +233,77 @@ function sortAgentsByStatus(agents: Agent[]): Agent[] {
   );
 }
 
+function AddAgentForm({ onAdded }: { onAdded: () => void }) {
+  const [type, setType] = useState<"worker" | "planner">("worker");
+  const [customId, setCustomId] = useState("");
+  const [interval, setInterval] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    try {
+      const body: Record<string, string> = { type };
+      if (customId.trim()) body.id = customId.trim();
+      if (interval.trim()) body.interval = interval.trim();
+      const res = await fetch("/api/agents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (res.ok) {
+        setCustomId("");
+        setInterval("");
+        onAdded();
+      }
+    } catch {
+      // best-effort
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="bg-surface border border-border rounded-md p-2 mb-2">
+      <div className="flex items-center gap-2">
+        <select
+          className="bg-background border border-border rounded px-2 py-1 text-sm text-text"
+          value={type}
+          onChange={(e) => setType(e.target.value as "worker" | "planner")}
+        >
+          <option value="worker">worker</option>
+          <option value="planner">planner</option>
+        </select>
+        <input
+          className="bg-background border border-border rounded px-2 py-1 text-sm text-text w-28"
+          placeholder="ID (auto)"
+          value={customId}
+          onChange={(e) => setCustomId(e.target.value)}
+        />
+        <input
+          className="bg-background border border-border rounded px-2 py-1 text-sm text-text w-20"
+          placeholder="2m"
+          value={interval}
+          onChange={(e) => setInterval(e.target.value)}
+        />
+        <button
+          className="text-xs rounded px-2 py-1 border border-accent-green text-accent-green hover:bg-accent-green/20 transition-colors disabled:opacity-50"
+          onClick={handleSubmit}
+          disabled={submitting}
+        >
+          Add
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function AgentPanel() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [actionFeedback, setActionFeedback] = useState<string | null>(null);
+  const [clearConfirming, setClearConfirming] = useState(false);
+  const clearTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(true);
 
   const fetchAgents = useCallback(async () => {
@@ -261,8 +329,14 @@ export function AgentPanel() {
     return () => {
       mountedRef.current = false;
       clearInterval(id);
+      if (clearTimeoutRef.current) clearTimeout(clearTimeoutRef.current);
     };
   }, [fetchAgents]);
+
+  const showFeedback = (msg: string) => {
+    setActionFeedback(msg);
+    setTimeout(() => setActionFeedback(null), 3000);
+  };
 
   const handleForceRun = async (agentId: string) => {
     try {
@@ -283,8 +357,89 @@ export function AgentPanel() {
     }
   };
 
+  const handleApply = async () => {
+    try {
+      const res = await fetch("/api/agents/apply", { method: "POST" });
+      const data = await res.json();
+      showFeedback(data.ok ? "Applied" : `Error: ${data.error || data.stderr}`);
+      fetchAgents();
+    } catch {
+      showFeedback("Apply failed");
+    }
+  };
+
+  const handleClear = async () => {
+    if (!clearConfirming) {
+      setClearConfirming(true);
+      clearTimeoutRef.current = setTimeout(() => setClearConfirming(false), 3000);
+      return;
+    }
+    if (clearTimeoutRef.current) clearTimeout(clearTimeoutRef.current);
+    setClearConfirming(false);
+    try {
+      const res = await fetch("/api/agents/clear", { method: "POST" });
+      const data = await res.json();
+      showFeedback(data.ok ? `Cleared ${data.removed} agent(s)` : "Clear failed");
+      fetchAgents();
+    } catch {
+      showFeedback("Clear failed");
+    }
+  };
+
+  const stagedCount = agents.filter(
+    (a) => a.status === "staged" || a.status === "modified"
+  ).length;
+  const orphanCount = agents.filter((a) => a.status === "orphan").length;
+  const hasPendingChanges = stagedCount > 0 || orphanCount > 0;
+  const hasStagedAgents = agents.filter((a) => a.status !== "orphan").length > 0;
+
   return (
     <div className="h-full bg-surface px-3 pb-3 overflow-y-auto flex flex-col">
+      <div className="flex items-center gap-2 py-2">
+        <button
+          className="text-xs rounded px-2 py-1 border border-border text-text hover:bg-surface-hover transition-colors"
+          onClick={() => setShowAddForm((v) => !v)}
+        >
+          + Add
+        </button>
+        <button
+          className={`text-xs rounded px-2 py-1 border transition-colors ${
+            hasPendingChanges
+              ? "border-accent-green text-accent-green hover:bg-accent-green/20"
+              : "border-border text-muted-foreground cursor-not-allowed opacity-50"
+          }`}
+          onClick={hasPendingChanges ? handleApply : undefined}
+          disabled={!hasPendingChanges}
+          title={hasPendingChanges ? "Apply staged config" : "No pending changes"}
+        >
+          Apply
+        </button>
+        <button
+          className={`text-xs rounded px-2 py-1 border transition-colors ${
+            !hasStagedAgents
+              ? "border-border text-muted-foreground cursor-not-allowed opacity-50"
+              : clearConfirming
+                ? "border-accent-red bg-accent-red text-background"
+                : "border-accent-red text-accent-red hover:bg-accent-red/20"
+          }`}
+          onClick={hasStagedAgents ? handleClear : undefined}
+          disabled={!hasStagedAgents}
+          title={
+            !hasStagedAgents
+              ? "No staged agents"
+              : clearConfirming
+                ? "Click again to confirm"
+                : "Clear all staged config"
+          }
+        >
+          {clearConfirming ? "Confirm?" : "Clear"}
+        </button>
+        {actionFeedback && (
+          <span className="text-xs text-accent-cyan ml-auto">{actionFeedback}</span>
+        )}
+      </div>
+
+      {showAddForm && <AddAgentForm onAdded={() => { setShowAddForm(false); fetchAgents(); }} />}
 
       {error && (
         <p className="text-accent-red text-sm mb-2">{error}</p>

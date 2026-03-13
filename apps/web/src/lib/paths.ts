@@ -30,6 +30,10 @@ export function logsDir(): string {
   return path.join(getForgeRoot(), "agent-kernel/logs");
 }
 
+export function templatePath(type: string): string {
+  return path.join(getForgeRoot(), `templates/${type}.json`);
+}
+
 export function eventsPath(): string {
   return path.join(getForgeRoot(), "events.jsonl");
 }
