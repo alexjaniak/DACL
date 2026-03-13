@@ -1,4 +1,5 @@
 import path from "path";
+import fs from "fs";
 
 /**
  * Resolve the repo root from which all data files are located.
@@ -30,6 +31,10 @@ export function logsDir(): string {
   return path.join(getForgeRoot(), "agent-kernel/logs");
 }
 
+export function templatePath(type: string): string {
+  return path.join(getForgeRoot(), `templates/${type}.json`);
+}
+
 export function eventsPath(): string {
   return path.join(getForgeRoot(), "events.jsonl");
 }
@@ -40,4 +45,12 @@ export function managePyPath(): string {
 
 export function runShPath(): string {
   return path.join(getForgeRoot(), "agent-kernel/run.sh");
+}
+
+export function atomicWriteJsonSync(filePath: string, data: unknown): void {
+  const dir = path.dirname(filePath);
+  const content = JSON.stringify(data, null, 2) + "\n";
+  const tmpPath = path.join(dir, `.cron-jobs.tmp.${process.pid}`);
+  fs.writeFileSync(tmpPath, content, "utf-8");
+  fs.renameSync(tmpPath, filePath);
 }

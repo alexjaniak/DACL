@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+type AgentStatus = "staged" | "active" | "modified" | "orphan";
+
 interface Agent {
   id: string;
   role: "planner" | "worker";
@@ -17,6 +19,8 @@ interface Agent {
   agentic: boolean;
   workspace: boolean;
   repo: string;
+  status: AgentStatus;
+  stagedInterval?: string;
 }
 
 function relativeTime(iso: string): string {
@@ -80,6 +84,30 @@ function RoleBadge({ role }: { role: "planner" | "worker" }) {
   );
 }
 
+const statusBadgeConfig: Record<AgentStatus, { label: string; bg: string }> = {
+  staged: { label: "STAGED", bg: "bg-accent-yellow" },
+  active: { label: "ACTIVE", bg: "bg-accent-green" },
+  modified: { label: "MODIFIED", bg: "bg-accent-yellow" },
+  orphan: { label: "ORPHAN", bg: "bg-accent-red" },
+};
+
+function StatusBadge({ status, agent }: { status: AgentStatus; agent: Agent }) {
+  const config = statusBadgeConfig[status];
+  const tooltip =
+    status === "modified" && agent.stagedInterval
+      ? `interval: ${agent.interval} → ${agent.stagedInterval}`
+      : undefined;
+
+  return (
+    <span
+      className={`${config.bg} text-background text-xs rounded px-1.5 py-0.5 font-medium uppercase tracking-wide`}
+      title={tooltip}
+    >
+      {config.label}
+    </span>
+  );
+}
+
 function AgentCard({
   agent,
   onForceRun,
@@ -129,6 +157,7 @@ function AgentCard({
   };
 
   const isStarted = feedback === "Started";
+  const isStaged = agent.status === "staged";
 
   return (
     <div className="rounded-md bg-surface p-2 border border-border hover:bg-surface-hover transition-colors">
@@ -138,6 +167,7 @@ function AgentCard({
           {agent.id}
         </span>
         <RoleBadge role={agent.role} />
+        <StatusBadge status={agent.status} agent={agent} />
         <button
           className={`flex-shrink-0 size-5 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
             confirming
@@ -153,6 +183,11 @@ function AgentCard({
 
       <div className="flex items-center gap-3 text-sm text-text ml-4 mb-2">
         <span title="Interval">{agent.interval}</span>
+        {agent.status === "modified" && agent.stagedInterval && (
+          <span className="text-accent-yellow" title="Pending interval change">
+            → {agent.stagedInterval}
+          </span>
+        )}
         {agent.lastRun && (
           <span title={`Last run: ${agent.lastRun}`}>
             {relativeTime(agent.lastRun)}
@@ -168,13 +203,94 @@ function AgentCard({
       <div className="flex justify-end mr-1">
         <button
           className={`text-xs rounded px-2 py-0.5 border transition-colors ${
-            isStarted
-              ? "text-accent-green bg-accent-green/10 border-accent-green/20"
-              : "text-accent-green bg-surface-hover hover:bg-accent-green/20 border-border"
+            isStaged
+              ? "text-muted-foreground bg-surface border-border cursor-not-allowed opacity-50"
+              : isStarted
+                ? "text-accent-green bg-accent-green/10 border-accent-green/20"
+                : "text-accent-green bg-surface-hover hover:bg-accent-green/20 border-border"
           }`}
-          onClick={handleForceRun}
+          onClick={isStaged ? undefined : handleForceRun}
+          disabled={isStaged}
+          title={isStaged ? "Apply config first to run this agent" : undefined}
         >
           {feedback ?? "\u25B6 Run"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+const statusOrder: Record<AgentStatus, number> = {
+  active: 0,
+  modified: 1,
+  staged: 2,
+  orphan: 3,
+};
+
+function sortAgentsByStatus(agents: Agent[]): Agent[] {
+  return [...agents].sort(
+    (a, b) => statusOrder[a.status] - statusOrder[b.status]
+  );
+}
+
+function AddAgentForm({ onAdded }: { onAdded: () => void }) {
+  const [type, setType] = useState<"worker" | "planner">("worker");
+  const [customId, setCustomId] = useState("");
+  const [interval, setInterval] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    try {
+      const body: Record<string, string> = { type };
+      if (customId.trim()) body.id = customId.trim();
+      if (interval.trim()) body.interval = interval.trim();
+      const res = await fetch("/api/agents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (res.ok) {
+        setCustomId("");
+        setInterval("");
+        onAdded();
+      }
+    } catch {
+      // best-effort
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="bg-surface border border-border rounded-md p-2 mb-2">
+      <div className="flex items-center gap-2">
+        <select
+          className="bg-background border border-border rounded px-2 py-1 text-sm text-text"
+          value={type}
+          onChange={(e) => setType(e.target.value as "worker" | "planner")}
+        >
+          <option value="worker">worker</option>
+          <option value="planner">planner</option>
+        </select>
+        <input
+          className="bg-background border border-border rounded px-2 py-1 text-sm text-text w-28"
+          placeholder="ID (auto)"
+          value={customId}
+          onChange={(e) => setCustomId(e.target.value)}
+        />
+        <input
+          className="bg-background border border-border rounded px-2 py-1 text-sm text-text w-20"
+          placeholder="2m"
+          value={interval}
+          onChange={(e) => setInterval(e.target.value)}
+        />
+        <button
+          className="text-xs rounded px-2 py-1 border border-accent-green text-accent-green hover:bg-accent-green/20 transition-colors disabled:opacity-50"
+          onClick={handleSubmit}
+          disabled={submitting}
+        >
+          Add
         </button>
       </div>
     </div>
@@ -184,6 +300,10 @@ function AgentCard({
 export function AgentPanel() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [actionFeedback, setActionFeedback] = useState<string | null>(null);
+  const [clearConfirming, setClearConfirming] = useState(false);
+  const clearTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(true);
 
   const fetchAgents = useCallback(async () => {
@@ -209,8 +329,14 @@ export function AgentPanel() {
     return () => {
       mountedRef.current = false;
       clearInterval(id);
+      if (clearTimeoutRef.current) clearTimeout(clearTimeoutRef.current);
     };
   }, [fetchAgents]);
+
+  const showFeedback = (msg: string) => {
+    setActionFeedback(msg);
+    setTimeout(() => setActionFeedback(null), 3000);
+  };
 
   const handleForceRun = async (agentId: string) => {
     try {
@@ -231,8 +357,89 @@ export function AgentPanel() {
     }
   };
 
+  const handleApply = async () => {
+    try {
+      const res = await fetch("/api/agents/apply", { method: "POST" });
+      const data = await res.json();
+      showFeedback(data.ok ? "Applied" : `Error: ${data.error || data.stderr}`);
+      fetchAgents();
+    } catch {
+      showFeedback("Apply failed");
+    }
+  };
+
+  const handleClear = async () => {
+    if (!clearConfirming) {
+      setClearConfirming(true);
+      clearTimeoutRef.current = setTimeout(() => setClearConfirming(false), 3000);
+      return;
+    }
+    if (clearTimeoutRef.current) clearTimeout(clearTimeoutRef.current);
+    setClearConfirming(false);
+    try {
+      const res = await fetch("/api/agents/clear", { method: "POST" });
+      const data = await res.json();
+      showFeedback(data.ok ? `Cleared ${data.removed} agent(s)` : "Clear failed");
+      fetchAgents();
+    } catch {
+      showFeedback("Clear failed");
+    }
+  };
+
+  const stagedCount = agents.filter(
+    (a) => a.status === "staged" || a.status === "modified"
+  ).length;
+  const orphanCount = agents.filter((a) => a.status === "orphan").length;
+  const hasPendingChanges = stagedCount > 0 || orphanCount > 0;
+  const hasStagedAgents = agents.filter((a) => a.status !== "orphan").length > 0;
+
   return (
     <div className="h-full bg-surface px-3 pb-3 overflow-y-auto flex flex-col">
+      <div className="flex items-center gap-2 py-2">
+        <button
+          className="text-xs rounded px-2 py-1 border border-border text-text hover:bg-surface-hover transition-colors"
+          onClick={() => setShowAddForm((v) => !v)}
+        >
+          + Add
+        </button>
+        <button
+          className={`text-xs rounded px-2 py-1 border transition-colors ${
+            hasPendingChanges
+              ? "border-accent-green text-accent-green hover:bg-accent-green/20"
+              : "border-border text-muted-foreground cursor-not-allowed opacity-50"
+          }`}
+          onClick={hasPendingChanges ? handleApply : undefined}
+          disabled={!hasPendingChanges}
+          title={hasPendingChanges ? "Apply staged config" : "No pending changes"}
+        >
+          Apply
+        </button>
+        <button
+          className={`text-xs rounded px-2 py-1 border transition-colors ${
+            !hasStagedAgents
+              ? "border-border text-muted-foreground cursor-not-allowed opacity-50"
+              : clearConfirming
+                ? "border-accent-red bg-accent-red text-background"
+                : "border-accent-red text-accent-red hover:bg-accent-red/20"
+          }`}
+          onClick={hasStagedAgents ? handleClear : undefined}
+          disabled={!hasStagedAgents}
+          title={
+            !hasStagedAgents
+              ? "No staged agents"
+              : clearConfirming
+                ? "Click again to confirm"
+                : "Clear all staged config"
+          }
+        >
+          {clearConfirming ? "Confirm?" : "Clear"}
+        </button>
+        {actionFeedback && (
+          <span className="text-xs text-accent-cyan ml-auto">{actionFeedback}</span>
+        )}
+      </div>
+
+      {showAddForm && <AddAgentForm onAdded={() => { setShowAddForm(false); fetchAgents(); }} />}
 
       {error && (
         <p className="text-accent-red text-sm mb-2">{error}</p>
@@ -242,7 +449,7 @@ export function AgentPanel() {
         <p className="text-muted-foreground text-sm">No agents configured</p>
       ) : (
         <div className="flex flex-col gap-2">
-          {agents.map((agent) => (
+          {sortAgentsByStatus(agents).map((agent) => (
             <AgentCard
               key={agent.id}
               agent={agent}

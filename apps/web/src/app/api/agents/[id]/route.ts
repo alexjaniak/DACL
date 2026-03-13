@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { spawnSync } from "child_process";
 import fs from "fs";
-import { managePyPath, cronJobsPath, getForgeRoot } from "@/lib/paths";
+import { atomicWriteJsonSync, cronJobsPath } from "@/lib/paths";
 
 const SAFE_ID_RE = /^[a-z][a-z0-9-]{0,63}$/;
 
 interface CronJob {
   id: string;
+}
+
+interface CronJobsData {
+  jobs: CronJob[];
+  [key: string]: unknown;
 }
 
 export async function DELETE(
@@ -19,36 +23,22 @@ export async function DELETE(
     return NextResponse.json({ error: "Invalid agent ID" }, { status: 400 });
   }
 
-  // Verify agent exists
   try {
     const raw = fs.readFileSync(cronJobsPath(), "utf-8");
-    const jobs: CronJob[] = JSON.parse(raw).jobs ?? [];
-    if (!jobs.some((j) => j.id === id)) {
+    const data: CronJobsData = JSON.parse(raw);
+    const jobs: CronJob[] = data.jobs ?? [];
+
+    const newJobs = jobs.filter((j) => j.id !== id);
+    if (newJobs.length === jobs.length) {
       return NextResponse.json({ error: "Agent not found" }, { status: 404 });
     }
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to read agent config" },
-      { status: 500 }
-    );
-  }
 
-  try {
-    const result = spawnSync("python3", [managePyPath(), "remove", id], {
-      cwd: getForgeRoot(),
-      encoding: "utf-8",
-      timeout: 10000,
-    });
-    if (result.status !== 0) {
-      return NextResponse.json(
-        { ok: false, error: result.stderr || "Command failed" },
-        { status: 500 }
-      );
-    }
-    return NextResponse.json({ ok: true, output: result.stdout });
+    data.jobs = newJobs;
+    atomicWriteJsonSync(cronJobsPath(), data);
+
+    return NextResponse.json({ ok: true, agents: newJobs.map((j) => j.id) });
   } catch (err) {
-    const message =
-      err instanceof Error ? err.message : "Unknown error";
+    const message = err instanceof Error ? err.message : "Unknown error";
     return NextResponse.json(
       { ok: false, error: message },
       { status: 500 }
