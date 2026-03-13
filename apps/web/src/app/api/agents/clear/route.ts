@@ -1,15 +1,6 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
-import path from "path";
-import { cronJobsPath } from "@/lib/paths";
-
-function atomicWriteJsonSync(filePath: string, data: unknown): void {
-  const dir = path.dirname(filePath);
-  const content = JSON.stringify(data, null, 2) + "\n";
-  const tmpPath = path.join(dir, `.cron-jobs.tmp.${process.pid}`);
-  fs.writeFileSync(tmpPath, content, "utf-8");
-  fs.renameSync(tmpPath, filePath);
-}
+import { atomicWriteJsonSync, cronJobsPath } from "@/lib/paths";
 
 export async function POST() {
   try {

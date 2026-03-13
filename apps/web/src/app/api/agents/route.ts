@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
-import path from "path";
 import {
+  atomicWriteJsonSync,
   cronJobsPath,
   cronStatePath,
   lockFilePath,
@@ -179,14 +179,6 @@ export async function GET() {
 
 const SAFE_TYPE_RE = /^(worker|planner)$/;
 const SAFE_ID_RE = /^[a-z][a-z0-9-]{0,63}$/;
-
-function atomicWriteJsonSync(filePath: string, data: unknown): void {
-  const dir = path.dirname(filePath);
-  const content = JSON.stringify(data, null, 2) + "\n";
-  const tmpPath = path.join(dir, `.cron-jobs.tmp.${process.pid}`);
-  fs.writeFileSync(tmpPath, content, "utf-8");
-  fs.renameSync(tmpPath, filePath);
-}
 
 export async function POST(request: NextRequest) {
   try {

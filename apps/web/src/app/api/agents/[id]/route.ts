@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
-import path from "path";
-import { cronJobsPath } from "@/lib/paths";
+import { atomicWriteJsonSync, cronJobsPath } from "@/lib/paths";
 
 const SAFE_ID_RE = /^[a-z][a-z0-9-]{0,63}$/;
 
@@ -12,14 +11,6 @@ interface CronJob {
 interface CronJobsData {
   jobs: CronJob[];
   [key: string]: unknown;
-}
-
-function atomicWriteJsonSync(filePath: string, data: unknown): void {
-  const dir = path.dirname(filePath);
-  const content = JSON.stringify(data, null, 2) + "\n";
-  const tmpPath = path.join(dir, `.cron-jobs.tmp.${process.pid}`);
-  fs.writeFileSync(tmpPath, content, "utf-8");
-  fs.renameSync(tmpPath, filePath);
 }
 
 export async function DELETE(
