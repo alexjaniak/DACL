@@ -12,7 +12,7 @@ Work on this issue directly — do not search for other issues to pick up.
 3. Announce pickup and relabel as normal.
 4. Proceed with planning/review.
 
-If `ASSIGNED_ISSUE` is not present, use the standard intake flow below.
+If `ASSIGNED_ISSUE` is not present, do **not** search for or claim new issues. Proceed with reviews, sweeps, and @ADMIN processing only.
 
 ## Role
 
