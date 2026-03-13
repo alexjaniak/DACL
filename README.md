@@ -25,7 +25,6 @@ Unified command-line interface for managing agents.
 | `forge list` | Show all agents (staged, active, unstaged) |
 | `forge status` | Alias for `forge list` |
 | `forge cron apply` | Sync staged agent config to live crontab |
-| `forge cron status` | Show cron timing (`--watch` for live view) |
 | `forge logs` | View agent logs (`-f` to follow) |
 | `forge wh` | Start webhook monitor with auto-tunnel |
 
