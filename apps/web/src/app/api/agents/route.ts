@@ -62,10 +62,9 @@ function isProcessAlive(pid: number): boolean {
   }
 }
 
-function inferRole(contexts: string[]): string {
-  return contexts.some((c) => c.includes("PLANNER.md"))
-    ? "planner"
-    : "worker";
+function inferRole(id: string): string {
+  const match = id.match(/^([a-zA-Z]+)-\d+$/);
+  return match?.[1] ?? "worker";
 }
 
 function buildAgentFromJob(
@@ -100,7 +99,7 @@ function buildAgentFromJob(
 
   return {
     id: job.id,
-    role: inferRole(job.contexts),
+    role: inferRole(job.id),
     interval: job.interval,
     intervalSeconds,
     enabled: job.enabled !== false,
