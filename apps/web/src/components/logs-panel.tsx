@@ -14,7 +14,6 @@ interface AgentOffset {
 export function LogsPanel() {
   const [blocks, setBlocks] = useState<LogBlock[]>([]);
   const [agents, setAgents] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState("all");
   const [filter, setFilter] = useState("");
   const [autoScroll, setAutoScroll] = useState(true);
 
@@ -26,10 +25,9 @@ export function LogsPanel() {
 
   // Merge new blocks into state
   const mergeBlocks = useCallback(
-    (newBlocks: LogBlock[], mode: "all" | "single") => {
+    (newBlocks: LogBlock[]) => {
       if (newBlocks.length === 0) return;
       setBlocks((prev) => {
-        // Build a map preferring blocks that have endTimestamp set
         const blockMap = new Map<string, LogBlock>();
         for (const b of prev) {
           blockMap.set(b.key, b);
@@ -44,21 +42,12 @@ export function LogsPanel() {
         }
         if (!changed) return prev;
         const merged = Array.from(blockMap.values());
-        if (mode === "all") {
-          merged.sort(
-            (a, b) =>
-              new Date(a.endTimestamp ?? a.timestamp).getTime() -
-              new Date(b.endTimestamp ?? b.timestamp).getTime()
-          );
-          return merged.slice(-MAX_BLOCKS);
-        } else {
-          merged.sort(
-            (a, b) =>
-              new Date(a.endTimestamp ?? a.timestamp).getTime() -
-              new Date(b.endTimestamp ?? b.timestamp).getTime()
-          );
-          return merged.slice(-MAX_BLOCKS);
-        }
+        merged.sort(
+          (a, b) =>
+            new Date(a.endTimestamp ?? a.timestamp).getTime() -
+            new Date(b.endTimestamp ?? b.timestamp).getTime()
+        );
+        return merged.slice(-MAX_BLOCKS);
       });
     },
     []
@@ -66,89 +55,63 @@ export function LogsPanel() {
 
   // Initial load via existing GET endpoint
   const fetchInitialLogs = useCallback(async () => {
-    if (activeTab === "all") {
-      let agentIds = agents;
-      if (agentIds.length === 0) {
-        const agentsRes = await fetch("/api/agents");
-        if (!agentsRes.ok) return;
-        const agentsData = await agentsRes.json();
-        agentIds = (agentsData.agents as { id: string }[]).map((a) => a.id);
-        agentIds.sort();
-        setAgents(agentIds);
-      }
-
-      const results = await Promise.all(
-        agentIds.map(async (agentId) => {
-          const res = await fetch(
-            `/api/logs/${encodeURIComponent(agentId)}?offset=0`
-          );
-          if (!res.ok) return { agentId, data: "", offset: 0 };
-          const data = await res.json();
-          return { agentId, ...data };
-        })
-      );
-
-      const newBlocks: LogBlock[] = [];
-      for (const result of results) {
-        if (result.data) {
-          newBlocks.push(...parseLogBlocks(result.agentId, result.data));
-        }
-        offsetsRef.current[result.agentId] = result.offset;
-      }
-      mergeBlocks(newBlocks, "all");
-    } else {
-      const res = await fetch(
-        `/api/logs/${encodeURIComponent(activeTab)}?offset=0`
-      );
-      if (!res.ok) return;
-      const data = await res.json();
-      if (data.data) {
-        const parsed = parseLogBlocks(activeTab, data.data);
-        mergeBlocks(parsed, "single");
-      }
-      offsetsRef.current[activeTab] = data.offset;
+    let agentIds = agents;
+    if (agentIds.length === 0) {
+      const agentsRes = await fetch("/api/agents");
+      if (!agentsRes.ok) return;
+      const agentsData = await agentsRes.json();
+      agentIds = (agentsData.agents as { id: string }[]).map((a) => a.id);
+      agentIds.sort();
+      setAgents(agentIds);
     }
-  }, [activeTab, agents, mergeBlocks]);
+
+    const results = await Promise.all(
+      agentIds.map(async (agentId) => {
+        const res = await fetch(
+          `/api/logs/${encodeURIComponent(agentId)}?offset=0`
+        );
+        if (!res.ok) return { agentId, data: "", offset: 0 };
+        const data = await res.json();
+        return { agentId, ...data };
+      })
+    );
+
+    const newBlocks: LogBlock[] = [];
+    for (const result of results) {
+      if (result.data) {
+        newBlocks.push(...parseLogBlocks(result.agentId, result.data));
+      }
+      offsetsRef.current[result.agentId] = result.offset;
+    }
+    mergeBlocks(newBlocks);
+  }, [agents, mergeBlocks]);
 
   // Fallback polling fetch (incremental)
   const fetchLogsPoll = useCallback(async () => {
-    if (activeTab === "all") {
-      const agentIds = agents;
-      if (agentIds.length === 0) return;
+    const agentIds = agents;
+    if (agentIds.length === 0) return;
 
-      const results = await Promise.all(
-        agentIds.map(async (agentId) => {
-          const offset = offsetsRef.current[agentId] ?? 0;
-          const res = await fetch(
-            `/api/logs/${encodeURIComponent(agentId)}?offset=${offset}`
-          );
-          if (!res.ok) return { agentId, data: "", offset: 0 };
-          const data = await res.json();
-          return { agentId, ...data };
-        })
-      );
+    const results = await Promise.all(
+      agentIds.map(async (agentId) => {
+        const offset = offsetsRef.current[agentId] ?? 0;
+        const res = await fetch(
+          `/api/logs/${encodeURIComponent(agentId)}?offset=${offset}`
+        );
+        if (!res.ok) return { agentId, data: "", offset: 0 };
+        const data = await res.json();
+        return { agentId, ...data };
+      })
+    );
 
-      const newBlocks: LogBlock[] = [];
-      for (const result of results) {
-        if (result.data) {
-          newBlocks.push(...parseLogBlocks(result.agentId, result.data));
-        }
-        offsetsRef.current[result.agentId] = result.offset;
+    const newBlocks: LogBlock[] = [];
+    for (const result of results) {
+      if (result.data) {
+        newBlocks.push(...parseLogBlocks(result.agentId, result.data));
       }
-      mergeBlocks(newBlocks, "all");
-    } else {
-      const offset = offsetsRef.current[activeTab] ?? 0;
-      const res = await fetch(
-        `/api/logs/${encodeURIComponent(activeTab)}?offset=${offset}`
-      );
-      if (!res.ok) return;
-      const data = await res.json();
-      if (data.data) {
-        mergeBlocks(parseLogBlocks(activeTab, data.data), "single");
-      }
-      offsetsRef.current[activeTab] = data.offset;
+      offsetsRef.current[result.agentId] = result.offset;
     }
-  }, [activeTab, agents, mergeBlocks]);
+    mergeBlocks(newBlocks);
+  }, [agents, mergeBlocks]);
 
   // Start fallback polling
   const startFallbackPolling = useCallback(() => {
@@ -166,43 +129,31 @@ export function LogsPanel() {
 
   // Set up SSE connection
   useEffect(() => {
-    // Reset state on tab switch
     setBlocks([]);
     offsetsRef.current = {};
 
-    // Load initial history — called once per tab switch, not on every agent change.
     fetchInitialLogs();
 
-    // Open SSE connection
-    const sseUrl =
-      activeTab === "all"
-        ? "/api/logs/stream"
-        : `/api/logs/stream?agentId=${encodeURIComponent(activeTab)}`;
-
-    const es = new EventSource(sseUrl);
+    const es = new EventSource("/api/logs/stream");
     eventSourceRef.current = es;
 
     es.addEventListener("log", (event) => {
       const { agentId, data, offset } = JSON.parse(event.data);
       if (data) {
         const parsed = parseLogBlocks(agentId, data);
-        mergeBlocks(parsed, activeTab === "all" ? "all" : "single");
+        mergeBlocks(parsed);
       }
       offsetsRef.current[agentId] = offset;
 
-      // If we're getting SSE events, discover new agents for tabs
-      if (activeTab === "all") {
-        setAgents((prev) => {
-          if (prev.includes(agentId)) return prev;
-          const next = [...prev, agentId];
-          next.sort();
-          return next;
-        });
-      }
+      setAgents((prev) => {
+        if (prev.includes(agentId)) return prev;
+        const next = [...prev, agentId];
+        next.sort();
+        return next;
+      });
     });
 
     es.onerror = () => {
-      // EventSource auto-reconnects; start fallback polling in the meantime
       startFallbackPolling();
     };
 
@@ -216,7 +167,7 @@ export function LogsPanel() {
       stopFallbackPolling();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, mergeBlocks, startFallbackPolling, stopFallbackPolling]);
+  }, [mergeBlocks, startFallbackPolling, stopFallbackPolling]);
 
   // Auto-scroll detection
   const handleScroll = useCallback(() => {
@@ -239,43 +190,22 @@ export function LogsPanel() {
     }
   }, [blocks, autoScroll]);
 
-  const filteredBlocks =
-    activeTab === "all"
-      ? blocks
-      : blocks.filter((b) => b.agentId === activeTab);
-
   const displayBlocks = filter
-    ? filteredBlocks.filter((b) =>
+    ? blocks.filter((b) =>
         b.content.toLowerCase().includes(filter.toLowerCase())
       )
-    : filteredBlocks;
+    : blocks;
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* Header with tabs */}
-      <div className="flex items-center justify-between border-b border-border px-4 py-2 shrink-0">
-        <div className="flex items-center gap-1 overflow-x-auto">
-          <TabButton
-            label="All"
-            active={activeTab === "all"}
-            onClick={() => setActiveTab("all")}
-          />
-          {agents.map((id) => (
-            <TabButton
-              key={id}
-              label={id}
-              active={activeTab === id}
-              onClick={() => setActiveTab(id)}
-              color={getAgentColor(id)}
-            />
-          ))}
-        </div>
+      {/* Filter bar */}
+      <div className="flex items-center justify-end border-b border-border px-4 py-2 shrink-0">
         <input
           type="text"
           placeholder="Filter..."
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          className="bg-surface-hover text-text text-sm px-2 py-1 rounded border border-border outline-none focus:border-accent-blue w-40 shrink-0 ml-2"
+          className="bg-surface-hover text-text text-sm px-2 py-1 rounded border border-border outline-none focus:border-accent-blue w-40 shrink-0"
         />
       </div>
 
@@ -291,7 +221,7 @@ export function LogsPanel() {
           </div>
         ) : (
           displayBlocks.map((block) => (
-            <LogCard key={block.key} block={block} showAgent={activeTab === "all"} />
+            <LogCard key={block.key} block={block} />
           ))
         )}
       </div>
@@ -299,61 +229,21 @@ export function LogsPanel() {
   );
 }
 
-function TabButton({
-  label,
-  active,
-  onClick,
-  color,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-  color?: string;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`px-3 py-1.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
-        active
-          ? "text-text-bright border-accent-blue"
-          : "text-muted-foreground border-transparent hover:text-text"
-      }`}
-      style={active && color ? { borderColor: color } : undefined}
-    >
-      {color && (
-        <span
-          className="inline-block w-2 h-2 rounded-full mr-1.5"
-          style={{ backgroundColor: color }}
-        />
-      )}
-      {label}
-    </button>
-  );
-}
-
-function LogCard({
-  block,
-  showAgent,
-}: {
-  block: LogBlock;
-  showAgent: boolean;
-}) {
+function LogCard({ block }: { block: LogBlock }) {
   const agentColor = getAgentColor(block.agentId);
 
   return (
     <div className="bg-surface border border-border rounded-md p-3">
       <div className="flex items-center gap-2 mb-2">
-        {showAgent && (
-          <span
-            className="text-sm font-semibold px-2 py-0.5 rounded"
-            style={{
-              backgroundColor: agentColor + "20",
-              color: agentColor,
-            }}
-          >
-            {block.agentId}
-          </span>
-        )}
+        <span
+          className="text-sm font-semibold px-2 py-0.5 rounded"
+          style={{
+            backgroundColor: agentColor + "20",
+            color: agentColor,
+          }}
+        >
+          {block.agentId}
+        </span>
         <span className="text-sm text-muted-foreground">
           {block.displayTime}
           {block.displayEndTime && (
