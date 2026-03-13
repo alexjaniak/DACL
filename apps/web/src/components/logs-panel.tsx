@@ -67,8 +67,8 @@ export function LogsPanel() {
           const merged = [...prev, ...fresh];
           merged.sort(
             (a, b) =>
-              new Date(a.timestamp).getTime() -
-              new Date(b.timestamp).getTime()
+              new Date(a.endTimestamp ?? a.timestamp).getTime() -
+              new Date(b.endTimestamp ?? b.timestamp).getTime()
           );
           return merged.slice(-MAX_BLOCKS);
         });
@@ -91,8 +91,8 @@ export function LogsPanel() {
             const merged = [...prev, ...fresh];
             merged.sort(
               (a, b) =>
-                new Date(b.timestamp).getTime() -
-                new Date(a.timestamp).getTime()
+                new Date(b.endTimestamp ?? b.timestamp).getTime() -
+                new Date(a.endTimestamp ?? a.timestamp).getTime()
             );
             return merged.slice(0, MAX_BLOCKS);
           });
@@ -253,6 +253,9 @@ function LogCard({
         )}
         <span className="text-sm text-muted-foreground">
           {block.displayTime}
+          {block.displayEndTime && (
+            <span className="text-muted-foreground/60"> → {block.displayEndTime}</span>
+          )}
         </span>
       </div>
       <pre className="text-text text-base whitespace-pre-wrap break-words leading-relaxed">

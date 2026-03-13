@@ -138,7 +138,7 @@ fi
 # Emit early so ALL output (including errors) is captured between delimiters.
 echo "=== RUN $(date -u +%Y-%m-%dT%H:%M:%SZ) ==="
 cleanup() {
-  echo "=== END RUN ==="
+  echo "=== END RUN $(date -u +%Y-%m-%dT%H:%M:%SZ) ==="
   rm -f "${LOCKFILE:-}"
 }
 trap cleanup EXIT
