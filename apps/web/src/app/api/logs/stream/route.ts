@@ -4,6 +4,7 @@ import path from "path";
 import { agentLogPath, logsDir } from "@/lib/paths";
 
 const SAFE_ID_RE = /^[a-z][a-z0-9-]{0,63}$/;
+const MAX_CHUNK = 64 * 1024;
 
 export const dynamic = "force-dynamic";
 
@@ -52,7 +53,7 @@ export async function GET(request: NextRequest) {
       return;
     }
 
-    const bytesToRead = fileSize - currentOffset;
+    const bytesToRead = Math.min(fileSize - currentOffset, MAX_CHUNK);
     if (bytesToRead <= 0) {
       offsets.set(agent, fileSize);
       return;
@@ -63,8 +64,9 @@ export async function GET(request: NextRequest) {
     fs.readSync(fd, buffer, 0, bytesToRead, currentOffset);
     fs.closeSync(fd);
 
-    offsets.set(agent, fileSize);
-    sendEvent(controller, agent, buffer.toString("utf-8"), fileSize);
+    const newOffset = currentOffset + bytesToRead;
+    offsets.set(agent, newOffset);
+    sendEvent(controller, agent, buffer.toString("utf-8"), newOffset);
   }
 
   function watchAgent(
@@ -135,6 +137,7 @@ export async function GET(request: NextRequest) {
           const files = fs.readdirSync(dir).filter((f) => f.endsWith(".log"));
           for (const file of files) {
             const agent = path.basename(file, ".log");
+            if (!SAFE_ID_RE.test(agent)) continue;
             watchAgent(controller, agent);
           }
         } catch {
@@ -152,6 +155,7 @@ export async function GET(request: NextRequest) {
           )
             return;
           const agent = path.basename(filename, ".log");
+          if (!SAFE_ID_RE.test(agent)) return;
           if (agentId && agent !== agentId) return;
           if (offsets.has(agent)) return; // already watching
 
