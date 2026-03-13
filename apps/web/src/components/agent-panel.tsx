@@ -6,7 +6,7 @@ type AgentStatus = "staged" | "active" | "modified" | "orphan";
 
 interface Agent {
   id: string;
-  role: "planner" | "worker";
+  role: string;
   interval: string;
   intervalSeconds: number;
   enabled: boolean;
@@ -73,8 +73,13 @@ function StatusDot({ running, overdue }: { running: boolean; overdue: boolean })
   );
 }
 
-function RoleBadge({ role }: { role: "planner" | "worker" }) {
-  const color = role === "planner" ? "text-accent-magenta" : "text-accent-blue";
+function RoleBadge({ role }: { role: string }) {
+  const color =
+    role === "planner"
+      ? "text-accent-magenta"
+      : role === "worker"
+        ? "text-accent-blue"
+        : "text-accent-cyan";
   return (
     <span
       className={`${color} text-sm font-medium uppercase tracking-wide`}
@@ -234,10 +239,22 @@ function sortAgentsByStatus(agents: Agent[]): Agent[] {
 }
 
 function AddAgentForm({ onAdded }: { onAdded: () => void }) {
-  const [type, setType] = useState<"worker" | "planner">("worker");
+  const [type, setType] = useState("worker");
+  const [templateTypes, setTemplateTypes] = useState<string[]>(["worker", "planner"]);
   const [customId, setCustomId] = useState("");
   const [interval, setInterval] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/templates")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.templates?.length) {
+          setTemplateTypes(data.templates.map((t: { type: string }) => t.type).sort());
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleSubmit = async () => {
     setSubmitting(true);
@@ -268,10 +285,11 @@ function AddAgentForm({ onAdded }: { onAdded: () => void }) {
         <select
           className="bg-background border border-border rounded px-2 py-1 text-sm text-text"
           value={type}
-          onChange={(e) => setType(e.target.value as "worker" | "planner")}
+          onChange={(e) => setType(e.target.value)}
         >
-          <option value="worker">worker</option>
-          <option value="planner">planner</option>
+          {templateTypes.map((t) => (
+            <option key={t} value={t}>{t}</option>
+          ))}
         </select>
         <input
           className="bg-background border border-border rounded px-2 py-1 text-sm text-text w-28"
