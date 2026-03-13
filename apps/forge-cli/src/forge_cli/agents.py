@@ -30,10 +30,6 @@ def _cron_jobs_path():
     return os.path.join(_repo_root(), "agent-kernel", "cron", "cron-jobs.json")
 
 
-def _manage_py_path():
-    return os.path.join(_repo_root(), "agent-kernel", "cron", "manage.py")
-
-
 def _load_cron_jobs(path):
     if not os.path.exists(path):
         return {"stagger": True, "jobs": []}
@@ -72,23 +68,6 @@ def _next_id(agent_type, existing_ids):
     while n in used:
         n += 1
     return f"{agent_type}-{n:02d}"
-
-
-def _run_cron_apply():
-    """Run manage.py apply to sync crontab."""
-    manage_py = _manage_py_path()
-    if not os.path.isfile(manage_py):
-        click.echo("Warning: manage.py not found, skipping cron apply.", err=True)
-        return
-    result = subprocess.run(
-        [sys.executable, manage_py, "apply"],
-        capture_output=True,
-        text=True,
-    )
-    if result.stdout:
-        click.echo(result.stdout, nl=False)
-    if result.returncode != 0:
-        click.echo(f"Warning: cron apply failed: {result.stderr}", err=True)
 
 
 @click.command()
@@ -147,7 +126,7 @@ def add(agent_type, agent_id, interval, list_templates):
     _save_cron_jobs(cron_path, cron_data)
 
     click.echo(f"Added {agent_id} (template: {agent_type}, interval: {job['interval']})")
-    _run_cron_apply()
+    click.echo("Run `forge cron apply` to activate.")
 
 
 @click.command()
@@ -168,4 +147,4 @@ def remove(agent_id):
     _save_cron_jobs(cron_path, cron_data)
 
     click.echo(f"Removed {agent_id}")
-    _run_cron_apply()
+    click.echo("Run `forge cron apply` to activate.")
