@@ -255,7 +255,7 @@ function LogCard({
           {block.displayTime}
         </span>
       </div>
-      <pre className="text-text text-base font-mono whitespace-pre-wrap break-words leading-relaxed">
+      <pre className="text-text text-base whitespace-pre-wrap break-words leading-relaxed">
         {block.content}
       </pre>
     </div>

@@ -134,7 +134,7 @@ function AgentCard({
     <div className="rounded-md bg-surface p-2 border border-border hover:bg-surface-hover transition-colors">
       <div className="flex items-center gap-2 mb-1">
         <StatusDot running={agent.running} overdue={agent.overdue} />
-        <span className="font-mono text-base text-text-bright truncate flex-1 min-w-0">
+        <span className="text-base text-text-bright truncate flex-1 min-w-0">
           {agent.id}
         </span>
         <RoleBadge role={agent.role} />
@@ -151,7 +151,7 @@ function AgentCard({
         </button>
       </div>
 
-      <div className="flex items-center gap-3 text-sm text-text font-mono ml-4 mb-2">
+      <div className="flex items-center gap-3 text-sm text-text ml-4 mb-2">
         <span title="Interval">{agent.interval}</span>
         {agent.lastRun && (
           <span title={`Last run: ${agent.lastRun}`}>
@@ -167,7 +167,7 @@ function AgentCard({
 
       <div className="flex justify-end mr-1">
         <button
-          className={`text-xs font-mono rounded px-2 py-0.5 border transition-colors ${
+          className={`text-xs rounded px-2 py-0.5 border transition-colors ${
             isStarted
               ? "text-accent-green bg-accent-green/10 border-accent-green/20"
               : "text-accent-green bg-surface-hover hover:bg-accent-green/20 border-border"
