@@ -6,22 +6,117 @@ import { getAgentColor } from "@/lib/colors";
 
 const MAX_BLOCKS = 200;
 const POLL_INTERVAL = 5000; // Fallback polling interval (only used when SSE drops)
+const STORAGE_KEY = "forge-log-agent-filter";
 
 interface AgentOffset {
   [agentId: string]: number;
 }
+
+type AgentFilterState = Record<string, boolean>;
+
+function loadFilterState(): AgentFilterState {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return {};
+}
+
+function saveFilterState(state: AgentFilterState) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch {}
+}
+
+function getRole(agentId: string): string | null {
+  const match = agentId.match(/^(worker|planner|super)/);
+  return match ? match[1] : null;
+}
+
+const ROLES = ["worker", "planner", "super"] as const;
+const ROLE_COLORS: Record<string, string> = {
+  worker: "var(--accent-green)",
+  planner: "var(--accent-magenta)",
+  super: "var(--accent-yellow)",
+};
 
 export function LogsPanel() {
   const [blocks, setBlocks] = useState<LogBlock[]>([]);
   const [agents, setAgents] = useState<string[]>([]);
   const [filter, setFilter] = useState("");
   const [autoScroll, setAutoScroll] = useState(true);
+  const [agentFilter, setAgentFilter] = useState<AgentFilterState>(loadFilterState);
+  const [filterOpen, setFilterOpen] = useState(false);
 
   const offsetsRef = useRef<AgentOffset>({});
   const containerRef = useRef<HTMLDivElement>(null);
   const prevScrollTop = useRef(0);
   const eventSourceRef = useRef<EventSource | null>(null);
   const fallbackTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Persist filter state on change
+  useEffect(() => {
+    saveFilterState(agentFilter);
+  }, [agentFilter]);
+
+  // Ensure new agents default to visible
+  useEffect(() => {
+    setAgentFilter((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      for (const id of agents) {
+        if (!(id in next)) {
+          next[id] = true;
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [agents]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!filterOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setFilterOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [filterOpen]);
+
+  const isAgentVisible = useCallback(
+    (agentId: string) => agentFilter[agentId] !== false,
+    [agentFilter]
+  );
+
+  const toggleAgent = useCallback((agentId: string) => {
+    setAgentFilter((prev) => {
+      const next = { ...prev };
+      next[agentId] = prev[agentId] === false ? true : false;
+      return next;
+    });
+  }, []);
+
+  const toggleRole = useCallback(
+    (role: string) => {
+      const roleAgents = agents.filter((a) => getRole(a) === role);
+      if (roleAgents.length === 0) return;
+      const allVisible = roleAgents.every((a) => agentFilter[a] !== false);
+      setAgentFilter((prev) => {
+        const next = { ...prev };
+        for (const a of roleAgents) {
+          next[a] = !allVisible;
+        }
+        return next;
+      });
+    },
+    [agents, agentFilter]
+  );
+
+  const hiddenCount = agents.filter((a) => agentFilter[a] === false).length;
 
   // Merge new blocks into state
   const mergeBlocks = useCallback(
@@ -190,16 +285,98 @@ export function LogsPanel() {
     }
   }, [blocks, autoScroll]);
 
-  const displayBlocks = filter
-    ? blocks.filter((b) =>
-        b.content.toLowerCase().includes(filter.toLowerCase())
-      )
-    : blocks;
+  const displayBlocks = blocks.filter((b) => {
+    if (!isAgentVisible(b.agentId)) return false;
+    if (filter && !b.content.toLowerCase().includes(filter.toLowerCase())) return false;
+    return true;
+  });
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Filter bar */}
-      <div className="flex items-center justify-end border-b border-border px-4 py-2 shrink-0">
+      <div className="flex items-center justify-end gap-2 border-b border-border px-4 py-2 shrink-0">
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={() => setFilterOpen((v) => !v)}
+            className="text-muted-foreground hover:text-text-bright text-sm px-2 py-1 rounded border border-border flex items-center gap-1.5"
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M1 2h14l-5.5 6.5V14l-3-2V8.5L1 2z" />
+            </svg>
+            Agents
+            {hiddenCount > 0 && (
+              <span className="text-xs bg-accent-blue/20 text-accent-blue px-1.5 rounded-full">
+                {agents.length - hiddenCount}/{agents.length}
+              </span>
+            )}
+          </button>
+          {filterOpen && (
+            <div className="absolute top-full left-0 mt-1 z-50 bg-surface border border-border rounded-md shadow-lg min-w-[200px]">
+              {/* Role pills */}
+              {ROLES.some((r) => agents.some((a) => getRole(a) === r)) && (
+                <div className="flex items-center gap-1.5 px-3 py-2 border-b border-border">
+                  {ROLES.map((role) => {
+                    const roleAgents = agents.filter((a) => getRole(a) === role);
+                    if (roleAgents.length === 0) return null;
+                    const allVisible = roleAgents.every((a) => agentFilter[a] !== false);
+                    return (
+                      <button
+                        key={role}
+                        onClick={() => toggleRole(role)}
+                        className="text-xs px-2 py-0.5 rounded-full border transition-colors"
+                        style={{
+                          borderColor: ROLE_COLORS[role],
+                          backgroundColor: allVisible ? ROLE_COLORS[role] + "30" : "transparent",
+                          color: ROLE_COLORS[role],
+                          opacity: allVisible ? 1 : 0.5,
+                        }}
+                      >
+                        {role}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {/* Agent checkboxes */}
+              <div className="py-1 max-h-[240px] overflow-y-auto">
+                {agents.length === 0 ? (
+                  <div className="px-3 py-2 text-sm text-muted-foreground">No agents</div>
+                ) : (
+                  agents.map((agentId) => {
+                    const color = getAgentColor(agentId);
+                    const visible = agentFilter[agentId] !== false;
+                    return (
+                      <button
+                        key={agentId}
+                        onClick={() => toggleAgent(agentId)}
+                        className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-left hover:bg-surface-hover transition-colors"
+                      >
+                        <span
+                          className="w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0"
+                          style={{
+                            borderColor: visible ? "var(--accent-blue)" : "var(--color-border)",
+                            backgroundColor: visible ? "var(--accent-blue)" : "transparent",
+                          }}
+                        >
+                          {visible && (
+                            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="white" strokeWidth="1.5">
+                              <path d="M2 5l2 2 4-4" />
+                            </svg>
+                          )}
+                        </span>
+                        <span
+                          className="w-2.5 h-2.5 rounded-full shrink-0"
+                          style={{ backgroundColor: color }}
+                        />
+                        <span className="text-text truncate">{agentId}</span>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          )}
+        </div>
         <input
           type="text"
           placeholder="Filter..."
