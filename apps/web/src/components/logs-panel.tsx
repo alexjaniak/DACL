@@ -5,7 +5,7 @@ import { LogBlock, parseLogBlocks } from "@/lib/log-parser";
 import { getAgentColor } from "@/lib/colors";
 
 const MAX_BLOCKS = 200;
-const POLL_INTERVAL = 2000;
+const POLL_INTERVAL = 5000; // Fallback polling interval (only used when SSE drops)
 
 interface AgentOffset {
   [agentId: string]: number;
@@ -21,11 +21,52 @@ export function LogsPanel() {
   const offsetsRef = useRef<AgentOffset>({});
   const containerRef = useRef<HTMLDivElement>(null);
   const prevScrollTop = useRef(0);
+  const eventSourceRef = useRef<EventSource | null>(null);
+  const fallbackTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const fetchLogs = useCallback(async () => {
+  // Merge new blocks into state
+  const mergeBlocks = useCallback(
+    (newBlocks: LogBlock[], mode: "all" | "single") => {
+      if (newBlocks.length === 0) return;
+      setBlocks((prev) => {
+        // Build a map preferring blocks that have endTimestamp set
+        const blockMap = new Map<string, LogBlock>();
+        for (const b of prev) {
+          blockMap.set(b.key, b);
+        }
+        let changed = false;
+        for (const b of newBlocks) {
+          const existing = blockMap.get(b.key);
+          if (!existing || (b.endTimestamp && !existing.endTimestamp)) {
+            blockMap.set(b.key, b);
+            changed = true;
+          }
+        }
+        if (!changed) return prev;
+        const merged = Array.from(blockMap.values());
+        if (mode === "all") {
+          merged.sort(
+            (a, b) =>
+              new Date(a.endTimestamp ?? a.timestamp).getTime() -
+              new Date(b.endTimestamp ?? b.timestamp).getTime()
+          );
+          return merged.slice(-MAX_BLOCKS);
+        } else {
+          merged.sort(
+            (a, b) =>
+              new Date(a.endTimestamp ?? a.timestamp).getTime() -
+              new Date(b.endTimestamp ?? b.timestamp).getTime()
+          );
+          return merged.slice(-MAX_BLOCKS);
+        }
+      });
+    },
+    []
+  );
+
+  // Initial load via existing GET endpoint
+  const fetchInitialLogs = useCallback(async () => {
     if (activeTab === "all") {
-      // For "all" tab: fetch each agent's logs using per-agent endpoints
-      // First discover agents if we don't know them yet
       let agentIds = agents;
       if (agentIds.length === 0) {
         const agentsRes = await fetch("/api/agents");
@@ -36,7 +77,45 @@ export function LogsPanel() {
         setAgents(agentIds);
       }
 
-      // Fetch all agent logs in parallel with per-agent offsets
+      const results = await Promise.all(
+        agentIds.map(async (agentId) => {
+          const res = await fetch(
+            `/api/logs/${encodeURIComponent(agentId)}?offset=0`
+          );
+          if (!res.ok) return { agentId, data: "", offset: 0 };
+          const data = await res.json();
+          return { agentId, ...data };
+        })
+      );
+
+      const newBlocks: LogBlock[] = [];
+      for (const result of results) {
+        if (result.data) {
+          newBlocks.push(...parseLogBlocks(result.agentId, result.data));
+        }
+        offsetsRef.current[result.agentId] = result.offset;
+      }
+      mergeBlocks(newBlocks, "all");
+    } else {
+      const res = await fetch(
+        `/api/logs/${encodeURIComponent(activeTab)}?offset=0`
+      );
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.data) {
+        const parsed = parseLogBlocks(activeTab, data.data);
+        mergeBlocks(parsed, "single");
+      }
+      offsetsRef.current[activeTab] = data.offset;
+    }
+  }, [activeTab, agents, mergeBlocks]);
+
+  // Fallback polling fetch (incremental)
+  const fetchLogsPoll = useCallback(async () => {
+    if (activeTab === "all") {
+      const agentIds = agents;
+      if (agentIds.length === 0) return;
+
       const results = await Promise.all(
         agentIds.map(async (agentId) => {
           const offset = offsetsRef.current[agentId] ?? 0;
@@ -52,27 +131,11 @@ export function LogsPanel() {
       const newBlocks: LogBlock[] = [];
       for (const result of results) {
         if (result.data) {
-          const parsed = parseLogBlocks(result.agentId, result.data);
-          newBlocks.push(...parsed);
+          newBlocks.push(...parseLogBlocks(result.agentId, result.data));
         }
         offsetsRef.current[result.agentId] = result.offset;
       }
-
-      if (newBlocks.length > 0) {
-        setBlocks((prev) => {
-          // On first load or full refresh, replace all
-          const existingKeys = new Set(prev.map((b) => b.key));
-          const fresh = newBlocks.filter((b) => !existingKeys.has(b.key));
-          if (fresh.length === 0) return prev;
-          const merged = [...prev, ...fresh];
-          merged.sort(
-            (a, b) =>
-              new Date(b.timestamp).getTime() -
-              new Date(a.timestamp).getTime()
-          );
-          return merged.slice(0, MAX_BLOCKS);
-        });
-      }
+      mergeBlocks(newBlocks, "all");
     } else {
       const offset = offsetsRef.current[activeTab] ?? 0;
       const res = await fetch(
@@ -80,59 +143,99 @@ export function LogsPanel() {
       );
       if (!res.ok) return;
       const data = await res.json();
-
       if (data.data) {
-        const parsed = parseLogBlocks(activeTab, data.data);
-        if (parsed.length > 0) {
-          setBlocks((prev) => {
-            const existingKeys = new Set(prev.map((b) => b.key));
-            const fresh = parsed.filter((b) => !existingKeys.has(b.key));
-            if (fresh.length === 0) return prev;
-            const merged = [...prev, ...fresh];
-            merged.sort(
-              (a, b) =>
-                new Date(b.timestamp).getTime() -
-                new Date(a.timestamp).getTime()
-            );
-            return merged.slice(0, MAX_BLOCKS);
-          });
-        }
+        mergeBlocks(parseLogBlocks(activeTab, data.data), "single");
       }
       offsetsRef.current[activeTab] = data.offset;
     }
-  }, [activeTab, agents]);
+  }, [activeTab, agents, mergeBlocks]);
 
-  // Reset blocks when switching tabs
+  // Start fallback polling
+  const startFallbackPolling = useCallback(() => {
+    if (fallbackTimerRef.current) return;
+    fallbackTimerRef.current = setInterval(fetchLogsPoll, POLL_INTERVAL);
+  }, [fetchLogsPoll]);
+
+  // Stop fallback polling
+  const stopFallbackPolling = useCallback(() => {
+    if (fallbackTimerRef.current) {
+      clearInterval(fallbackTimerRef.current);
+      fallbackTimerRef.current = null;
+    }
+  }, []);
+
+  // Set up SSE connection
   useEffect(() => {
+    // Reset state on tab switch
     setBlocks([]);
     offsetsRef.current = {};
-    fetchLogs();
-  }, [activeTab, fetchLogs]);
 
-  // Poll every 2 seconds
-  useEffect(() => {
-    const id = setInterval(fetchLogs, POLL_INTERVAL);
-    return () => clearInterval(id);
-  }, [fetchLogs]);
+    // Load initial history — called once per tab switch, not on every agent change.
+    fetchInitialLogs();
+
+    // Open SSE connection
+    const sseUrl =
+      activeTab === "all"
+        ? "/api/logs/stream"
+        : `/api/logs/stream?agentId=${encodeURIComponent(activeTab)}`;
+
+    const es = new EventSource(sseUrl);
+    eventSourceRef.current = es;
+
+    es.addEventListener("log", (event) => {
+      const { agentId, data, offset } = JSON.parse(event.data);
+      if (data) {
+        const parsed = parseLogBlocks(agentId, data);
+        mergeBlocks(parsed, activeTab === "all" ? "all" : "single");
+      }
+      offsetsRef.current[agentId] = offset;
+
+      // If we're getting SSE events, discover new agents for tabs
+      if (activeTab === "all") {
+        setAgents((prev) => {
+          if (prev.includes(agentId)) return prev;
+          const next = [...prev, agentId];
+          next.sort();
+          return next;
+        });
+      }
+    });
+
+    es.onerror = () => {
+      // EventSource auto-reconnects; start fallback polling in the meantime
+      startFallbackPolling();
+    };
+
+    es.onopen = () => {
+      stopFallbackPolling();
+    };
+
+    return () => {
+      es.close();
+      eventSourceRef.current = null;
+      stopFallbackPolling();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, mergeBlocks, startFallbackPolling, stopFallbackPolling]);
 
   // Auto-scroll detection
   const handleScroll = useCallback(() => {
     const el = containerRef.current;
     if (!el) return;
-    // Container scrolls; top = 0 means at newest (top)
-    if (el.scrollTop < prevScrollTop.current && el.scrollTop > 10) {
+    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 20;
+    if (!atBottom && el.scrollTop < prevScrollTop.current) {
       setAutoScroll(false);
     }
-    if (el.scrollTop <= 5) {
+    if (atBottom) {
       setAutoScroll(true);
     }
     prevScrollTop.current = el.scrollTop;
   }, []);
 
-  // Scroll to top when new blocks arrive and autoScroll is on
+  // Scroll to bottom when new blocks arrive and autoScroll is on
   useEffect(() => {
     if (autoScroll && containerRef.current) {
-      containerRef.current.scrollTop = 0;
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
     }
   }, [blocks, autoScroll]);
 
@@ -253,6 +356,9 @@ function LogCard({
         )}
         <span className="text-sm text-muted-foreground">
           {block.displayTime}
+          {block.displayEndTime && (
+            <span className="text-muted-foreground/60"> → {block.displayEndTime}</span>
+          )}
         </span>
       </div>
       <pre className="text-text text-base whitespace-pre-wrap break-words leading-relaxed">

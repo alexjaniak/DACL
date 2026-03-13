@@ -27,9 +27,8 @@ export async function GET(request: NextRequest) {
 
   const total = lines.length;
 
-  // Reverse lines so index 0 = most recent, then paginate
-  const reversed = [...lines].reverse();
-  const slice = reversed.slice(offset, offset + MAX_EVENTS_PER_RESPONSE);
+  // Lines are already in chronological order (oldest first), paginate from start
+  const slice = lines.slice(offset, offset + MAX_EVENTS_PER_RESPONSE);
 
   const events: unknown[] = [];
   for (const line of slice) {

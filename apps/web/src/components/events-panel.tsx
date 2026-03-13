@@ -91,8 +91,11 @@ function EventCard({ event }: { event: NormalizedEvent }) {
 export function EventsPanel() {
   const [events, setEvents] = useState<NormalizedEvent[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [autoScroll, setAutoScroll] = useState(true);
   const totalRef = useRef(0);
   const mountedRef = useRef(true);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const prevScrollTop = useRef(0);
 
   const fetchEvents = useCallback(async () => {
     try {
@@ -101,7 +104,7 @@ export function EventsPanel() {
       const data = await res.json();
       if (mountedRef.current) {
         const fetched: NormalizedEvent[] = data.events ?? [];
-        setEvents(fetched.slice(0, MAX_DISPLAY));
+        setEvents(fetched.slice(-MAX_DISPLAY));
         totalRef.current = data.total ?? 0;
         setError(null);
       }
@@ -122,6 +125,25 @@ export function EventsPanel() {
     };
   }, [fetchEvents]);
 
+  const handleScroll = useCallback(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 20;
+    if (!atBottom && el.scrollTop < prevScrollTop.current) {
+      setAutoScroll(false);
+    }
+    if (atBottom) {
+      setAutoScroll(true);
+    }
+    prevScrollTop.current = el.scrollTop;
+  }, []);
+
+  useEffect(() => {
+    if (autoScroll && containerRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+    }
+  }, [events, autoScroll]);
+
   return (
     <div className="bg-surface px-3 pb-3 flex flex-col h-full min-h-0">
       {error && <p className="text-accent-red text-xs mb-2 shrink-0">{error}</p>}
@@ -129,7 +151,11 @@ export function EventsPanel() {
       {events.length === 0 && !error ? (
         <p className="text-muted-foreground text-sm">No events yet.</p>
       ) : (
-        <div className="flex flex-col gap-2 flex-1 overflow-y-auto min-h-0">
+        <div
+          ref={containerRef}
+          onScroll={handleScroll}
+          className="flex flex-col gap-2 flex-1 overflow-y-auto min-h-0"
+        >
           {events.map((event, i) => (
             <EventCard key={`${event.timestamp}-${i}`} event={event} />
           ))}
