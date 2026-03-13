@@ -83,21 +83,6 @@ def remove(id):
     m.cmd_remove(SimpleNamespace(id=id))
 
 
-@cron.command("list")
-def list_jobs():
-    """List active cron jobs."""
-    m = _get_manage()
-    m.cmd_list(SimpleNamespace())
-
-
-@cron.command()
-@click.option("--watch", "-w", is_flag=True, help="Continuously refresh every second")
-def status(watch):
-    """Show agent timing: last run, next run, countdown."""
-    m = _get_manage()
-    m.cmd_status(SimpleNamespace(watch=watch))
-
-
 @cron.command()
 @click.argument("id")
 def run(id):
