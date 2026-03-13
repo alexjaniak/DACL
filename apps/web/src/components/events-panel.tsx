@@ -54,7 +54,7 @@ function EventCard({ event }: { event: NormalizedEvent }) {
   return (
     <div className="rounded-md bg-surface p-2 border border-border">
       <div className="flex items-center gap-2 mb-1 flex-wrap">
-        <span className="text-sm font-mono text-muted-foreground">
+        <span className="text-sm text-muted-foreground">
           {formatTime(event.timestamp)}
         </span>
         <span
@@ -63,7 +63,7 @@ function EventCard({ event }: { event: NormalizedEvent }) {
           {event.raw_action}
         </span>
         {event.number > 0 && (
-          <span className="text-sm font-mono text-accent-blue">
+          <span className="text-sm text-accent-blue">
             #{event.number}
           </span>
         )}
