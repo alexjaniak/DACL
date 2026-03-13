@@ -16,26 +16,17 @@ if [[ -f "$KERNEL_DIR/.env" ]]; then
 fi
 CLAUDE="${CLAUDE_BIN:-claude}"
 
-# ── Innies proxy routing (optional) ──────────────────────────
-if [[ "${USE_INNIES:-false}" == "true" ]]; then
-  if [[ -n "${INNIES_TOKEN:-}" ]]; then
-    CLAUDE_CMD=(innies claude --token "$INNIES_TOKEN" --)
-  else
-    CLAUDE_CMD=(innies claude --)
-  fi
-else
-  CLAUDE_CMD=("$CLAUDE")
-fi
-
 # ── parse flags ────────────────────────────────────────────────
 AGENTIC=false
 PROMPT=""
 CONTEXTS=()
 WORKSPACE_ID=""
 TARGET_REPO=""
+MODEL=""
 NEXT_IS_CONTEXT=false
 NEXT_IS_WORKSPACE=false
 NEXT_IS_REPO=false
+NEXT_IS_MODEL=false
 
 for arg in "$@"; do
   if [[ "$NEXT_IS_CONTEXT" == true ]]; then
@@ -53,11 +44,17 @@ for arg in "$@"; do
     NEXT_IS_REPO=false
     continue
   fi
+  if [[ "$NEXT_IS_MODEL" == true ]]; then
+    MODEL="$arg"
+    NEXT_IS_MODEL=false
+    continue
+  fi
   case "$arg" in
     --agentic)    AGENTIC=true ;;
     --context)    NEXT_IS_CONTEXT=true ;;
     --workspace)  NEXT_IS_WORKSPACE=true ;;
     --repo)       NEXT_IS_REPO=true ;;
+    --model)      NEXT_IS_MODEL=true ;;
     *)            PROMPT="$arg" ;;
   esac
 done
@@ -68,7 +65,7 @@ if [[ -z "$PROMPT" ]] && [[ ! -t 0 ]]; then
 fi
 
 if [[ -z "$PROMPT" ]]; then
-  echo "Usage: $0 [--agentic] [--workspace <id>] [--repo <path-or-url>] [--context <path> ...] \"<prompt>\"" >&2
+  echo "Usage: $0 [--agentic] [--workspace <id>] [--repo <path-or-url>] [--model <model>] [--context <path> ...] \"<prompt>\"" >&2
   exit 1
 fi
 
@@ -146,6 +143,32 @@ cleanup() {
 }
 trap cleanup EXIT
 
+# ── runtime selection (default: claude) ──────────────────────
+AGENT_RUNTIME="${AGENT_RUNTIME:-claude}"
+
+# ── runtime command routing ──────────────────────────────────
+if [[ "$AGENT_RUNTIME" == "codex" ]]; then
+  if [[ "${USE_INNIES:-false}" == "true" ]]; then
+    if [[ -n "${INNIES_TOKEN:-}" ]]; then
+      RUNTIME_CMD=(innies codex --token "$INNIES_TOKEN" --)
+    else
+      RUNTIME_CMD=(innies codex --)
+    fi
+  else
+    RUNTIME_CMD=(codex)
+  fi
+else
+  if [[ "${USE_INNIES:-false}" == "true" ]]; then
+    if [[ -n "${INNIES_TOKEN:-}" ]]; then
+      RUNTIME_CMD=(innies claude --token "$INNIES_TOKEN" --)
+    else
+      RUNTIME_CMD=(innies claude --)
+    fi
+  else
+    RUNTIME_CMD=("$CLAUDE")
+  fi
+fi
+
 # ── preflight: skip idle worker runs ─────────────────────────
 IS_WORKER=false
 for ctx in "${CONTEXTS[@]}"; do
@@ -203,6 +226,14 @@ if [[ "$IS_PLANNER" == true ]]; then
   # If gh fails (network error, etc.), proceed with the run rather than skipping
 fi
 
+# ── preflight: Codex binary (direct mode) ────────────────────
+if [[ "$AGENT_RUNTIME" == "codex" ]] && [[ "${USE_INNIES:-false}" != "true" ]]; then
+  if ! command -v codex &>/dev/null; then
+    echo "[preflight] codex binary not found. Install: npm install -g @openai/codex" >&2
+    exit 1
+  fi
+fi
+
 # ── preflight: Innies proxy connectivity ─────────────────────
 if [[ "${USE_INNIES:-false}" == "true" ]]; then
   if ! command -v innies &>/dev/null; then
@@ -210,11 +241,37 @@ if [[ "${USE_INNIES:-false}" == "true" ]]; then
     echo "Install with: npm install -g innies" >&2
     exit 1
   fi
-  # Verify innies can reach the proxy (ignore unrelated checks like codex_binary)
+
   INNIES_OUT="$(innies doctor 2>&1 || true)"
-  if ! echo "$INNIES_OUT" | grep -q "^OK.*claude_binary"; then
-    echo "Error: innies claude check failed. Run 'innies doctor' to diagnose." >&2
-    echo "$INNIES_OUT" >&2
+
+  if [[ "$AGENT_RUNTIME" == "codex" ]]; then
+    if ! echo "$INNIES_OUT" | grep -q "codex_binary.*ok"; then
+      echo "[preflight] innies doctor: codex_binary check failed" >&2
+      echo "$INNIES_OUT" >&2
+      exit 1
+    fi
+  else
+    if ! echo "$INNIES_OUT" | grep -q "^OK.*claude_binary"; then
+      echo "Error: innies claude check failed. Run 'innies doctor' to diagnose." >&2
+      echo "$INNIES_OUT" >&2
+      exit 1
+    fi
+  fi
+fi
+
+# ── preflight: Codex config.toml (Innies mode) ──────────────
+if [[ "$AGENT_RUNTIME" == "codex" ]] && [[ "${USE_INNIES:-false}" == "true" ]]; then
+  CODEX_CONFIG="$HOME/.codex/config.toml"
+  if [[ ! -f "$CODEX_CONFIG" ]]; then
+    echo "[preflight] Missing $CODEX_CONFIG — required for Innies Codex" >&2
+    echo "Create it with:" >&2
+    echo '  model_provider = "innies"' >&2
+    echo '  [model_providers.innies]' >&2
+    echo '  base_url = "https://api.innies.computer/v1/proxy/v1"' >&2
+    exit 1
+  fi
+  if ! grep -q 'model_provider.*=.*"innies"' "$CODEX_CONFIG"; then
+    echo "[preflight] $CODEX_CONFIG does not set model_provider to innies" >&2
     exit 1
   fi
 fi
@@ -236,17 +293,29 @@ if [[ -n "$WORKSPACE_ID" ]]; then
   SYSTEM_PROMPT="AGENT_ID: $WORKSPACE_ID"$'\n\n'"$SYSTEM_PROMPT"
 fi
 
-# ── build claude args ─────────────────────────────────────────
-CLAUDE_ARGS=()
+# ── build runtime args ────────────────────────────────────────
+RUNTIME_ARGS=()
 
-if [[ "$AGENTIC" == false ]]; then
-  CLAUDE_ARGS+=(--print)          # text-only, no tools
+if [[ "$AGENT_RUNTIME" == "codex" ]]; then
+  if [[ "$AGENTIC" == false ]]; then
+    RUNTIME_ARGS+=(--quiet)
+  fi
+  RUNTIME_ARGS+=(--full-auto)
+  if [[ -n "$SYSTEM_PROMPT" ]]; then
+    RUNTIME_ARGS+=(--instructions "$SYSTEM_PROMPT")
+  fi
+else
+  if [[ "$AGENTIC" == false ]]; then
+    RUNTIME_ARGS+=(--print)          # text-only, no tools
+  fi
+  RUNTIME_ARGS+=(--dangerously-skip-permissions)
+  if [[ -n "$SYSTEM_PROMPT" ]]; then
+    RUNTIME_ARGS+=(--append-system-prompt "$SYSTEM_PROMPT")
+  fi
 fi
 
-CLAUDE_ARGS+=(--dangerously-skip-permissions)
-
-if [[ -n "$SYSTEM_PROMPT" ]]; then
-  CLAUDE_ARGS+=(--append-system-prompt "$SYSTEM_PROMPT")
+if [[ -n "$MODEL" ]]; then
+  RUNTIME_ARGS+=(--model "$MODEL")
 fi
 
 if [[ -n "$WORKSPACE_ID" ]]; then
@@ -278,10 +347,9 @@ fi
 MAX_RUNTIME="${MAX_RUNTIME:-1200}"  # 20 minutes default
 
 rc=0
-timeout "$MAX_RUNTIME" "${CLAUDE_CMD[@]}" "${CLAUDE_ARGS[@]}" "$PROMPT" || rc=$?
+timeout "$MAX_RUNTIME" "${RUNTIME_CMD[@]}" "${RUNTIME_ARGS[@]}" "$PROMPT" || rc=$?
 
 if [[ "$rc" -eq 124 ]]; then
   echo "Run killed: exceeded ${MAX_RUNTIME}s timeout"
 fi
-
 exit "$rc"

@@ -49,14 +49,35 @@ def parse_interval(interval):
     raise ValueError(f"Invalid interval '{interval}': must be Nm or Nh (e.g. 5m, 1h)")
 
 
-def build_cron_command(job_id, prompt, agentic, contexts=None, workspace=False, repo=None):
-    cmd = f"mkdir -p {LOGS_DIR} && cd {REPO_DIR} && ./agent-kernel/run.sh"
+VALID_RUNTIMES = {"claude", "codex"}
+MODEL_RE = re.compile(r'^[a-zA-Z0-9_./-]+$')
+
+
+def validate_runtime(runtime):
+    if runtime not in VALID_RUNTIMES:
+        print(f"Error: unknown runtime '{runtime}'. Valid: {', '.join(sorted(VALID_RUNTIMES))}", file=sys.stderr)
+        sys.exit(1)
+
+
+def validate_model(model):
+    if model and not MODEL_RE.match(model):
+        print(f"Error: invalid model '{model}'", file=sys.stderr)
+        sys.exit(1)
+
+
+
+def build_cron_command(job_id, prompt, agentic, contexts=None, workspace=False, repo=None, runtime=None, model=None):
+    runtime = runtime or "claude"
+    env_prefix = f"AGENT_RUNTIME={runtime} " if runtime != "claude" else ""
+    cmd = f"mkdir -p {LOGS_DIR} && cd {REPO_DIR} && {env_prefix}./agent-kernel/run.sh"
     if agentic:
         cmd += " --agentic"
     if workspace:
         cmd += f" --workspace {job_id}"
     if repo:
         cmd += f" --repo {repo}"
+    if model:
+        cmd += f" --model '{model}'"
     for ctx in (contexts or []):
         cmd += f" --context {ctx}"
     cmd += f' "{prompt}" >> {LOGS_DIR}/{job_id}.log 2>&1'
@@ -238,7 +259,9 @@ def cmd_apply(args):
                 d.get("agentic", False) != a.get("agentic", False) or
                 d.get("workspace", False) != a.get("workspace", False) or
                 d.get("contexts", []) != a.get("contexts", []) or
-                d.get("repo", "") != a.get("repo", "")):
+                d.get("repo", "") != a.get("repo", "") or
+                d.get("runtime", "claude") != a.get("runtime", "claude") or
+                d.get("model", "") != a.get("model", "")):
             to_update.add(job_id)
 
     no_change = (set(desired.keys()) & set(actual.keys())) - to_update
@@ -254,7 +277,11 @@ def cmd_apply(args):
         job = desired[job_id]
         contexts = job.get("contexts", [])
         repo = job.get("repo", "")
-        command = build_cron_command(job_id, job["prompt"], job.get("agentic", False), contexts, job.get("workspace", False), repo or None)
+        runtime = job.get("runtime", "claude")
+        model = job.get("model", "")
+        validate_runtime(runtime)
+        validate_model(model)
+        command = build_cron_command(job_id, job["prompt"], job.get("agentic", False), contexts, job.get("workspace", False), repo or None, runtime, model or None)
 
         offset = stagger_offsets.get(job_id, 0)
         if stagger and offset > 0:
@@ -274,6 +301,8 @@ def cmd_apply(args):
             "workspace": job.get("workspace", False),
             "contexts": contexts,
             "repo": repo,
+            "runtime": runtime,
+            "model": model,
             "stagger_offset": offset if stagger else 0,
             "installed_at": now_iso(),
         }
@@ -295,10 +324,15 @@ def cmd_add(args):
         print(f"Error: invalid id '{args.id}' (use alphanumeric, dashes, underscores)", file=sys.stderr)
         sys.exit(1)
 
+    runtime = args.runtime or "claude"
+    model = args.model or ""
+    validate_runtime(runtime)
+    validate_model(model)
+
     cron_expr = parse_interval(args.interval)
     contexts = args.context or []
     repo = args.repo or ""
-    command = build_cron_command(args.id, args.prompt, args.agentic, contexts, args.workspace, repo or None)
+    command = build_cron_command(args.id, args.prompt, args.agentic, contexts, args.workspace, repo or None, runtime, model or None)
 
     crontab = read_crontab()
     crontab = add_job_to_crontab(crontab, args.id, cron_expr, command)
@@ -313,6 +347,8 @@ def cmd_add(args):
         "workspace": args.workspace,
         "contexts": contexts,
         "repo": repo,
+        "runtime": runtime,
+        "model": model,
         "installed_at": now_iso(),
     }
     save_state(state)
@@ -440,6 +476,10 @@ def cmd_run(args):
         print(f"No job with id '{args.id}' in {JOBS_FILE}", file=sys.stderr)
         sys.exit(1)
 
+    runtime = job.get("runtime", "claude")
+    if runtime != "claude":
+        os.environ["AGENT_RUNTIME"] = runtime
+
     cmd = [os.path.join(REPO_DIR, "agent-kernel", "run.sh")]
     if job.get("agentic"):
         cmd.append("--agentic")
@@ -447,6 +487,8 @@ def cmd_run(args):
         cmd += ["--workspace", job["id"]]
     if job.get("repo"):
         cmd += ["--repo", job["repo"]]
+    if job.get("model"):
+        cmd += ["--model", job["model"]]
     for ctx in job.get("contexts", []):
         cmd += ["--context", ctx]
     cmd.append(job["prompt"])
@@ -489,6 +531,8 @@ def main():
     p_add.add_argument("--workspace", action="store_true", help="Run in isolated git worktree")
     p_add.add_argument("--context", action="append", help="Context file path relative to repo root (repeatable)")
     p_add.add_argument("--repo", help="Target repo (e.g. github.com/owner/repo or absolute path)")
+    p_add.add_argument("--runtime", default="claude", help="Agent runtime: claude or codex (default: claude)")
+    p_add.add_argument("--model", default="", help="Explicit model override (e.g. gpt-5.4)")
 
     p_rm = sub.add_parser("remove", help="Remove a cron job by ID")
     p_rm.add_argument("id", help="Job identifier")
