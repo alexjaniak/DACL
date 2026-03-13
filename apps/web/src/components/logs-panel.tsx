@@ -331,6 +331,8 @@ function TabButton({
   );
 }
 
+const COLLAPSED_HEIGHT = 150;
+
 function LogCard({
   block,
   showAgent,
@@ -339,6 +341,20 @@ function LogCard({
   showAgent: boolean;
 }) {
   const agentColor = getAgentColor(block.agentId);
+  const [expanded, setExpanded] = useState(false);
+  const [overflows, setOverflows] = useState(false);
+  const contentRef = useRef<HTMLPreElement>(null);
+
+  useEffect(() => {
+    const el = contentRef.current;
+    if (el) {
+      setOverflows(el.scrollHeight > COLLAPSED_HEIGHT);
+    }
+  }, [block.content]);
+
+  const toggle = useCallback(() => {
+    setExpanded((prev) => !prev);
+  }, []);
 
   return (
     <div className="bg-surface border border-border rounded-md p-3">
@@ -361,9 +377,35 @@ function LogCard({
           )}
         </span>
       </div>
-      <pre className="text-text text-base whitespace-pre-wrap break-words leading-relaxed">
-        {block.content}
-      </pre>
+      <div
+        className="relative cursor-pointer"
+        onClick={overflows ? toggle : undefined}
+        style={{ cursor: overflows ? "pointer" : "default" }}
+      >
+        <pre
+          ref={contentRef}
+          className="text-text text-base whitespace-pre-wrap break-words leading-relaxed overflow-hidden transition-[max-height] duration-300 ease-in-out"
+          style={{ maxHeight: expanded ? 9999 : COLLAPSED_HEIGHT }}
+        >
+          {block.content}
+        </pre>
+        {overflows && !expanded && (
+          <div
+            className="absolute bottom-0 left-0 right-0 h-12 pointer-events-none"
+            style={{
+              background: "linear-gradient(to top, #21252b, transparent)",
+            }}
+          />
+        )}
+      </div>
+      {overflows && (
+        <button
+          onClick={toggle}
+          className="text-sm text-muted-foreground hover:text-text cursor-pointer mt-1"
+        >
+          {expanded ? "Show less" : "Show more"}
+        </button>
+      )}
     </div>
   );
 }
