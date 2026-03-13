@@ -29,10 +29,21 @@ export function LogsPanel() {
     (newBlocks: LogBlock[], mode: "all" | "single") => {
       if (newBlocks.length === 0) return;
       setBlocks((prev) => {
-        const existingKeys = new Set(prev.map((b) => b.key));
-        const fresh = newBlocks.filter((b) => !existingKeys.has(b.key));
-        if (fresh.length === 0) return prev;
-        const merged = [...prev, ...fresh];
+        // Build a map preferring blocks that have endTimestamp set
+        const blockMap = new Map<string, LogBlock>();
+        for (const b of prev) {
+          blockMap.set(b.key, b);
+        }
+        let changed = false;
+        for (const b of newBlocks) {
+          const existing = blockMap.get(b.key);
+          if (!existing || (b.endTimestamp && !existing.endTimestamp)) {
+            blockMap.set(b.key, b);
+            changed = true;
+          }
+        }
+        if (!changed) return prev;
+        const merged = Array.from(blockMap.values());
         if (mode === "all") {
           merged.sort(
             (a, b) =>
@@ -159,7 +170,7 @@ export function LogsPanel() {
     setBlocks([]);
     offsetsRef.current = {};
 
-    // Load initial history
+    // Load initial history — called once per tab switch, not on every agent change.
     fetchInitialLogs();
 
     // Open SSE connection
@@ -204,7 +215,8 @@ export function LogsPanel() {
       eventSourceRef.current = null;
       stopFallbackPolling();
     };
-  }, [activeTab, fetchInitialLogs, mergeBlocks, startFallbackPolling, stopFallbackPolling]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, mergeBlocks, startFallbackPolling, stopFallbackPolling]);
 
   // Auto-scroll detection
   const handleScroll = useCallback(() => {
