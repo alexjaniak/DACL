@@ -112,10 +112,12 @@ function AgentCard({
   agent,
   onForceRun,
   onDelete,
+  onAdopt,
 }: {
   agent: Agent;
   onForceRun: (id: string) => void;
   onDelete: (id: string) => void;
+  onAdopt: (id: string) => void;
 }) {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
@@ -145,6 +147,12 @@ function AgentCard({
     setTimeout(() => setFeedback(null), 2000);
   };
 
+  const handleAdopt = () => {
+    onAdopt(agent.id);
+    setFeedback("Adopted");
+    setTimeout(() => setFeedback(null), 2000);
+  };
+
   const handleDelete = () => {
     if (!confirming) {
       setConfirming(true);
@@ -157,7 +165,9 @@ function AgentCard({
   };
 
   const isStarted = feedback === "Started";
+  const isAdopted = feedback === "Adopted";
   const isStaged = agent.status === "staged";
+  const isOrphan = agent.status === "orphan";
 
   return (
     <div className="rounded-md bg-surface p-2 border border-border hover:bg-surface-hover transition-colors">
@@ -201,20 +211,34 @@ function AgentCard({
       </div>
 
       <div className="flex justify-end mr-1">
-        <button
-          className={`text-xs rounded px-2 py-0.5 border transition-colors ${
-            isStaged
-              ? "text-muted-foreground bg-surface border-border cursor-not-allowed opacity-50"
-              : isStarted
-                ? "text-accent-green bg-accent-green/10 border-accent-green/20"
-                : "text-accent-green bg-surface-hover hover:bg-accent-green/20 border-border"
-          }`}
-          onClick={isStaged ? undefined : handleForceRun}
-          disabled={isStaged}
-          title={isStaged ? "Apply config first to run this agent" : undefined}
-        >
-          {feedback ?? "\u25B6 Run"}
-        </button>
+        {isOrphan ? (
+          <button
+            className={`text-xs rounded px-2 py-0.5 border transition-colors ${
+              isAdopted
+                ? "text-accent-cyan bg-accent-cyan/10 border-accent-cyan/20"
+                : "border-accent-cyan text-accent-cyan hover:bg-accent-cyan/20"
+            }`}
+            onClick={isAdopted ? undefined : handleAdopt}
+            disabled={isAdopted}
+          >
+            {feedback ?? "Adopt"}
+          </button>
+        ) : (
+          <button
+            className={`text-xs rounded px-2 py-0.5 border transition-colors ${
+              isStaged
+                ? "text-muted-foreground bg-surface border-border cursor-not-allowed opacity-50"
+                : isStarted
+                  ? "text-accent-green bg-accent-green/10 border-accent-green/20"
+                  : "text-accent-green bg-surface-hover hover:bg-accent-green/20 border-border"
+            }`}
+            onClick={isStaged ? undefined : handleForceRun}
+            disabled={isStaged}
+            title={isStaged ? "Apply config first to run this agent" : undefined}
+          >
+            {feedback ?? "\u25B6 Run"}
+          </button>
+        )}
       </div>
     </div>
   );
@@ -357,6 +381,17 @@ export function AgentPanel() {
     }
   };
 
+  const handleAdopt = async (agentId: string) => {
+    try {
+      const res = await fetch(`/api/agents/${agentId}/adopt`, { method: "POST" });
+      if (res.ok) {
+        fetchAgents();
+      }
+    } catch {
+      // best-effort
+    }
+  };
+
   const handleApply = async () => {
     try {
       const res = await fetch("/api/agents/apply", { method: "POST" });
@@ -455,6 +490,7 @@ export function AgentPanel() {
               agent={agent}
               onForceRun={handleForceRun}
               onDelete={handleDelete}
+              onAdopt={handleAdopt}
             />
           ))}
         </div>
