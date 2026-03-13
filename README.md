@@ -47,4 +47,19 @@ templates/       Agent configuration templates (worker.json, planner.json, super
 
 ## Getting started
 
-See [agent-kernel/README.md](agent-kernel/README.md) for setup and usage.
+```bash
+git clone https://github.com/alexjaniak/DACL.git
+cd DACL
+./install.sh
+```
+
+The install script checks prerequisites, installs dependencies, and generates config files.
+
+### Manual setup
+
+If you prefer manual setup:
+1. `pip install -e apps/forge-cli` — Install the Forge CLI
+2. `pip install -e apps/webhook-monitor` — Install the webhook server
+3. `cd apps/web && npm install` — Install dashboard dependencies
+4. `cp agent-kernel/.env.example agent-kernel/.env` — Configure credentials
+5. `cp apps/webhook-monitor/config.example.toml apps/webhook-monitor/config.toml` — Configure webhooks
