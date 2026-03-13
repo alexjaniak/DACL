@@ -3,44 +3,15 @@
 import json
 import os
 import re
-import subprocess
 import sys
 
 import click
 
-
-def _repo_root():
-    """Return the repository root directory."""
-    try:
-        return subprocess.check_output(
-            ["git", "rev-parse", "--show-toplevel"],
-            stderr=subprocess.DEVNULL,
-            text=True,
-        ).strip()
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        click.echo("Error: not inside a git repository.", err=True)
-        sys.exit(1)
+from forge_cli.paths import cron_jobs_path, load_cron_jobs, repo_root, save_cron_jobs
 
 
 def _templates_dir():
-    return os.path.join(_repo_root(), "templates")
-
-
-def _cron_jobs_path():
-    return os.path.join(_repo_root(), "agent-kernel", "cron", "cron-jobs.json")
-
-
-def _load_cron_jobs(path):
-    if not os.path.exists(path):
-        return {"stagger": True, "jobs": []}
-    with open(path) as f:
-        return json.load(f)
-
-
-def _save_cron_jobs(path, data):
-    with open(path, "w") as f:
-        json.dump(data, f, indent=2)
-        f.write("\n")
+    return os.path.join(repo_root(), "templates")
 
 
 def _available_templates():
@@ -104,8 +75,8 @@ def add(agent_type, agent_id, interval, list_templates):
     with open(templates[agent_type]) as f:
         template = json.load(f)
 
-    cron_path = _cron_jobs_path()
-    cron_data = _load_cron_jobs(cron_path)
+    cron_path = cron_jobs_path()
+    cron_data = load_cron_jobs(cron_path)
     existing_ids = [j["id"] for j in cron_data.get("jobs", [])]
 
     if agent_id is None:
@@ -123,7 +94,7 @@ def add(agent_type, agent_id, interval, list_templates):
     job["workspace"] = template.get("workspace", False)
 
     cron_data.setdefault("jobs", []).append(job)
-    _save_cron_jobs(cron_path, cron_data)
+    save_cron_jobs(cron_path, cron_data)
 
     click.echo(f"Added {agent_id} (template: {agent_type}, interval: {job['interval']})")
     click.echo("Run `forge cron apply` to activate.")
@@ -133,8 +104,8 @@ def add(agent_type, agent_id, interval, list_templates):
 @click.argument("agent_id")
 def remove(agent_id):
     """Remove an agent by ID."""
-    cron_path = _cron_jobs_path()
-    cron_data = _load_cron_jobs(cron_path)
+    cron_path = cron_jobs_path()
+    cron_data = load_cron_jobs(cron_path)
 
     jobs = cron_data.get("jobs", [])
     new_jobs = [j for j in jobs if j["id"] != agent_id]
@@ -144,7 +115,7 @@ def remove(agent_id):
         sys.exit(1)
 
     cron_data["jobs"] = new_jobs
-    _save_cron_jobs(cron_path, cron_data)
+    save_cron_jobs(cron_path, cron_data)
 
     click.echo(f"Removed {agent_id}")
     click.echo("Run `forge cron apply` to activate.")
