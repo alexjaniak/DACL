@@ -1,4 +1,5 @@
 .repos/
+.worktrees/
 agent-kernel/.env
 agent-kernel/cron/cron-state.json
 .mypy_cache
