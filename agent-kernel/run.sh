@@ -220,7 +220,7 @@ if [[ "$IS_WORKER" == true ]]; then
   fi
 fi
 
-# ── preflight: skip idle planner runs ────────────────────────
+# ── preflight: planner lock (never exits early) ──────────────
 IS_PLANNER=false
 for ctx in "${CONTEXTS[@]}"; do
   if [[ "$ctx" == *PLANNER.md ]]; then
@@ -240,16 +240,9 @@ if [[ "$IS_PLANNER" == true ]]; then
   ISSUES=$(gh "${GH_ARGS[@]}" 2>/dev/null || echo "error")
 
   if [[ "$ISSUES" == "error" ]]; then
-    # gh failed (network error, etc.) — proceed without pre-assignment
     echo "[preflight] gh issue list failed — proceeding without lock"
   elif [[ -z "$ISSUES" ]]; then
-    echo "No open issues with role:planner — skipping run"
-    if [[ -n "${WORKSPACE_ID:-}" ]]; then
-      SYSTEM_LOG="$KERNEL_DIR/logs/system.log"
-      mkdir -p "$(dirname "$SYSTEM_LOG")"
-      echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] $WORKSPACE_ID: skipped (no role:planner issues)" >> "$SYSTEM_LOG"
-    fi
-    exit 0
+    echo "[preflight] No open role:planner issues — proceeding without assignment"
   else
     # Try to lock one issue
     FORGE_LOCKED_ISSUE=""
@@ -261,17 +254,53 @@ if [[ "$IS_PLANNER" == true ]]; then
     done
 
     if [[ -z "$FORGE_LOCKED_ISSUE" ]]; then
-      echo "No unlocked planner issues available — skipping run"
-      if [[ -n "${WORKSPACE_ID:-}" ]]; then
-        SYSTEM_LOG="$KERNEL_DIR/logs/system.log"
-        mkdir -p "$(dirname "$SYSTEM_LOG")"
-        echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] $WORKSPACE_ID: skipped (all planner issues locked)" >> "$SYSTEM_LOG"
-      fi
-      exit 0
+      echo "[preflight] All planner issues locked — proceeding without assignment"
+    else
+      export FORGE_LOCKED_ISSUE
+      echo "[preflight] Locked issue #$FORGE_LOCKED_ISSUE for $WORKSPACE_ID"
     fi
+  fi
+fi
 
-    export FORGE_LOCKED_ISSUE
-    echo "[preflight] Locked issue #$FORGE_LOCKED_ISSUE for $WORKSPACE_ID"
+# ── preflight: super lock (never exits early) ────────────────
+IS_SUPER=false
+for ctx in "${CONTEXTS[@]}"; do
+  if [[ "$ctx" == *SUPER.md ]]; then
+    IS_SUPER=true
+    break
+  fi
+done
+
+if [[ "$IS_SUPER" == true ]]; then
+  GH_ARGS=(issue list --label "role:super" --state open --json number --jq '.[].number')
+
+  if [[ "$TARGET_REPO" == github.com/* ]]; then
+    GH_REPO="${TARGET_REPO#github.com/}"
+    GH_ARGS+=(--repo "$GH_REPO")
+  fi
+
+  ISSUES=$(gh "${GH_ARGS[@]}" 2>/dev/null || echo "error")
+
+  if [[ "$ISSUES" == "error" ]]; then
+    echo "[preflight] gh issue list failed — proceeding without lock"
+  elif [[ -z "$ISSUES" ]]; then
+    echo "[preflight] No open role:super issues — proceeding without assignment"
+  else
+    # Try to lock one issue
+    FORGE_LOCKED_ISSUE=""
+    for ISSUE_NUM in $ISSUES; do
+      if lock_acquire issue "$ISSUE_NUM" "$WORKSPACE_ID" 2>/dev/null; then
+        FORGE_LOCKED_ISSUE="$ISSUE_NUM"
+        break
+      fi
+    done
+
+    if [[ -z "$FORGE_LOCKED_ISSUE" ]]; then
+      echo "[preflight] All super issues locked — proceeding without assignment"
+    else
+      export FORGE_LOCKED_ISSUE
+      echo "[preflight] Locked issue #$FORGE_LOCKED_ISSUE for $WORKSPACE_ID"
+    fi
   fi
 fi
 
