@@ -62,8 +62,8 @@
 
 :root {
   /* One Dark theme — always dark */
-  --surface: #2c313a;
-  --surface-hover: #3e4451;
+  --surface: #21252b;
+  --surface-hover: #2c313a;
   --text: #abb2bf;
   --text-bright: #dcdfe4;
   --accent-blue: #61afef;
@@ -74,23 +74,23 @@
   --accent-cyan: #56b6c2;
   --accent-orange: #d19a66;
   /* shadcn/ui semantic tokens — One Dark mapping */
-  --background: #282c34;
+  --background: #1e2127;
   --foreground: #abb2bf;
-  --card: #2c313a;
+  --card: #21252b;
   --card-foreground: #abb2bf;
-  --popover: #2c313a;
+  --popover: #21252b;
   --popover-foreground: #abb2bf;
   --primary: #61afef;
-  --primary-foreground: #282c34;
-  --secondary: #3e4451;
+  --primary-foreground: #1e2127;
+  --secondary: #2c313a;
   --secondary-foreground: #dcdfe4;
-  --muted: #3e4451;
+  --muted: #2c313a;
   --muted-foreground: #7f848e;
-  --accent: #3e4451;
+  --accent: #2c313a;
   --accent-foreground: #dcdfe4;
   --destructive: #e06c75;
-  --border: #4b5263;
-  --input: #4b5263;
+  --border: #3e4451;
+  --input: #3e4451;
   --ring: #61afef;
   --chart-1: #61afef;
   --chart-2: #98c379;
@@ -98,13 +98,13 @@
   --chart-4: #c678dd;
   --chart-5: #56b6c2;
   --radius: 0.5rem;
-  --sidebar: #2c313a;
+  --sidebar: #21252b;
   --sidebar-foreground: #abb2bf;
   --sidebar-primary: #61afef;
-  --sidebar-primary-foreground: #282c34;
-  --sidebar-accent: #3e4451;
+  --sidebar-primary-foreground: #1e2127;
+  --sidebar-accent: #2c313a;
   --sidebar-accent-foreground: #dcdfe4;
-  --sidebar-border: #4b5263;
+  --sidebar-border: #3e4451;
   --sidebar-ring: #61afef;
 }
 
