@@ -10,6 +10,20 @@ import sys
 import time
 from datetime import datetime, timedelta, timezone
 
+# ── ANSI color helpers ────────────────────────────────────────
+
+def _color(text, code):
+    """Wrap text in ANSI color escape codes."""
+    if not sys.stdout.isatty():
+        return text
+    return f"\033[{code}m{text}\033[0m"
+
+def _green(text):  return _color(text, "32")
+def _red(text):    return _color(text, "31")
+def _yellow(text): return _color(text, "33")
+def _dim(text):    return _color(text, "2")
+
+
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 KERNEL_DIR = os.path.dirname(SCRIPT_DIR)
 REPO_DIR = os.path.dirname(KERNEL_DIR)
@@ -268,12 +282,15 @@ def cmd_apply(args):
 
     crontab = read_crontab()
 
-    for job_id in to_remove:
+    print("Applied cron changes:")
+
+    for job_id in sorted(to_remove):
+        old_interval = actual[job_id].get("interval", "?")
         crontab = remove_job_from_crontab(crontab, job_id)
         del state["jobs"][job_id]
-        print(f"  - Removed: {job_id}")
+        print(_red(f"  - {job_id:<20} {old_interval:<6} (removed)"))
 
-    for job_id in to_add | to_update:
+    for job_id in sorted(to_add | to_update):
         job = desired[job_id]
         contexts = job.get("contexts", [])
         repo = job.get("repo", "")
@@ -306,17 +323,26 @@ def cmd_apply(args):
             "stagger_offset": offset if stagger else 0,
             "installed_at": now_iso(),
         }
-        action = "Added" if job_id in to_add else "Updated"
-        sym = "+" if job_id in to_add else "~"
-        offset_info = f" (stagger: +{offset}s)" if stagger and offset > 0 else ""
-        print(f"  {sym} {action}: {job_id}{offset_info}")
+        if job_id in to_add:
+            print(_green(f"  + {job_id:<20} {job['interval']:<6} (new)"))
+        else:
+            old_interval = actual[job_id].get("interval", "?")
+            if old_interval != job["interval"]:
+                print(_yellow(f"  ~ {job_id:<20} {old_interval} \u2192 {job['interval']:<6} (updated)"))
+            else:
+                print(_yellow(f"  ~ {job_id:<20} {job['interval']:<6} (updated)"))
+
+    for job_id in sorted(no_change):
+        interval = desired[job_id]["interval"]
+        print(_dim(f"  = {job_id:<20} {interval:<6} (unchanged)"))
 
     write_crontab(crontab)
     state["stagger"] = stagger
     save_state(state)
 
-    print(f"Applied: +{len(to_add)} added, ~{len(to_update)} updated, "
-          f"-{len(to_remove)} removed, {len(no_change)} unchanged")
+    total_active = len(desired)
+    print()
+    print(f"{total_active} agent{'s' if total_active != 1 else ''} active.")
 
 
 def cmd_add(args):
