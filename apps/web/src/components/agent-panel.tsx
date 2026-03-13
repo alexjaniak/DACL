@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+type AgentStatus = "staged" | "active" | "modified" | "orphan";
+
 interface Agent {
   id: string;
   role: "planner" | "worker";
@@ -17,6 +19,8 @@ interface Agent {
   agentic: boolean;
   workspace: boolean;
   repo: string;
+  status: AgentStatus;
+  stagedInterval?: string;
 }
 
 function relativeTime(iso: string): string {
@@ -80,6 +84,30 @@ function RoleBadge({ role }: { role: "planner" | "worker" }) {
   );
 }
 
+const statusBadgeConfig: Record<AgentStatus, { label: string; bg: string }> = {
+  staged: { label: "STAGED", bg: "bg-accent-yellow" },
+  active: { label: "ACTIVE", bg: "bg-accent-green" },
+  modified: { label: "MODIFIED", bg: "bg-accent-yellow" },
+  orphan: { label: "ORPHAN", bg: "bg-accent-red" },
+};
+
+function StatusBadge({ status, agent }: { status: AgentStatus; agent: Agent }) {
+  const config = statusBadgeConfig[status];
+  const tooltip =
+    status === "modified" && agent.stagedInterval
+      ? `interval: ${agent.interval} → ${agent.stagedInterval}`
+      : undefined;
+
+  return (
+    <span
+      className={`${config.bg} text-background text-xs rounded px-1.5 py-0.5 font-medium uppercase tracking-wide`}
+      title={tooltip}
+    >
+      {config.label}
+    </span>
+  );
+}
+
 function AgentCard({
   agent,
   onForceRun,
@@ -129,6 +157,7 @@ function AgentCard({
   };
 
   const isStarted = feedback === "Started";
+  const isStaged = agent.status === "staged";
 
   return (
     <div className="rounded-md bg-surface p-2 border border-border hover:bg-surface-hover transition-colors">
@@ -138,6 +167,7 @@ function AgentCard({
           {agent.id}
         </span>
         <RoleBadge role={agent.role} />
+        <StatusBadge status={agent.status} agent={agent} />
         <button
           className={`flex-shrink-0 size-5 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
             confirming
@@ -153,6 +183,11 @@ function AgentCard({
 
       <div className="flex items-center gap-3 text-sm text-text ml-4 mb-2">
         <span title="Interval">{agent.interval}</span>
+        {agent.status === "modified" && agent.stagedInterval && (
+          <span className="text-accent-yellow" title="Pending interval change">
+            → {agent.stagedInterval}
+          </span>
+        )}
         {agent.lastRun && (
           <span title={`Last run: ${agent.lastRun}`}>
             {relativeTime(agent.lastRun)}
@@ -168,16 +203,33 @@ function AgentCard({
       <div className="flex justify-end mr-1">
         <button
           className={`text-xs rounded px-2 py-0.5 border transition-colors ${
-            isStarted
-              ? "text-accent-green bg-accent-green/10 border-accent-green/20"
-              : "text-accent-green bg-surface-hover hover:bg-accent-green/20 border-border"
+            isStaged
+              ? "text-muted-foreground bg-surface border-border cursor-not-allowed opacity-50"
+              : isStarted
+                ? "text-accent-green bg-accent-green/10 border-accent-green/20"
+                : "text-accent-green bg-surface-hover hover:bg-accent-green/20 border-border"
           }`}
-          onClick={handleForceRun}
+          onClick={isStaged ? undefined : handleForceRun}
+          disabled={isStaged}
+          title={isStaged ? "Apply config first to run this agent" : undefined}
         >
           {feedback ?? "\u25B6 Run"}
         </button>
       </div>
     </div>
+  );
+}
+
+const statusOrder: Record<AgentStatus, number> = {
+  active: 0,
+  modified: 1,
+  staged: 2,
+  orphan: 3,
+};
+
+function sortAgentsByStatus(agents: Agent[]): Agent[] {
+  return [...agents].sort(
+    (a, b) => statusOrder[a.status] - statusOrder[b.status]
   );
 }
 
@@ -242,7 +294,7 @@ export function AgentPanel() {
         <p className="text-muted-foreground text-sm">No agents configured</p>
       ) : (
         <div className="flex flex-col gap-2">
-          {agents.map((agent) => (
+          {sortAgentsByStatus(agents).map((agent) => (
             <AgentCard
               key={agent.id}
               agent={agent}

@@ -21,9 +21,11 @@ interface CronState {
   jobs: Record<
     string,
     {
+      interval?: string;
       last_run?: string;
       stagger_offset?: number;
       installed_at?: string;
+      contexts?: string[];
     }
   >;
 }
@@ -62,6 +64,57 @@ function inferRole(contexts: string[]): string {
     : "worker";
 }
 
+function buildAgentFromJob(
+  job: CronJob,
+  jobState: CronState["jobs"][string] | undefined,
+  status: "staged" | "active" | "modified" | "orphan",
+  stagedInterval?: string
+) {
+  const intervalSeconds = parseIntervalSeconds(job.interval);
+  const lastRun = jobState?.last_run ?? null;
+
+  let running = false;
+  try {
+    const lockContent = fs.readFileSync(lockFilePath(job.id), "utf-8").trim();
+    const pid = parseInt(lockContent, 10);
+    if (!isNaN(pid)) {
+      running = isProcessAlive(pid);
+    }
+  } catch {
+    // no lock file
+  }
+
+  let nextRun: string | null = null;
+  let overdue = false;
+  if (lastRun) {
+    const nextRunDate = new Date(
+      new Date(lastRun).getTime() + intervalSeconds * 1000
+    );
+    nextRun = nextRunDate.toISOString();
+    overdue = !running && new Date() > nextRunDate;
+  }
+
+  return {
+    id: job.id,
+    role: inferRole(job.contexts),
+    interval: job.interval,
+    intervalSeconds,
+    enabled: job.enabled !== false,
+    lastRun,
+    nextRun,
+    running,
+    overdue,
+    staggerOffset: jobState?.stagger_offset ?? 0,
+    prompt: job.prompt,
+    contexts: job.contexts,
+    agentic: job.agentic,
+    workspace: job.workspace,
+    repo: job.repo ?? "",
+    status,
+    ...(stagedInterval ? { stagedInterval } : {}),
+  };
+}
+
 export async function GET() {
   let jobs: CronJob[] = [];
   try {
@@ -72,57 +125,52 @@ export async function GET() {
   }
 
   let state: CronState = { jobs: {} };
+  let hasState = false;
   try {
     const raw = fs.readFileSync(cronStatePath(), "utf-8");
     state = JSON.parse(raw);
+    hasState = true;
   } catch {
     // no state file yet
   }
 
+  const stagedIds = new Set(jobs.map((j) => j.id));
+  const activeIds = new Set(Object.keys(state.jobs ?? {}));
+
   const agents = jobs.map((job) => {
-    const jobState = state.jobs?.[job.id] ?? {};
-    const intervalSeconds = parseIntervalSeconds(job.interval);
-    const lastRun = jobState.last_run ?? null;
+    const jobState = state.jobs?.[job.id];
+    const inState = activeIds.has(job.id);
 
-    let running = false;
-    try {
-      const lockContent = fs.readFileSync(lockFilePath(job.id), "utf-8").trim();
-      const pid = parseInt(lockContent, 10);
-      if (!isNaN(pid)) {
-        running = isProcessAlive(pid);
-      }
-    } catch {
-      // no lock file
+    if (!hasState || !inState) {
+      return buildAgentFromJob(job, undefined, "staged");
     }
 
-    let nextRun: string | null = null;
-    let overdue = false;
-    if (lastRun) {
-      const nextRunDate = new Date(
-        new Date(lastRun).getTime() + intervalSeconds * 1000
-      );
-      nextRun = nextRunDate.toISOString();
-      overdue = !running && new Date() > nextRunDate;
+    const activeInterval = jobState?.interval;
+    if (activeInterval && activeInterval !== job.interval) {
+      // interval field shows the active (running) interval
+      // stagedInterval shows what it will change to on next apply
+      const modifiedJob = { ...job, interval: activeInterval };
+      return buildAgentFromJob(modifiedJob, jobState, "modified", job.interval);
     }
 
-    return {
-      id: job.id,
-      role: inferRole(job.contexts),
-      interval: job.interval,
-      intervalSeconds,
-      enabled: job.enabled !== false,
-      lastRun,
-      nextRun,
-      running,
-      overdue,
-      staggerOffset: jobState.stagger_offset ?? 0,
-      prompt: job.prompt,
-      contexts: job.contexts,
-      agentic: job.agentic,
-      workspace: job.workspace,
-      repo: job.repo ?? "",
-    };
+    return buildAgentFromJob(job, jobState, "active");
   });
+
+  // Add orphan agents (in state but not in staged config)
+  for (const id of activeIds) {
+    if (!stagedIds.has(id)) {
+      const jobState = state.jobs[id];
+      const orphanJob: CronJob = {
+        id,
+        interval: jobState.interval ?? "?",
+        prompt: "",
+        contexts: jobState.contexts ?? [],
+        agentic: false,
+        workspace: false,
+      };
+      agents.push(buildAgentFromJob(orphanJob, jobState, "orphan"));
+    }
+  }
 
   return NextResponse.json({ agents });
 }
