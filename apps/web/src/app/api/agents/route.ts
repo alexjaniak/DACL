@@ -1,9 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
+import path from "path";
 import {
   cronJobsPath,
   cronStatePath,
   lockFilePath,
+  templatePath,
 } from "@/lib/paths";
 
 interface CronJob {
@@ -173,4 +175,102 @@ export async function GET() {
   }
 
   return NextResponse.json({ agents });
+}
+
+const SAFE_TYPE_RE = /^(worker|planner)$/;
+const SAFE_ID_RE = /^[a-z][a-z0-9-]{0,63}$/;
+
+function atomicWriteJsonSync(filePath: string, data: unknown): void {
+  const dir = path.dirname(filePath);
+  const content = JSON.stringify(data, null, 2) + "\n";
+  const tmpPath = path.join(dir, `.cron-jobs.tmp.${process.pid}`);
+  fs.writeFileSync(tmpPath, content, "utf-8");
+  fs.renameSync(tmpPath, filePath);
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const type: string = body.type;
+
+    if (!type || !SAFE_TYPE_RE.test(type)) {
+      return NextResponse.json(
+        { error: "type must be 'worker' or 'planner'" },
+        { status: 400 }
+      );
+    }
+
+    let template;
+    try {
+      const raw = fs.readFileSync(templatePath(type), "utf-8");
+      template = JSON.parse(raw);
+    } catch {
+      return NextResponse.json(
+        { error: `Template not found: ${type}` },
+        { status: 500 }
+      );
+    }
+
+    const filePath = cronJobsPath();
+    let data: { stagger?: boolean; jobs: CronJob[] } = { stagger: true, jobs: [] };
+    try {
+      const raw = fs.readFileSync(filePath, "utf-8");
+      data = JSON.parse(raw);
+      if (!Array.isArray(data.jobs)) data.jobs = [];
+    } catch {
+      // fresh config
+    }
+
+    let id: string = body.id ?? "";
+    if (id && !SAFE_ID_RE.test(id)) {
+      return NextResponse.json(
+        { error: "Invalid agent ID format" },
+        { status: 400 }
+      );
+    }
+
+    if (!id) {
+      const existingIds = new Set(data.jobs.map((j) => j.id));
+      for (let n = 1; n <= 99; n++) {
+        const candidate = `${type}-${String(n).padStart(2, "0")}`;
+        if (!existingIds.has(candidate)) {
+          id = candidate;
+          break;
+        }
+      }
+      if (!id) {
+        return NextResponse.json(
+          { error: "Too many agents of this type" },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (data.jobs.some((j) => j.id === id)) {
+      return NextResponse.json(
+        { error: `Agent ${id} already exists` },
+        { status: 409 }
+      );
+    }
+
+    const newJob: CronJob = {
+      id,
+      interval: body.interval ?? template.interval ?? "2m",
+      prompt: template.prompt ?? "",
+      contexts: template.contexts ?? [],
+      agentic: template.agentic ?? true,
+      workspace: template.workspace ?? true,
+    };
+
+    data.jobs.push(newJob);
+    atomicWriteJsonSync(filePath, data);
+
+    return NextResponse.json({ ok: true, agent: newJob });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return NextResponse.json(
+      { ok: false, error: message },
+      { status: 500 }
+    );
+  }
 }
