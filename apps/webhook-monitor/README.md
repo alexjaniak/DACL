@@ -94,7 +94,9 @@ The script tries `gh webhook forward` first, then falls back to `ngrok`.
 ## Quick start (both server + tunnel)
 
 ```bash
-./dev.sh
+forge wh
 ```
 
-Starts the webhook server and tunnel in parallel. Press `Ctrl+C` to stop both.
+Starts the webhook server and tunnel in a single process. Press `Ctrl+C` to stop both.
+
+Use `forge wh --no-tunnel` to start only the server without the tunnel.
