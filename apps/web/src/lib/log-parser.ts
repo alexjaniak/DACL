@@ -2,11 +2,14 @@ export interface LogBlock {
   agentId: string;
   timestamp: string;
   displayTime: string;
+  endTimestamp?: string;
+  displayEndTime?: string;
   content: string;
   key: string;
 }
 
 const RUN_MARKER = /^=== RUN (\S+) ===$/;
+const END_MARKER = /^=== END RUN(?:\s+(\S+))? ===$/;
 
 function formatTime(isoTimestamp: string): string {
   try {
@@ -48,23 +51,29 @@ export function parseLogBlocks(
       }
       currentTimestamp = match[1];
       currentLines = [];
-    } else if (line === '=== END RUN ===') {
-      if (currentTimestamp && currentLines.length > 0) {
-        const content = currentLines.join("\n").trim();
-        if (content) {
-          blocks.push({
-            agentId,
-            timestamp: currentTimestamp,
-            displayTime: formatTime(currentTimestamp),
-            content,
-            key: `${agentId}-${currentTimestamp}`,
-          });
+    } else {
+      const endMatch = line.match(END_MARKER);
+      if (endMatch) {
+        if (currentTimestamp && currentLines.length > 0) {
+          const content = currentLines.join("\n").trim();
+          if (content) {
+            const endTs = endMatch[1] || undefined;
+            blocks.push({
+              agentId,
+              timestamp: currentTimestamp,
+              displayTime: formatTime(currentTimestamp),
+              endTimestamp: endTs,
+              displayEndTime: endTs ? formatTime(endTs) : undefined,
+              content,
+              key: `${agentId}-${currentTimestamp}`,
+            });
+          }
         }
+        currentTimestamp = null;
+        currentLines = [];
+      } else if (currentTimestamp) {
+        currentLines.push(line);
       }
-      currentTimestamp = null;
-      currentLines = [];
-    } else if (currentTimestamp) {
-      currentLines.push(line);
     }
   }
 

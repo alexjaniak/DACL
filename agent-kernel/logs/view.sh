@@ -44,8 +44,9 @@ format_lines() {
   color=$(color_for_agent "$agent")
   local tag="\033[${color}m[${agent}]\033[0m"
   local separator="─────────────────────────"
-  local buffer=""
+  local body=""
   local in_block=false
+  local current_start_ts=""
 
   while IFS= read -r line; do
     # Run boundary marker from run.sh — start buffering a new block
@@ -53,17 +54,26 @@ format_lines() {
       local run_ts="${BASH_REMATCH[1]}"
       local display_ts
       display_ts=$(date -jf '%Y-%m-%dT%H:%M:%SZ' "$run_ts" '+%H:%M:%S' 2>/dev/null || echo "$run_ts")
-      buffer="$(printf "\n%b \033[90m%s\033[0m \033[90m%s\033[0m\n" "$tag" "$display_ts" "$separator")"
+      current_start_ts="$display_ts"
+      body=""
       in_block=true
       continue
     fi
 
     # End-of-run marker — flush the buffered block atomically
-    if [[ "$line" == "=== END RUN ===" ]]; then
-      if [[ -n "$buffer" ]]; then
-        printf '%s\n' "$buffer"
+    if [[ "$line" =~ ^===\ END\ RUN(\ ([0-9T:.Z-]+))?\ ===$ ]]; then
+      local end_ts="${BASH_REMATCH[2]:-}"
+      local time_display="$current_start_ts"
+      if [[ -n "$end_ts" ]]; then
+        local display_end
+        display_end=$(date -jf '%Y-%m-%dT%H:%M:%SZ' "$end_ts" '+%H:%M:%S' 2>/dev/null || echo "$end_ts")
+        time_display="$current_start_ts → $display_end"
       fi
-      buffer=""
+      if [[ -n "$body" ]]; then
+        printf "\n%b \033[90m%s\033[0m \033[90m%s\033[0m\n%s\n" "$tag" "$time_display" "$separator" "$body"
+      fi
+      body=""
+      current_start_ts=""
       in_block=false
       continue
     fi
@@ -71,15 +81,15 @@ format_lines() {
     [[ -z "$line" ]] && continue
 
     if $in_block; then
-      buffer+="$(printf "\n  %s" "$line")"
+      body+="$(printf "  %s\n" "$line")"
     else
       printf "  %s\n" "$line"
     fi
   done
 
   # Flush any remaining buffer (e.g. run still in progress during follow mode)
-  if [[ -n "$buffer" ]]; then
-    printf '%s\n' "$buffer"
+  if [[ -n "$body" ]]; then
+    printf "\n%b \033[90m%s\033[0m \033[90m%s\033[0m\n%s\n" "$tag" "$current_start_ts" "$separator" "$body"
   fi
 }
 
