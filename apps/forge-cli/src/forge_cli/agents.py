@@ -125,7 +125,19 @@ def add(agent_type, agent_id, interval, list_templates):
     cron_data.setdefault("jobs", []).append(job)
     _save_cron_jobs(cron_path, cron_data)
 
-    click.echo(f"Added {agent_id} (template: {agent_type}, interval: {job['interval']})")
+    click.echo(click.style(
+        f"Staged {agent_id} (template: {agent_type}, interval: {job['interval']})",
+        fg="green",
+    ))
+    prompt_display = job["prompt"]
+    if len(prompt_display) > 60:
+        prompt_display = prompt_display[:57] + "..."
+    click.echo(f"  prompt:    \"{prompt_display}\"")
+    if job["contexts"]:
+        click.echo(f"  contexts:  {', '.join(job['contexts'])}")
+    click.echo(f"  agentic:   {'yes' if job['agentic'] else 'no'}")
+    click.echo(f"  workspace: {'yes' if job['workspace'] else 'no'}")
+    click.echo()
     click.echo("Run `forge cron apply` to activate.")
 
 
@@ -137,6 +149,7 @@ def remove(agent_id):
     cron_data = _load_cron_jobs(cron_path)
 
     jobs = cron_data.get("jobs", [])
+    removed = [j for j in jobs if j["id"] == agent_id]
     new_jobs = [j for j in jobs if j["id"] != agent_id]
 
     if len(new_jobs) == len(jobs):
@@ -146,5 +159,10 @@ def remove(agent_id):
     cron_data["jobs"] = new_jobs
     _save_cron_jobs(cron_path, cron_data)
 
-    click.echo(f"Removed {agent_id}")
-    click.echo("Run `forge cron apply` to activate.")
+    interval = removed[0].get("interval", "?") if removed else "?"
+    click.echo(click.style(
+        f"Unstaged {agent_id} (was: interval {interval})",
+        fg="red",
+    ))
+    click.echo()
+    click.echo("Run `forge cron apply` to deactivate.")
