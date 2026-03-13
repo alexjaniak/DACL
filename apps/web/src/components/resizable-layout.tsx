@@ -7,6 +7,8 @@ const SIDEBAR_MIN = 200;
 const SIDEBAR_MAX = 500;
 const PANEL_MIN = 100;
 const HANDLE_SIZE = 4;
+const SIDEBAR_COLLAPSE_THRESHOLD = 120; // px — below this, auto-collapse
+const EVENTS_COLLAPSE_THRESHOLD = 60;   // px — below this, auto-collapse
 
 interface PanelSizes {
   sidebarWidth: number;
@@ -94,17 +96,28 @@ export function ResizableLayout({
       const rect = containerRef.current.getBoundingClientRect();
 
       if (draggingRef.current === "vertical") {
-        const newWidth = Math.max(SIDEBAR_MIN, Math.min(SIDEBAR_MAX, e.clientX - rect.left));
-        setSizes((prev) => ({ ...prev, sidebarWidth: newWidth }));
+        const rawWidth = e.clientX - rect.left;
+        if (rawWidth < SIDEBAR_COLLAPSE_THRESHOLD) {
+          setCollapsed((prev) => ({ ...prev, sidebar: true }));
+        } else {
+          const newWidth = Math.max(SIDEBAR_MIN, Math.min(SIDEBAR_MAX, rawWidth));
+          setSizes((prev) => ({ ...prev, sidebarWidth: newWidth }));
+          setCollapsed((prev) => (prev.sidebar ? { ...prev, sidebar: false } : prev));
+        }
       } else if (draggingRef.current === "horizontal") {
         const rightHeight = rect.height;
         const relativeY = e.clientY - rect.top;
-        const ratio = Math.max(0.1, Math.min(0.9, relativeY / rightHeight));
-        // Enforce minimum pixel sizes
-        const topPx = ratio * rightHeight;
-        const bottomPx = rightHeight - topPx - HANDLE_SIZE;
-        if (topPx >= PANEL_MIN && bottomPx >= PANEL_MIN) {
-          setSizes((prev) => ({ ...prev, topRightRatio: ratio }));
+        const bottomPx = rightHeight - relativeY - HANDLE_SIZE;
+        if (bottomPx < EVENTS_COLLAPSE_THRESHOLD) {
+          setCollapsed((prev) => ({ ...prev, bottom: true }));
+        } else {
+          const ratio = Math.max(0.1, Math.min(0.9, relativeY / rightHeight));
+          const topPx = ratio * rightHeight;
+          const clampedBottomPx = rightHeight - topPx - HANDLE_SIZE;
+          if (topPx >= PANEL_MIN && clampedBottomPx >= PANEL_MIN) {
+            setSizes((prev) => ({ ...prev, topRightRatio: ratio }));
+          }
+          setCollapsed((prev) => (prev.bottom ? { ...prev, bottom: false } : prev));
         }
       }
     },
