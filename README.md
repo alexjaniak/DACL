@@ -13,8 +13,6 @@ Autonomous agent orchestration platform. Worker, planner, and super agents coord
 
 **Worktree isolation:** Each agent runs in its own git worktree, preventing file conflicts between concurrent agents.
 
-**Lock system:** Local filesystem locks (`agent-kernel/locks.sh`) prevent multiple agents from claiming the same issue. Preflight in `run.sh` acquires a lock before assignment; stale locks are detected and cleaned automatically.
-
 ## Forge CLI
 
 Unified command-line interface for managing agents.
@@ -30,15 +28,13 @@ Unified command-line interface for managing agents.
 | `forge cron status` | Show cron timing (`--watch` for live view) |
 | `forge logs` | View agent logs (`-f` to follow) |
 | `forge wh` | Start webhook monitor with auto-tunnel |
-| `forge locks list` | Show all held locks |
-| `forge locks clear` | Remove stale or all locks |
 
 Install: `pip install -e apps/forge-cli`
 
 ## Project structure
 
 ```
-agent-kernel/    Core runtime — run.sh entry point, locks, cron scheduling
+agent-kernel/    Core runtime — run.sh entry point, cron scheduling
 apps/            Applications (forge-cli, web dashboard)
 contexts/        Reusable context files that define agent behavior and protocols
 templates/       Agent configuration templates (worker.json, planner.json, super.json)
