@@ -229,25 +229,65 @@ export function LogsPanel() {
   );
 }
 
+function getRoleDotColor(agentId: string): string {
+  if (agentId.startsWith("worker")) return "#98c379";
+  if (agentId.startsWith("planner")) return "#c678dd";
+  if (agentId.startsWith("super")) return "#e5c07b";
+  return "#abb2bf";
+}
+
+function formatDuration(startIso: string, endIso: string): string {
+  const ms = new Date(endIso).getTime() - new Date(startIso).getTime();
+  if (ms < 0) return "";
+  const totalSec = Math.floor(ms / 1000);
+  const min = Math.floor(totalSec / 60);
+  const sec = totalSec % 60;
+  if (min > 0) return `${min}m ${sec}s`;
+  return `${sec}s`;
+}
+
 function LogCard({ block }: { block: LogBlock }) {
   const agentColor = getAgentColor(block.agentId);
+  const dotColor = getRoleDotColor(block.agentId);
+  const duration =
+    block.endTimestamp && block.timestamp
+      ? formatDuration(block.timestamp, block.endTimestamp)
+      : "";
 
   return (
-    <div className="bg-surface border border-border rounded-md p-3">
+    <div
+      className="bg-surface border border-border rounded-md p-3 border-l-2"
+      style={{ borderLeftColor: agentColor }}
+    >
       <div className="flex items-center gap-2 mb-2">
         <span
-          className="text-sm font-semibold px-2 py-0.5 rounded"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold px-2 py-0.5 rounded"
           style={{
-            backgroundColor: agentColor + "20",
+            backgroundColor: agentColor + "26",
             color: agentColor,
+            border: `1px solid ${agentColor}4D`,
           }}
         >
+          <span
+            className="inline-block w-2 h-2 rounded-full shrink-0"
+            style={{ backgroundColor: dotColor }}
+          />
           {block.agentId}
         </span>
         <span className="text-sm text-muted-foreground">
           {block.displayTime}
           {block.displayEndTime && (
-            <span className="text-muted-foreground/60"> → {block.displayEndTime}</span>
+            <>
+              <span className="text-muted-foreground/60">
+                {" "}
+                → {block.displayEndTime}
+              </span>
+              {duration && (
+                <span className="text-muted-foreground text-xs ml-1">
+                  ({duration})
+                </span>
+              )}
+            </>
           )}
         </span>
       </div>
