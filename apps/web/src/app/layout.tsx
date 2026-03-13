@@ -13,10 +13,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body
-        className={`${GeistMono.variable} antialiased min-h-screen`}
-      >
+    <html lang="en" className={`dark ${GeistMono.variable}`}>
+      <body className="antialiased min-h-screen">
         {children}
       </body>
     </html>
