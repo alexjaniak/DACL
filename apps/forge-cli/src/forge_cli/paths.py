@@ -33,6 +33,9 @@ def load_cron_jobs(path):
 
 
 def save_cron_jobs(path, data):
-    with open(path, "w") as f:
+    dir_name = os.path.dirname(path)
+    tmp_path = os.path.join(dir_name, f".cron-jobs.tmp.{os.getpid()}")
+    with open(tmp_path, "w") as f:
         json.dump(data, f, indent=2)
         f.write("\n")
+    os.rename(tmp_path, path)
