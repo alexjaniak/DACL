@@ -56,7 +56,7 @@ Removes the agent from `cron-jobs.json`. Run `forge cron apply` to deactivate.
 
 ### `forge list` / `forge status`
 
-Show all agents grouped by state: staged, active, and orphan (active but not in config).
+Show all agents grouped by state: staged, active, and unstaged (active but not in config).
 
 ```
 forge list
@@ -124,17 +124,24 @@ forge cron apply
 Add a single cron job.
 
 ```
-forge cron add ID INTERVAL PROMPT [--agentic] [--workspace] [--context PATH] [--repo REPO]
+forge cron add ID INTERVAL PROMPT [--agentic] [--workspace] [--context TEXT] [--repo REPO]
 ```
 
-| Flag | Description |
-|------|-------------|
+**Arguments:**
+
+| Argument | Description |
+|----------|-------------|
 | `ID` | Job identifier |
 | `INTERVAL` | Schedule interval (e.g. `5m`, `1h`) |
 | `PROMPT` | Prompt text for the agent |
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
 | `--agentic` | Enable tool use |
 | `--workspace` | Run in isolated git worktree |
-| `--context PATH` | Context file path (repeatable) |
+| `--context TEXT` | Context file path (repeatable) |
 | `--repo REPO` | Target repo |
 
 ```bash
@@ -147,30 +154,6 @@ Remove a cron job by ID.
 
 ```bash
 forge cron remove summary-bot
-```
-
-#### `forge cron list`
-
-List active cron jobs.
-
-```bash
-forge cron list
-```
-
-#### `forge cron status`
-
-Show agent timing: last run, next run, and countdown.
-
-```
-forge cron status [--watch | -w]
-```
-
-| Flag | Description |
-|------|-------------|
-| `-w`, `--watch` | Continuously refresh every second |
-
-```bash
-forge cron status -w
 ```
 
 #### `forge cron run`
