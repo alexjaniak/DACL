@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useLayoutEffect } from "react";
 import { LogBlock, parseLogBlocks } from "@/lib/log-parser";
 import { getAgentColor } from "@/lib/colors";
 
@@ -331,6 +331,8 @@ function TabButton({
   );
 }
 
+const COLLAPSED_HEIGHT = 144;
+
 function LogCard({
   block,
   showAgent,
@@ -339,6 +341,16 @@ function LogCard({
   showAgent: boolean;
 }) {
   const agentColor = getAgentColor(block.agentId);
+  const [expanded, setExpanded] = useState(false);
+  const [overflows, setOverflows] = useState(false);
+  const contentRef = useRef<HTMLPreElement>(null);
+
+  useLayoutEffect(() => {
+    const el = contentRef.current;
+    if (el) {
+      setOverflows(el.scrollHeight > COLLAPSED_HEIGHT);
+    }
+  }, [block.content]);
 
   return (
     <div className="bg-surface border border-border rounded-md p-3">
@@ -361,9 +373,31 @@ function LogCard({
           )}
         </span>
       </div>
-      <pre className="text-text text-base whitespace-pre-wrap break-words leading-relaxed">
-        {block.content}
-      </pre>
+      <div className="relative">
+        <pre
+          ref={contentRef}
+          className="text-text text-base whitespace-pre-wrap break-words leading-relaxed overflow-hidden transition-[max-height] duration-300 ease-in-out"
+          style={{ maxHeight: expanded ? 2000 : COLLAPSED_HEIGHT }}
+        >
+          {block.content}
+        </pre>
+        {overflows && !expanded && (
+          <div
+            className="absolute bottom-0 left-0 right-0 h-10 pointer-events-none"
+            style={{
+              background: "linear-gradient(to bottom, transparent, var(--surface))",
+            }}
+          />
+        )}
+      </div>
+      {overflows && (
+        <button
+          onClick={() => setExpanded((prev) => !prev)}
+          className="text-sm text-muted-foreground hover:text-text mt-1 cursor-pointer"
+        >
+          {expanded ? "▲ Show less" : "▼ Show more"}
+        </button>
+      )}
     </div>
   );
 }
