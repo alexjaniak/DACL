@@ -385,7 +385,7 @@ function LogCard({
           <div
             className="absolute bottom-0 left-0 right-0 h-10 pointer-events-none"
             style={{
-              background: "linear-gradient(to bottom, transparent, #21252b)",
+              background: "linear-gradient(to bottom, transparent, var(--surface))",
             }}
           />
         )}
