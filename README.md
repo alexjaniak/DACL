@@ -46,7 +46,7 @@ cd DACL
 ./install.sh
 ```
 
-The install script checks prerequisites, installs dependencies, and generates config files. See `./install.sh --help` for options.
+The install script checks prerequisites, installs dependencies, and generates config files.
 
 ### Manual setup
 
